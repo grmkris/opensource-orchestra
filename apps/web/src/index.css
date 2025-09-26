@@ -129,7 +129,27 @@ body {
 	* {
 		@apply border-border outline-ring/50;
 	}
+
 	body {
 		@apply bg-background text-foreground;
 	}
+}
+
+/* Custom slider styles */
+.slider::-webkit-slider-thumb {
+	appearance: none;
+	width: 12px;
+	height: 12px;
+	border-radius: 50%;
+	background: #ef4444;
+	cursor: pointer;
+}
+
+.slider::-moz-range-thumb {
+	width: 12px;
+	height: 12px;
+	border-radius: 50%;
+	background: #ef4444;
+	cursor: pointer;
+	border: none;
 }
