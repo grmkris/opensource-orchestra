@@ -12,7 +12,7 @@ import {
 	getFullSubdomainName,
 	TEXT_RECORD_KEYS,
 } from "@/lib/contracts/ens-contracts";
-import { useEnsName } from "./useEnsName";
+import { useEnsName, useEnsNameOptimistic } from "./useEnsName";
 
 interface SubdomainData {
 	name: string;
@@ -140,9 +140,8 @@ export function useSubdomainData(label: string | undefined) {
 
 // Hook to get primary ENS name for an address (reverse resolution)
 export function usePrimaryName(address: Address | undefined) {
-	const addressFormated = getAddress(address ?? "0x0000000000000000000000000000000000000000");
-	console.log("addressFormated", addressFormated);
-	const { data: name, isLoading } = useEnsName({
+	const addressFormated = address;
+	const { data: name, isLoading } = useEnsNameOptimistic({
 		address: addressFormated,
 		l1ChainId: 1, // Mainnet
 		l2ChainId: ENS_CHAIN.id, // Base,
