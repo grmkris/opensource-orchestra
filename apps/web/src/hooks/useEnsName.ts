@@ -1,6 +1,7 @@
 // This is the correct way to implement ENS Primary Name resolution with L2 support.
 // Caveats: propogation is slow, which can lead to a confusing UX and suboptimal DX during hackathons.
 // See the other files in this directory for alternative approaches.
+import { ENS_CONTRACTS } from "@/lib/contracts/ens-contracts";
 import { type Address, parseAbi } from "viem";
 import { holesky, mainnet, sepolia } from "viem/chains";
 import { useReadContract } from "wagmi";
@@ -19,7 +20,7 @@ export const useEnsName = ({
 	const coinType = evmChainIdToCoinType(l2ChainId ?? l1ChainId);
 
 	return useReadContract({
-		address: "0xeEeEEEeE14D718C2B47D9923Deab1335E144EeEe", // Universal Resolver
+		address: ENS_CONTRACTS.UNIVERSAL_RESOLVER, // Universal Resolver
 		abi: parseAbi([
 			"function reverse(bytes lookupAddress, uint256 coinType) returns (string, address, address)",
 			"error ResolverNotFound(bytes name)",
