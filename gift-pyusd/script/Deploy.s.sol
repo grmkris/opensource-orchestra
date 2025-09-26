@@ -2,7 +2,7 @@
 pragma solidity 0.8.23;
 
 import {Script} from "forge-std/Script.sol";
-import {HelloPYUSD} from "../src/HelloPYUSD.sol";
+import {GiftPYUSD} from "../src/GiftPYUSD.sol";
 
 contract Deploy is Script {
     // 1e6 = 1.000000 PYUSD (6 decimals)
@@ -16,6 +16,6 @@ contract Deploy is Script {
         vm.broadcast();
 
         // Deploy the contract
-        new HelloPYUSD(pyusd, MINT_PRICE);
+        new GiftPYUSD(pyusd, MINT_PRICE);
     }
 }
