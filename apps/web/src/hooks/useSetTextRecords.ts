@@ -1,13 +1,13 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 import type { Address } from "viem";
 import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { L2_REGISTRY_ABI } from "@/lib/contracts/ens-abi";
 import {
 	ENS_CHAIN,
 	ENS_CONTRACTS,
-	getSubdomainNamehash,
 	getFullSubdomainName,
-	L2_REGISTRY_ABI,
+	getSubdomainNamehash,
 	type TextRecordKey,
 } from "@/lib/contracts/ens-contracts";
 
@@ -52,7 +52,7 @@ export function useSetTextRecords({
 			queryClient.invalidateQueries({
 				queryKey: ["subdomainData"],
 			});
-			
+
 			onSuccess?.([]);
 		}
 	}, [isConfirmed, lastTxHash, queryClient, onSuccess]);
@@ -65,9 +65,17 @@ export function useSetTextRecords({
 	}, [writeError, onError]);
 
 	const setTextRecordMutation = useMutation({
-		mutationFn: async ({ label, key, value }: { label: string; key: TextRecordKey; value: string }) => {
+		mutationFn: async ({
+			label,
+			key,
+			value,
+		}: {
+			label: string;
+			key: TextRecordKey;
+			value: string;
+		}) => {
 			const node = getSubdomainNamehash(label);
-			
+
 			return new Promise<void>((resolve, reject) => {
 				try {
 					writeContract({
@@ -85,7 +93,7 @@ export function useSetTextRecords({
 		},
 		onSuccess: () => {
 			// Optimistically update cache
-			const fullName = getFullSubdomainName("");
+			const _fullName = getFullSubdomainName("");
 			queryClient.invalidateQueries({
 				queryKey: ["textRecords"],
 			});

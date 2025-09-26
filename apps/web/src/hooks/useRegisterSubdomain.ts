@@ -1,102 +1,54 @@
-import { useCallback, useEffect, useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type { Address } from "viem";
+import { createPublicClient, http } from "viem";
+import { base } from "viem/chains";
+import { useWriteContract } from "wagmi";
+import { L2_REGISTRAR_ABI } from "@/lib/contracts/ens-abi";
 import {
-	usePublicClient,
-	useWaitForTransactionReceipt,
-	useWriteContract,
-} from "wagmi";
-import { useQuery } from "@tanstack/react-query";
-import {
-	ENS_CHAIN,
 	ENS_CONTRACTS,
 	getFullSubdomainName,
-	L2_REGISTRAR_ABI,
 } from "@/lib/contracts/ens-contracts";
 
-interface UseRegisterSubdomainProps {
-	onSuccess?: (label: string, owner: Address) => void;
-	onError?: (error: Error) => void;
+// Base-specific public client for contract reads
+const basePublicClient = createPublicClient({
+	chain: base,
+	transport: http(),
+});
+
+interface RegisterSubdomainParams {
+	label: string;
+	owner: Address;
 }
 
-export function useRegisterSubdomain({
-	onSuccess,
-	onError,
-}: UseRegisterSubdomainProps = {}) {
-	const [isPending, setIsPending] = useState(false);
-	const [lastTxHash, setLastTxHash] = useState<`0x${string}` | undefined>();
+export function useRegisterSubdomain() {
+	const { writeContractAsync } = useWriteContract();
 
-	const { writeContract, data: txHash, error: writeError } = useWriteContract();
-
-	const { isLoading: isConfirming, isSuccess: isConfirmed } =
-		useWaitForTransactionReceipt({
-			hash: lastTxHash,
-		});
-
-	// Update pending state based on transaction status
-	useEffect(() => {
-		if (txHash) {
-			setLastTxHash(txHash);
-			setIsPending(true);
-		}
-	}, [txHash]);
-
-	useEffect(() => {
-		if (isConfirmed) {
-			setIsPending(false);
-		}
-	}, [isConfirmed]);
-
-	// Handle errors
-	useEffect(() => {
-		if (writeError) {
-			setIsPending(false);
-			onError?.(writeError);
-		}
-	}, [writeError, onError]);
-
-	const register = useCallback(
-		(label: string, owner: Address) => {
+	return useMutation({
+		mutationFn: async ({ label, owner }: RegisterSubdomainParams) => {
 			if (!ENS_CONTRACTS.L2_REGISTRAR) {
 				throw new Error("L2 Registrar address not set");
 			}
 
-			try {
-				writeContract({
-					address: ENS_CONTRACTS.L2_REGISTRAR as Address,
-					abi: L2_REGISTRAR_ABI,
-					functionName: "register",
-					args: [label, owner],
-					chainId: ENS_CHAIN.id,
-				});
+			// Execute the registration transaction
+			const hash = await writeContractAsync({
+				address: ENS_CONTRACTS.L2_REGISTRAR as Address,
+				abi: L2_REGISTRAR_ABI,
+				functionName: "register",
+				args: [label, owner],
+				chainId: base.id,
+			});
 
-				// Call success callback when confirmed
-				if (isConfirmed && onSuccess) {
-					onSuccess(label, owner);
-				}
-			} catch (error) {
-				onError?.(error as Error);
-			}
+			// Return the result data
+			return { label, owner, hash };
 		},
-		[writeContract, onSuccess, onError, isConfirmed],
-	);
-
-	return {
-		register,
-		isPending: isPending || isConfirming,
-		isConfirmed,
-		txHash: lastTxHash,
-		error: writeError,
-	};
+	});
 }
 
-// Hook to check subdomain availability
 export function useSubdomainAvailability(label: string | undefined) {
-	const publicClient = usePublicClient();
-
 	const { data, isLoading, error } = useQuery({
 		queryKey: ["subdomain-availability", label, ENS_CONTRACTS.L2_REGISTRAR],
 		queryFn: async () => {
-			if (!label || label.length < 3 || !ENS_CONTRACTS.L2_REGISTRAR || !publicClient) {
+			if (!label || label.length < 3 || !ENS_CONTRACTS.L2_REGISTRAR) {
 				return {
 					isAvailable: false,
 					isValidLength: (label?.length ?? 0) >= 3,
@@ -105,8 +57,8 @@ export function useSubdomainAvailability(label: string | undefined) {
 			}
 
 			try {
-				const isAvailable = await publicClient.readContract({
-					address: ENS_CONTRACTS.L2_REGISTRAR as Address,
+				const isAvailable = await basePublicClient.readContract({
+					address: ENS_CONTRACTS.L2_REGISTRAR,
 					abi: L2_REGISTRAR_ABI,
 					functionName: "available",
 					args: [label],
@@ -126,8 +78,8 @@ export function useSubdomainAvailability(label: string | undefined) {
 				};
 			}
 		},
-		enabled: !!label && !!ENS_CONTRACTS.L2_REGISTRAR && !!publicClient,
-		staleTime: 5000, // Consider data stale after 5 seconds
+		enabled: !!label && !!ENS_CONTRACTS.L2_REGISTRAR,
+		staleTime: 5000,
 		retry: 2,
 		refetchOnMount: true,
 	});
@@ -143,21 +95,23 @@ export function useSubdomainAvailability(label: string | undefined) {
 
 // Hook for batch availability checking
 export function useMultipleAvailability(labels: string[]) {
-	const publicClient = usePublicClient();
-
-	const { data: results, isLoading, error } = useQuery({
+	const {
+		data: results,
+		isLoading,
+		error,
+	} = useQuery({
 		queryKey: ["multiple-availability", labels, ENS_CONTRACTS.L2_REGISTRAR],
 		queryFn: async () => {
-			if (!ENS_CONTRACTS.L2_REGISTRAR || !publicClient || labels.length === 0) {
+			if (!ENS_CONTRACTS.L2_REGISTRAR || labels.length === 0) {
 				return [];
 			}
 
-			const validLabels = labels.filter(label => label.length >= 3);
-			
+			const validLabels = labels.filter((label) => label.length >= 3);
+
 			const results = await Promise.all(
 				validLabels.map(async (label) => {
 					try {
-						const isAvailable = await publicClient.readContract({
+						const isAvailable = await basePublicClient.readContract({
 							address: ENS_CONTRACTS.L2_REGISTRAR as Address,
 							abi: L2_REGISTRAR_ABI,
 							functionName: "available",
@@ -179,12 +133,12 @@ export function useMultipleAvailability(labels: string[]) {
 							error: error as Error,
 						};
 					}
-				})
+				}),
 			);
 
 			return results;
 		},
-		enabled: !!ENS_CONTRACTS.L2_REGISTRAR && !!publicClient && labels.length > 0,
+		enabled: !!ENS_CONTRACTS.L2_REGISTRAR && labels.length > 0,
 		staleTime: 5000,
 		retry: 1,
 	});

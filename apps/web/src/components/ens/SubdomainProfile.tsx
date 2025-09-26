@@ -1,6 +1,7 @@
 "use client";
 
 import { CheckIcon, CopyIcon, ExternalLinkIcon } from "lucide-react";
+import Image from "next/image";
 import { useId, useState } from "react";
 import { useAccount } from "wagmi";
 import { Loader } from "@/components/loader";
@@ -8,9 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useSubdomainData } from "@/hooks/useENSSubdomain";
+import {
+	useEnhancedPrimaryName,
+	useSubdomainData,
+} from "@/hooks/useENSSubdomain";
+import { useSetPrimaryName } from "@/hooks/useSetPrimaryName";
 import { useUpdateProfile } from "@/hooks/useSetTextRecords";
-import Image from "next/image";
 
 interface SubdomainProfileProps {
 	label: string;
@@ -25,6 +29,22 @@ export function SubdomainProfile({
 	const { subdomain, isLoading } = useSubdomainData(label);
 	const [isEditing, setIsEditing] = useState(false);
 	const [copiedField, setCopiedField] = useState<string | null>(null);
+
+	// Primary name management
+	const {
+		baseName,
+		hasBasePrimary,
+		isLoading: primaryLoading,
+	} = useEnhancedPrimaryName(address);
+
+	const {
+		mutateAsync: setPrimaryName,
+		isPending: settingPrimary,
+		isSuccess: primarySet,
+		error: primaryError,
+	} = useSetPrimaryName();
+
+	const isCurrentlyPrimary = hasBasePrimary && baseName === subdomain?.name;
 
 	// Form state for editing
 	const [formData, setFormData] = useState({
@@ -105,6 +125,11 @@ export function SubdomainProfile({
 		setIsEditing(false);
 	};
 
+	const handleSetPrimaryName = () => {
+		if (!label) return;
+		setPrimaryName(label);
+	};
+
 	if (isLoading) {
 		return (
 			<Card className="p-6">
@@ -134,7 +159,14 @@ export function SubdomainProfile({
 				{/* Header */}
 				<div className="flex items-center justify-between">
 					<div>
-						<h2 className="font-semibold text-xl">{subdomain.name}</h2>
+						<div className="flex items-center space-x-2">
+							<h2 className="font-semibold text-xl">{subdomain.name}</h2>
+							{isCurrentlyPrimary && (
+								<span className="rounded-full bg-green-100 px-2 py-1 text-green-800 text-xs">
+									Primary Name
+								</span>
+							)}
+						</div>
 						<div className="flex items-center space-x-2 text-muted-foreground text-sm">
 							<span>Owner: {subdomain.address}</span>
 							<Button
@@ -152,10 +184,42 @@ export function SubdomainProfile({
 						</div>
 					</div>
 
-					{isOwner && !isEditing && (
-						<Button onClick={() => setIsEditing(true)}>Edit Profile</Button>
-					)}
+					<div className="flex space-x-2">
+						{isOwner && !isEditing && !isCurrentlyPrimary && (
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={handleSetPrimaryName}
+								disabled={settingPrimary || primaryLoading}
+							>
+								{settingPrimary ? (
+									<div className="flex items-center space-x-2">
+										<Loader className="h-3 w-3" />
+										<span>Setting...</span>
+									</div>
+								) : (
+									"Set as Primary"
+								)}
+							</Button>
+						)}
+						{isOwner && !isEditing && (
+							<Button onClick={() => setIsEditing(true)}>Edit Profile</Button>
+						)}
+					</div>
 				</div>
+
+				{/* Primary Name Status & Errors */}
+				{primaryError && (
+					<div className="text-red-600 text-sm">
+						Error setting primary name: {primaryError.message}
+					</div>
+				)}
+
+				{primarySet && (
+					<div className="text-green-600 text-sm">
+						Primary name set successfully! It may take a few moments to update.
+					</div>
+				)}
 
 				{/* Avatar */}
 				{subdomain.avatar && (

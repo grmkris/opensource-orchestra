@@ -11,6 +11,7 @@ import {
 	useRegisterSubdomain,
 	useSubdomainAvailability,
 } from "@/hooks/useRegisterSubdomain";
+import { useSetPrimaryName } from "@/hooks/useSetPrimaryName";
 import { getFullSubdomainName } from "@/lib/contracts/ens-contracts";
 
 interface SubdomainRegistrationProps {
@@ -33,6 +34,7 @@ export function SubdomainRegistration({
 		return () => clearTimeout(timer);
 	}, [label]);
 
+	// Check availability
 	const {
 		isAvailable,
 		isLoading: availabilityLoading,
@@ -40,13 +42,19 @@ export function SubdomainRegistration({
 		isValidLength,
 	} = useSubdomainAvailability(debouncedLabel);
 
-	const { register, isPending, isConfirmed, error } = useRegisterSubdomain({
-		onSuccess: (registeredLabel) => {
-			const fullSubdomainName = getFullSubdomainName(registeredLabel);
-			onSuccess?.(registeredLabel, fullSubdomainName);
-			setLabel(""); // Clear input after successful registration
-		},
-	});
+	// Mutations - clean and simple!
+	const registerMutation = useRegisterSubdomain();
+	const setPrimaryMutation = useSetPrimaryName();
+
+	// Derived state from mutations - no manual tracking needed
+	const isRegistering = registerMutation.isPending;
+	const registerSuccess = registerMutation.isSuccess;
+	const registeredData = registerMutation.data;
+	const registerError = registerMutation.error;
+
+	const isSettingPrimary = setPrimaryMutation.isPending;
+	const primarySuccess = setPrimaryMutation.isSuccess;
+	const primaryError = setPrimaryMutation.error;
 
 	const canRegister = useMemo(() => {
 		return (
@@ -55,7 +63,7 @@ export function SubdomainRegistration({
 			isValidLength &&
 			isAvailable &&
 			!availabilityLoading &&
-			!isPending
+			!isRegistering
 		);
 	}, [
 		address,
@@ -63,18 +71,34 @@ export function SubdomainRegistration({
 		isValidLength,
 		isAvailable,
 		availabilityLoading,
-		isPending,
+		isRegistering,
 	]);
 
 	const handleRegister = () => {
 		if (!address || !canRegister) return;
-		register(label, address);
+
+		registerMutation.mutate(
+			{ label, owner: address },
+			{
+				onSuccess: (data) => {
+					onSuccess?.(data.label, getFullSubdomainName(data.label));
+					setLabel(""); // Clear input
+				},
+			},
+		);
+	};
+
+	const handleSetPrimary = () => {
+		if (!registeredData?.label) return;
+
+		setPrimaryMutation.mutate(registeredData.label);
 	};
 
 	const handleLabelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const value = e.target.value.toLowerCase().replace(/[^a-z0-9]/g, "");
 		setLabel(value);
 	};
+
 	const subdomainId = useId();
 
 	const getAvailabilityStatus = () => {
@@ -113,7 +137,7 @@ export function SubdomainRegistration({
 							value={label}
 							onChange={handleLabelChange}
 							className="flex-1"
-							disabled={isPending}
+							disabled={isRegistering}
 						/>
 						<span className="whitespace-nowrap text-muted-foreground">
 							.catmisha.eth
@@ -154,7 +178,7 @@ export function SubdomainRegistration({
 					disabled={!canRegister}
 					className="w-full"
 				>
-					{isPending ? (
+					{isRegistering ? (
 						<div className="flex items-center space-x-2">
 							<Loader className="h-4 w-4" />
 							<span>Registering...</span>
@@ -164,14 +188,54 @@ export function SubdomainRegistration({
 					)}
 				</Button>
 
-				{/* Transaction Status */}
-				{error && (
-					<div className="text-red-600 text-sm">Error: {error.message}</div>
+				{/* Primary Name Button - Shows after successful registration */}
+				{registerSuccess && registeredData && (
+					<Button
+						onClick={handleSetPrimary}
+						disabled={isSettingPrimary}
+						className="w-full"
+						variant="outline"
+					>
+						{isSettingPrimary ? (
+							<div className="flex items-center space-x-2">
+								<Loader className="h-4 w-4" />
+								<span>Setting as primary name...</span>
+							</div>
+						) : (
+							`Set ${getFullSubdomainName(registeredData.label)} as Primary Name on Base`
+						)}
+					</Button>
 				)}
 
-				{isConfirmed && (
+				{/* Status Messages - Direct from mutations */}
+				{registerError && (
+					<div className="text-red-600 text-sm">
+						Registration Error: {registerError.message}
+					</div>
+				)}
+
+				{primaryError && (
+					<div className="text-red-600 text-sm">
+						Primary Name Error: {primaryError.message}
+					</div>
+				)}
+
+				{/* Registration Success */}
+				{registerSuccess && registeredData && (
 					<div className="text-green-600 text-sm">
-						Successfully registered {fullName}!
+						✅ Successfully registered{" "}
+						{getFullSubdomainName(registeredData.label)}!
+						<div className="mt-1 text-muted-foreground">
+							Click the button above to set it as your primary name on Base.
+						</div>
+					</div>
+				)}
+
+				{/* Primary Name Success */}
+				{primarySuccess && (
+					<div className="text-green-600 text-sm">
+						✅ Primary name set successfully! It may take a few moments to
+						update.
 					</div>
 				)}
 
@@ -187,6 +251,9 @@ export function SubdomainRegistration({
 					<p>• Free registration on Base L2</p>
 					<p>• Minimum 3 characters, alphanumeric only</p>
 					<p>• You can set avatar, bio, and social links after registration</p>
+					<p>
+						• After registration, optionally set as your primary name on Base
+					</p>
 				</div>
 			</div>
 		</Card>

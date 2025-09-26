@@ -1,11 +1,18 @@
-import type { Address } from "viem";
+import { useQuery } from "@tanstack/react-query";
+import { getAddress, type Address } from "viem";
 import { normalize } from "viem/ens";
-import { useEnsAddress, useEnsAvatar, useEnsName, useEnsText, usePublicClient } from "wagmi";
 import {
+	useEnsAddress,
+	useEnsAvatar,
+	useEnsText,
+	usePublicClient,
+} from "wagmi";
+import {
+	ENS_CHAIN,
 	getFullSubdomainName,
 	TEXT_RECORD_KEYS,
 } from "@/lib/contracts/ens-contracts";
-import { useQuery } from "@tanstack/react-query";
+import { useEnsName } from "./useEnsName";
 
 interface SubdomainData {
 	name: string;
@@ -29,59 +36,69 @@ export function useSubdomainData(label: string | undefined) {
 	const { data: address, isLoading: addressLoading } = useEnsAddress({
 		name: normalizedName,
 		query: { enabled: !!normalizedName },
+		chainId: ENS_CHAIN.id,
 	});
 
 	const { data: avatar, isLoading: avatarLoading } = useEnsAvatar({
 		name: normalizedName,
 		query: { enabled: !!normalizedName },
+		chainId: ENS_CHAIN.id,
 	});
 
 	const { data: description, isLoading: descriptionLoading } = useEnsText({
 		name: normalizedName,
 		key: TEXT_RECORD_KEYS.DESCRIPTION,
 		query: { enabled: !!normalizedName },
+		chainId: ENS_CHAIN.id,
 	});
 
 	const { data: display, isLoading: displayLoading } = useEnsText({
 		name: normalizedName,
 		key: TEXT_RECORD_KEYS.DISPLAY,
 		query: { enabled: !!normalizedName },
+		chainId: ENS_CHAIN.id,
 	});
 
 	const { data: twitter, isLoading: twitterLoading } = useEnsText({
 		name: normalizedName,
 		key: TEXT_RECORD_KEYS.TWITTER,
 		query: { enabled: !!normalizedName },
+		chainId: ENS_CHAIN.id,
 	});
 
 	const { data: github, isLoading: githubLoading } = useEnsText({
 		name: normalizedName,
 		key: TEXT_RECORD_KEYS.GITHUB,
 		query: { enabled: !!normalizedName },
+		chainId: ENS_CHAIN.id,
 	});
 
 	const { data: discord, isLoading: discordLoading } = useEnsText({
 		name: normalizedName,
 		key: TEXT_RECORD_KEYS.DISCORD,
 		query: { enabled: !!normalizedName },
+		chainId: ENS_CHAIN.id,
 	});
 
 	const { data: telegram, isLoading: telegramLoading } = useEnsText({
 		name: normalizedName,
 		key: TEXT_RECORD_KEYS.TELEGRAM,
 		query: { enabled: !!normalizedName },
+		chainId: ENS_CHAIN.id,
 	});
 
 	const { data: url, isLoading: urlLoading } = useEnsText({
 		name: normalizedName,
 		key: TEXT_RECORD_KEYS.URL,
 		query: { enabled: !!normalizedName },
+		chainId: ENS_CHAIN.id,
 	});
 
 	const { data: email, isLoading: emailLoading } = useEnsText({
 		name: normalizedName,
 		key: TEXT_RECORD_KEYS.EMAIL,
 		query: { enabled: !!normalizedName },
+		chainId: ENS_CHAIN.id,
 	});
 
 	const isLoading =
@@ -123,10 +140,15 @@ export function useSubdomainData(label: string | undefined) {
 
 // Hook to get primary ENS name for an address (reverse resolution)
 export function usePrimaryName(address: Address | undefined) {
+	const addressFormated = getAddress(address ?? "0x0000000000000000000000000000000000000000");
+	console.log("addressFormated", addressFormated);
 	const { data: name, isLoading } = useEnsName({
-		address,
-		query: { enabled: !!address },
+		address: addressFormated,
+		l1ChainId: 1, // Mainnet
+		l2ChainId: ENS_CHAIN.id, // Base,
 	});
+
+	console.log("name", name, addressFormated);
 
 	// Check if the resolved name is one of our subdomains
 	const isOurSubdomain = name?.endsWith(".catmisha.eth") ?? false;
@@ -160,9 +182,15 @@ export function useUserSubdomain(userAddress: Address | undefined) {
 export function useTextRecords(label: string | undefined, keys: string[]) {
 	const fullName = label ? getFullSubdomainName(label) : undefined;
 	const normalizedName = fullName ? normalize(fullName) : undefined;
-	const publicClient = usePublicClient();
+	const publicClient = usePublicClient({
+		chainId: ENS_CHAIN.id,
+	});
 
-	const { data: textRecords, isLoading, error } = useQuery({
+	const {
+		data: textRecords,
+		isLoading,
+		error,
+	} = useQuery({
 		queryKey: ["textRecords", normalizedName, keys],
 		queryFn: async () => {
 			if (!normalizedName || !publicClient) return {};
@@ -179,11 +207,11 @@ export function useTextRecords(label: string | undefined, keys: string[]) {
 						console.warn(`Failed to fetch text record ${key}:`, error);
 						return { key, value: null };
 					}
-				})
+				}),
 			);
 
 			return Object.fromEntries(
-				results.map(({ key, value }) => [key, value || ""])
+				results.map(({ key, value }) => [key, value || ""]),
 			);
 		},
 		enabled: !!normalizedName && !!publicClient && keys.length > 0,

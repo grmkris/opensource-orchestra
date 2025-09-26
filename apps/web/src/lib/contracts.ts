@@ -1,1 +1,0 @@
-export const LAYER2_RESOLVER = "0x0ce4122ca2f0466891f0a8c023ef8091585adfc8";
