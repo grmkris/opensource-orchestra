@@ -9,14 +9,77 @@ contract GiftPYUSDTest is Test {
     MockPYUSD public pyusd;
     GiftPYUSD public giftPYUSD;
     uint256 constant MINT_PRICE = 100e6; // PYUSD has 6 decimals
+    uint256 constant ARTIST_ID = 1;
+    address constant ARTIST_WALLET = address(0xA11CE);
+    string constant ARTIST_NAME = "Alice";
+    string constant ARTIST_IMAGE = "https://example.com/alice.png";
+    uint256 constant ANOTHER_ARTIST_ID = 2;
+    address constant ANOTHER_ARTIST_WALLET = address(0xB0B1);
+    string constant ANOTHER_ARTIST_NAME = "Bob";
+    string constant ANOTHER_ARTIST_IMAGE = "https://example.com/bob.png";
 
     function setUp() public {
         pyusd = new MockPYUSD();
         giftPYUSD = new GiftPYUSD(address(pyusd), MINT_PRICE);
+
+        giftPYUSD.registerArtist(ARTIST_ID, ARTIST_WALLET, ARTIST_NAME, ARTIST_IMAGE);
     }
 
     function testCreate() public {
         assertNotEq(address(giftPYUSD), address(0));
+    }
+
+    function testRegisterArtist_Succeeds() public {
+        giftPYUSD.registerArtist(ANOTHER_ARTIST_ID, ANOTHER_ARTIST_WALLET, ANOTHER_ARTIST_NAME, ANOTHER_ARTIST_IMAGE);
+
+        (address payoutWallet, string memory name, string memory imageURI, bool exists) = giftPYUSD.artists(ANOTHER_ARTIST_ID);
+
+        assertEq(payoutWallet, ANOTHER_ARTIST_WALLET);
+        assertEq(name, ANOTHER_ARTIST_NAME);
+        assertEq(imageURI, ANOTHER_ARTIST_IMAGE);
+        assertTrue(exists);
+    }
+
+    function testRegisterArtist_RevertIfDuplicate() public {
+        vm.expectRevert(GiftPYUSD.ARTIST_EXISTS.selector);
+        giftPYUSD.registerArtist(ARTIST_ID, ARTIST_WALLET, ARTIST_NAME, ARTIST_IMAGE);
+    }
+
+    function testRegisterArtist_RevertIfInvalidWallet() public {
+        vm.expectRevert(GiftPYUSD.INVALID_WALLET.selector);
+        giftPYUSD.registerArtist(ANOTHER_ARTIST_ID, address(0), ANOTHER_ARTIST_NAME, ANOTHER_ARTIST_IMAGE);
+    }
+
+    function testRegisterArtist_RevertIfNotOwner() public {
+        vm.prank(address(0xBEEF));
+        vm.expectRevert(GiftPYUSD.NOT_OWNER.selector);
+        giftPYUSD.registerArtist(ANOTHER_ARTIST_ID, ANOTHER_ARTIST_WALLET, ANOTHER_ARTIST_NAME, ANOTHER_ARTIST_IMAGE);
+    }
+
+    function testUpdateArtist_Succeeds() public {
+        address newWallet = address(0xA11CF);
+        string memory newName = "Alice Deluxe";
+        string memory newImage = "https://example.com/alice-deluxe.png";
+
+        giftPYUSD.updateArtist(ARTIST_ID, newWallet, newName, newImage);
+
+        (address payoutWallet, string memory name, string memory imageURI, bool exists) = giftPYUSD.artists(ARTIST_ID);
+
+        assertEq(payoutWallet, newWallet);
+        assertEq(name, newName);
+        assertEq(imageURI, newImage);
+        assertTrue(exists);
+    }
+
+    function testUpdateArtist_RevertIfNotFound() public {
+        vm.expectRevert(GiftPYUSD.ARTIST_NOT_FOUND.selector);
+        giftPYUSD.updateArtist(999, ARTIST_WALLET, ARTIST_NAME, ARTIST_IMAGE);
+    }
+
+    function testUpdateArtist_RevertIfNotOwner() public {
+        vm.prank(address(0xBEEF));
+        vm.expectRevert(GiftPYUSD.NOT_OWNER.selector);
+        giftPYUSD.updateArtist(ARTIST_ID, ARTIST_WALLET, ARTIST_NAME, ARTIST_IMAGE);
     }
 
     function testMint() public {
@@ -24,23 +87,33 @@ contract GiftPYUSDTest is Test {
         pyusd.mint(address(this), MINT_PRICE);
         pyusd.approve(address(giftPYUSD), MINT_PRICE);
 
-        // Mint NFT paying with PYUSD
-        giftPYUSD.mint();
+        // Mint NFT paying with PYUSD to the registered artist
+        giftPYUSD.mint(ARTIST_ID);
 
         // PYUSD transferred to the NFT contract
         assertEq(pyusd.balanceOf(address(this)), 0);
         assertEq(pyusd.balanceOf(address(giftPYUSD)), MINT_PRICE);
 
-        // NFT state assertions
+        // NFT and artist state assertions
         assertEq(giftPYUSD.balanceOf(address(this)), 1);
         assertEq(giftPYUSD.totalIssued(), 1);
+        assertEq(giftPYUSD.tokenArtist(1), ARTIST_ID);
+        assertEq(giftPYUSD.artistBalance(ARTIST_ID), MINT_PRICE);
+    }
+
+    function testMint_RevertIfArtistMissing() public {
+        pyusd.mint(address(this), MINT_PRICE);
+        pyusd.approve(address(giftPYUSD), MINT_PRICE);
+
+        vm.expectRevert(GiftPYUSD.ARTIST_NOT_FOUND.selector);
+        giftPYUSD.mint(999);
     }
 
     function testSBT_ApproveReverts() public {
         // Mint one to self first
         pyusd.mint(address(this), MINT_PRICE);
         pyusd.approve(address(giftPYUSD), MINT_PRICE);
-        giftPYUSD.mint();
+        giftPYUSD.mint(ARTIST_ID);
 
         // Expect reverts for approvals
         vm.expectRevert(GiftPYUSD.TRANSFERS_DISABLED.selector);
@@ -54,7 +127,7 @@ contract GiftPYUSDTest is Test {
         // Mint one to self first
         pyusd.mint(address(this), MINT_PRICE);
         pyusd.approve(address(giftPYUSD), MINT_PRICE);
-        giftPYUSD.mint();
+        giftPYUSD.mint(ARTIST_ID);
 
         address to = address(0xB0B);
 
@@ -71,36 +144,42 @@ contract GiftPYUSDTest is Test {
         giftPYUSD.safeTransferFrom(address(this), to, 1, "");
     }
 
-    function testWithdraw_ByOwner() public {
-        // Prepare: mint once to move PYUSD into the contract
+    function testWithdrawForArtist_Succeeds() public {
+        // Prepare: mint once to move PYUSD into the contract and credit the artist
         pyusd.mint(address(this), MINT_PRICE);
         pyusd.approve(address(giftPYUSD), MINT_PRICE);
-        giftPYUSD.mint();
+        giftPYUSD.mint(ARTIST_ID);
 
-        // pre-assert: funds are in the contract
+        // pre-assert: funds are in the contract and artist balance tracked
         assertEq(pyusd.balanceOf(address(giftPYUSD)), MINT_PRICE);
-        assertEq(pyusd.balanceOf(address(this)), 0);
+        assertEq(giftPYUSD.artistBalance(ARTIST_ID), MINT_PRICE);
 
-        // withdraw by owner (this test contract is the owner)
-        giftPYUSD.withdraw(address(this), MINT_PRICE);
+        // withdraw by the artist payout wallet
+        vm.prank(ARTIST_WALLET);
+        giftPYUSD.withdrawForArtist(ARTIST_ID, MINT_PRICE);
 
-        // post-assert: funds moved back to owner, contract drained
+        // post-assert: funds moved to artist wallet, balances updated
         assertEq(pyusd.balanceOf(address(giftPYUSD)), 0);
-        assertEq(pyusd.balanceOf(address(this)), MINT_PRICE);
+        assertEq(pyusd.balanceOf(ARTIST_WALLET), MINT_PRICE);
+        assertEq(giftPYUSD.artistBalance(ARTIST_ID), 0);
     }
 
-    function testWithdraw_RevertIfNotOwner() public {
-        address attacker = address(0xBEEF);
-
-        // Move funds into the contract first
+    function testWithdrawForArtist_RevertIfUnauthorized() public {
         pyusd.mint(address(this), MINT_PRICE);
         pyusd.approve(address(giftPYUSD), MINT_PRICE);
-        giftPYUSD.mint();
-        assertEq(pyusd.balanceOf(address(giftPYUSD)), MINT_PRICE);
+        giftPYUSD.mint(ARTIST_ID);
 
-        // Expect revert when non-owner tries to withdraw
-        vm.prank(attacker);
-        vm.expectRevert(bytes("NOT_OWNER"));
-        giftPYUSD.withdraw(attacker, MINT_PRICE);
+        vm.expectRevert(GiftPYUSD.UNAUTHORIZED.selector);
+        giftPYUSD.withdrawForArtist(ARTIST_ID, MINT_PRICE);
+    }
+
+    function testWithdrawForArtist_RevertIfInsufficientBalance() public {
+        pyusd.mint(address(this), MINT_PRICE);
+        pyusd.approve(address(giftPYUSD), MINT_PRICE);
+        giftPYUSD.mint(ARTIST_ID);
+
+        vm.prank(ARTIST_WALLET);
+        vm.expectRevert(GiftPYUSD.INSUFFICIENT_BALANCE.selector);
+        giftPYUSD.withdrawForArtist(ARTIST_ID, MINT_PRICE + 1);
     }
 }

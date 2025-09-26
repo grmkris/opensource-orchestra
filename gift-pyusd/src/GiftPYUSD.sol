@@ -9,9 +9,36 @@ contract GiftPYUSD is ERC721 {
     ERC20 public immutable mintToken;
     uint256 public immutable mintPrice;
     address public immutable owner;
-    
+
+    struct Artist {
+        address payoutWallet;
+        string name;
+        string imageURI;
+        bool exists;
+    }
+
+    mapping(uint256 => Artist) public artists;
+    mapping(uint256 => uint256) public tokenArtist;
+    mapping(uint256 => uint256) public artistBalances;
+
     // SBT: disable all transfers/approvals
     error TRANSFERS_DISABLED();
+    error NOT_OWNER();
+    error ARTIST_EXISTS();
+    error ARTIST_NOT_FOUND();
+    error INVALID_WALLET();
+    error UNAUTHORIZED();
+    error INSUFFICIENT_BALANCE();
+
+    event ArtistRegistered(uint256 indexed artistId, address payoutWallet, string name, string imageURI);
+    event ArtistUpdated(uint256 indexed artistId, address payoutWallet, string name, string imageURI);
+    event GiftMinted(uint256 indexed tokenId, address indexed giver, uint256 indexed artistId, uint256 amount);
+    event ArtistWithdrawn(uint256 indexed artistId, address indexed payoutWallet, uint256 amount);
+
+    modifier onlyOwner() {
+        if (msg.sender != owner) revert NOT_OWNER();
+        _;
+    }
 
     constructor(address _mintToken, uint256 _mintPrice) ERC721("GiftPYUSD", "GIPY") {
         mintToken = ERC20(_mintToken);
@@ -19,10 +46,51 @@ contract GiftPYUSD is ERC721 {
         owner = msg.sender;
     }
 
-    function mint() external {
+    function registerArtist(uint256 artistId, address payoutWallet, string calldata name, string calldata imageURI) external onlyOwner {
+        if (artists[artistId].exists) revert ARTIST_EXISTS();
+        if (payoutWallet == address(0)) revert INVALID_WALLET();
+
+        artists[artistId] = Artist({
+            payoutWallet: payoutWallet,
+            name: name,
+            imageURI: imageURI,
+            exists: true
+        });
+
+        emit ArtistRegistered(artistId, payoutWallet, name, imageURI);
+    }
+
+    function updateArtist(uint256 artistId, address payoutWallet, string calldata name, string calldata imageURI) external onlyOwner {
+        Artist storage artist = artists[artistId];
+        if (!artist.exists) revert ARTIST_NOT_FOUND();
+
+        if (payoutWallet != address(0)) {
+            artist.payoutWallet = payoutWallet;
+        }
+        if (bytes(name).length != 0) {
+            artist.name = name;
+        }
+        if (bytes(imageURI).length != 0) {
+            artist.imageURI = imageURI;
+        }
+
+        emit ArtistUpdated(artistId, artist.payoutWallet, artist.name, artist.imageURI);
+    }
+
+    function mint(uint256 artistId) external {
+        Artist storage artist = artists[artistId];
+        if (!artist.exists) revert ARTIST_NOT_FOUND();
+
         // Pull PYUSD from caller first, then mint the NFT
         mintToken.transferFrom(msg.sender, address(this), mintPrice);
-        _mint(msg.sender, ++totalIssued);
+
+        uint256 newTokenId = ++totalIssued;
+        tokenArtist[newTokenId] = artistId;
+        artistBalances[artistId] += mintPrice;
+
+        _mint(msg.sender, newTokenId);
+
+        emit GiftMinted(newTokenId, msg.sender, artistId, mintPrice);
     }
 
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
@@ -30,16 +98,31 @@ contract GiftPYUSD is ERC721 {
     }
 
     function _buildTokenURI(uint256 tokenId) internal view returns (string memory) {
-        // Build JSON metadata for the SBT with placeholder image
+        uint256 artistId = tokenArtist[tokenId];
+        Artist storage artist = artists[artistId];
+        if (!artist.exists) revert ARTIST_NOT_FOUND();
+
+        string memory tokenIdStr = _uint2str(tokenId);
+        string memory mintPriceStr = _uint2str(mintPrice);
+        string memory totalIssuedStr = _uint2str(totalIssued);
+
+        // Build JSON metadata for the SBT with artist-specific fields
         return string(abi.encodePacked(
-            'data:application/json,{"name":"Gift PYUSD SBT #',
-            _uint2str(tokenId),
-            '","description":"A special Soulbound Token (SBT) purchased with PYUSD. This non-transferable NFT represents your participation in the Gift PYUSD ecosystem. Each SBT is unique and permanently bound to its original owner.","image":"',
-            'https://via.placeholder.com/400x400/4A90E2/FFFFFF?text=SBT%23',
-            _uint2str(tokenId),
-            '","attributes":[{"trait_type":"Mint Price","value":"1 PYUSD"},{"trait_type":"Total Issued","value":"',
-            _uint2str(totalIssued),
-            '"},{"trait_type":"Token Standard","value":"SBT (Non-Transferable)"},{"trait_type":"Network","value":"Sepolia"}]}'
+            'data:application/json,{"name":"',
+            artist.name,
+            ' Gift SBT #',
+            tokenIdStr,
+            '","description":"A soulbound token representing a PYUSD gift to artist ',
+            artist.name,
+            '. This token is non-transferable and acknowledges the supporter.","image":"',
+            artist.imageURI,
+            '","attributes":[{"trait_type":"Artist ID","value":"',
+            _uint2str(artistId),
+            '"},{"trait_type":"Mint Price","value":"',
+            mintPriceStr,
+            '"},{"trait_type":"Total Issued","value":"',
+            totalIssuedStr,
+            '"},{"trait_type":"Token Standard","value":"SBT (Non-Transferable)"}]}'
         ));
     }
 
@@ -63,15 +146,26 @@ contract GiftPYUSD is ERC721 {
         return string(bstr);
     }
 
-    // Owner-only: withdraw PYUSD from this contract to a recipient
-    function withdraw(address to, uint256 amount) external {
-        require(msg.sender == owner, "NOT_OWNER");
-        mintToken.transfer(to, amount);
+    function withdrawForArtist(uint256 artistId, uint256 amount) external {
+        Artist storage artist = artists[artistId];
+        if (!artist.exists) revert ARTIST_NOT_FOUND();
+        if (msg.sender != artist.payoutWallet) revert UNAUTHORIZED();
+        if (amount > artistBalances[artistId]) revert INSUFFICIENT_BALANCE();
+
+        artistBalances[artistId] -= amount;
+        mintToken.transfer(artist.payoutWallet, amount);
+
+        emit ArtistWithdrawn(artistId, artist.payoutWallet, amount);
     }
 
     // Convenience: current PYUSD balance held by this contract
     function contractPYUSDBalance() external view returns (uint256) {
         return mintToken.balanceOf(address(this));
+    }
+
+    function artistBalance(uint256 artistId) external view returns (uint256) {
+        if (!artists[artistId].exists) revert ARTIST_NOT_FOUND();
+        return artistBalances[artistId];
     }
 
     // ---------- SBT Overrides: disable transfers and approvals ----------
