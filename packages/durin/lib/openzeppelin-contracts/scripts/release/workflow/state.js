@@ -1,6 +1,6 @@
 const { readPreState } = require('@changesets/pre');
 const { default: readChangesets } = require('@changesets/read');
-const { join } = require('path');
+const { join } = require('node:path');
 const { fetch } = require('undici');
 const { version, name: packageName } = require(join(__dirname, '../../../contracts/package.json'));
 

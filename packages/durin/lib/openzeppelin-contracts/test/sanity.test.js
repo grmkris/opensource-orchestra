@@ -1,27 +1,34 @@
-const { ethers } = require('hardhat');
-const { expect } = require('chai');
-const { loadFixture, mine } = require('@nomicfoundation/hardhat-network-helpers');
+const { ethers } = require("hardhat");
+const { expect } = require("chai");
+const {
+	loadFixture,
+	mine,
+} = require("@nomicfoundation/hardhat-network-helpers");
 
 async function fixture() {
-  return {};
+	return {};
 }
 
-describe('Environment sanity', function () {
-  beforeEach(async function () {
-    Object.assign(this, await loadFixture(fixture));
-  });
+describe("Environment sanity", () => {
+	beforeEach(async function () {
+		Object.assign(this, await loadFixture(fixture));
+	});
 
-  describe('snapshot', function () {
-    let blockNumberBefore;
+	describe("snapshot", () => {
+		let blockNumberBefore;
 
-    it('cache and mine', async function () {
-      blockNumberBefore = await ethers.provider.getBlockNumber();
-      await mine();
-      expect(await ethers.provider.getBlockNumber()).to.equal(blockNumberBefore + 1);
-    });
+		it("cache and mine", async () => {
+			blockNumberBefore = await ethers.provider.getBlockNumber();
+			await mine();
+			expect(await ethers.provider.getBlockNumber()).to.equal(
+				blockNumberBefore + 1,
+			);
+		});
 
-    it('check snapshot', async function () {
-      expect(await ethers.provider.getBlockNumber()).to.equal(blockNumberBefore);
-    });
-  });
+		it("check snapshot", async () => {
+			expect(await ethers.provider.getBlockNumber()).to.equal(
+				blockNumberBefore,
+			);
+		});
+	});
 });

@@ -1,3 +1,3 @@
-process.on('unhandledRejection', reason => {
-  throw new Error(reason);
+process.on("unhandledRejection", (reason) => {
+	throw new Error(reason);
 });

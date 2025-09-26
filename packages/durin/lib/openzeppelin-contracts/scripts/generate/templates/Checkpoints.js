@@ -1,5 +1,5 @@
-const format = require('../format-lines');
-const { OPTS } = require('./Checkpoints.opts');
+const format = require("../format-lines");
+const { OPTS } = require("./Checkpoints.opts");
 
 // TEMPLATE
 const header = `\
@@ -23,7 +23,7 @@ const errors = `\
 error CheckpointUnorderedInsertion();
 `;
 
-const template = opts => `\
+const template = (opts) => `\
 struct ${opts.historyTypeName} {
     ${opts.checkpointTypeName}[] ${opts.checkpointFieldName};
 }
@@ -231,13 +231,13 @@ function _unsafeAccess(
 
 // GENERATE
 module.exports = format(
-  header.trimEnd(),
-  'library Checkpoints {',
-  format(
-    [].concat(
-      errors,
-      OPTS.map(opts => template(opts)),
-    ),
-  ).trimEnd(),
-  '}',
+	header.trimEnd(),
+	"library Checkpoints {",
+	format(
+		[].concat(
+			errors,
+			OPTS.map((opts) => template(opts)),
+		),
+	).trimEnd(),
+	"}",
 );

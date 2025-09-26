@@ -95,12 +95,12 @@ const INTERFACE_IDS = mapValues(SIGNATURES, interfaceId);
 function shouldSupportInterfaces(interfaces = []) {
   interfaces.unshift('ERC165');
 
-  describe('ERC165', function () {
+  describe('ERC165', () => {
     beforeEach(function () {
       this.contractUnderTest = this.mock || this.token;
     });
 
-    describe('when the interfaceId is supported', function () {
+    describe('when the interfaceId is supported', () => {
       it('uses less than 30k gas', async function () {
         for (const k of interfaces) {
           const interface = INTERFACE_IDS[k] ?? k;
@@ -116,7 +116,7 @@ function shouldSupportInterfaces(interfaces = []) {
       });
     });
 
-    describe('when the interfaceId is not supported', function () {
+    describe('when the interfaceId is not supported', () => {
       it('uses less than 30k', async function () {
         expect(await this.contractUnderTest.supportsInterface.estimateGas(INVALID_ID)).to.lte(30_000n);
       });

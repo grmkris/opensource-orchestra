@@ -1,6 +1,6 @@
-const format = require('../format-lines');
-const { capitalize } = require('../../helpers');
-const { OPTS } = require('./Checkpoints.opts.js');
+const format = require("../format-lines");
+const { capitalize } = require("../../helpers");
+const { OPTS } = require("./Checkpoints.opts.js");
 
 // TEMPLATE
 const header = `\
@@ -12,7 +12,7 @@ import {Checkpoints} from "@openzeppelin/contracts/utils/structs/Checkpoints.sol
 `;
 
 /* eslint-disable max-len */
-const template = opts => `\
+const template = (opts) => `\
 using Checkpoints for Checkpoints.${opts.historyTypeName};
 
 // Maximum gap between keys used during the fuzzing tests: the \`_prepareKeys\` function with make sure that
@@ -23,7 +23,7 @@ Checkpoints.${opts.historyTypeName} internal _ckpts;
 
 // helpers
 function _bound${capitalize(opts.keyTypeName)}(${opts.keyTypeName} x, ${opts.keyTypeName} min, ${
-  opts.keyTypeName
+	opts.keyTypeName
 } max) internal pure returns (${opts.keyTypeName}) {
     return SafeCast.to${capitalize(opts.keyTypeName)}(bound(uint256(x), uint256(min), uint256(max)));
 }
@@ -46,7 +46,7 @@ function _assertLatestCheckpoint(bool exist, ${opts.keyTypeName} key, ${opts.val
 
 // tests
 function testPush(${opts.keyTypeName}[] memory keys, ${opts.valueTypeName}[] memory values, ${
-  opts.keyTypeName
+	opts.keyTypeName
 } pastKey) public {
     vm.assume(values.length > 0 && values.length <= keys.length);
     _prepareKeys(keys, _KEY_MAX_GAP);
@@ -88,7 +88,7 @@ function push(${opts.keyTypeName} key, ${opts.valueTypeName} value) external {
 }
 
 function testLookup(${opts.keyTypeName}[] memory keys, ${opts.valueTypeName}[] memory values, ${
-  opts.keyTypeName
+	opts.keyTypeName
 } lookup) public {
     vm.assume(values.length > 0 && values.length <= keys.length);
     _prepareKeys(keys, _KEY_MAX_GAP);
@@ -128,11 +128,11 @@ function testLookup(${opts.keyTypeName}[] memory keys, ${opts.valueTypeName}[] m
 
 // GENERATE
 module.exports = format(
-  header,
-  ...OPTS.flatMap(opts => [
-    `contract Checkpoints${opts.historyTypeName}Test is Test {`,
-    [template(opts).trimEnd()],
-    '}',
-    '',
-  ]),
+	header,
+	...OPTS.flatMap((opts) => [
+		`contract Checkpoints${opts.historyTypeName}Test is Test {`,
+		[template(opts).trimEnd()],
+		"}",
+		"",
+	]),
 );

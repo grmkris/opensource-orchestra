@@ -1,5 +1,5 @@
-const format = require('../format-lines');
-const { TYPES } = require('./Slot.opts');
+const format = require("../format-lines");
+const { TYPES } = require("./Slot.opts");
 
 const header = `\
 pragma solidity ^0.8.24;
@@ -68,13 +68,13 @@ function tstore(${name}Slot slot, ${type} value) internal {
 
 // GENERATE
 module.exports = format(
-  header.trimEnd(),
-  'library TransientSlot {',
-  format(
-    [].concat(
-      TYPES.filter(type => type.isValueType).map(type => udvt(type)),
-      TYPES.filter(type => type.isValueType).map(type => transient(type)),
-    ),
-  ).trimEnd(),
-  '}',
+	header.trimEnd(),
+	"library TransientSlot {",
+	format(
+		[].concat(
+			TYPES.filter((type) => type.isValueType).map((type) => udvt(type)),
+			TYPES.filter((type) => type.isValueType).map((type) => transient(type)),
+		),
+	).trimEnd(),
+	"}",
 );

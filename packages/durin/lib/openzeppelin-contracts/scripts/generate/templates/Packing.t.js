@@ -1,6 +1,6 @@
-const format = require('../format-lines');
-const { product } = require('../../helpers');
-const { SIZES } = require('./Packing.opts');
+const format = require("../format-lines");
+const { product } = require("../../helpers");
+const { SIZES } = require("./Packing.opts");
 
 // TEMPLATE
 const header = `\
@@ -30,19 +30,19 @@ function testReplace(bytes${outer} container, bytes${inner} newValue, uint8 offs
 
 // GENERATE
 module.exports = format(
-  header,
-  'contract PackingTest is Test {',
-  format(
-    [].concat(
-      'using Packing for *;',
-      '',
-      product(SIZES, SIZES)
-        .filter(([left, right]) => SIZES.includes(left + right))
-        .map(([left, right]) => testPack(left, right)),
-      product(SIZES, SIZES)
-        .filter(([outer, inner]) => outer > inner)
-        .map(([outer, inner]) => testReplace(outer, inner)),
-    ),
-  ).trimEnd(),
-  '}',
+	header,
+	"contract PackingTest is Test {",
+	format(
+		[].concat(
+			"using Packing for *;",
+			"",
+			product(SIZES, SIZES)
+				.filter(([left, right]) => SIZES.includes(left + right))
+				.map(([left, right]) => testPack(left, right)),
+			product(SIZES, SIZES)
+				.filter(([outer, inner]) => outer > inner)
+				.map(([outer, inner]) => testReplace(outer, inner)),
+		),
+	).trimEnd(),
+	"}",
 );

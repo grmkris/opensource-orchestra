@@ -1,21 +1,21 @@
-import type { DeployFunction } from 'hardhat-deploy/types.js'
+import type { DeployFunction } from "hardhat-deploy/types.js";
 
-const func: DeployFunction = async function (hre) {
-  const { network, viem } = hre
+const func: DeployFunction = async (hre) => {
+	const { network, viem } = hre;
 
-  if (!network.tags.use_root) {
-    return true
-  }
+	if (!network.tags.use_root) {
+		return true;
+	}
 
-  const registry = await viem.getContract('ENSRegistry')
+	const registry = await viem.getContract("ENSRegistry");
 
-  await viem.deploy('Root', [registry.address])
+	await viem.deploy("Root", [registry.address]);
 
-  return true
-}
+	return true;
+};
 
-func.id = 'root'
-func.tags = ['root', 'Root']
-func.dependencies = ['ENSRegistry']
+func.id = "root";
+func.tags = ["root", "Root"];
+func.dependencies = ["ENSRegistry"];
 
-export default func
+export default func;

@@ -1,43 +1,43 @@
 // Based on https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v4.1.0/test/token/ERC1155/ERC1155.behaviour.js
 // Copyright (c) 2016-2020 zOS Global Limited
 
-import { GetContractReturnType } from '@nomicfoundation/hardhat-viem/types.js'
-import { expect } from 'chai'
-import hre from 'hardhat'
-import type { ArtifactsMap, CompilerInput } from 'hardhat/types/artifacts.js'
+import type { GetContractReturnType } from "@nomicfoundation/hardhat-viem/types.js";
+import { expect } from "chai";
+import hre from "hardhat";
+import type { ArtifactsMap, CompilerInput } from "hardhat/types/artifacts.js";
 import {
-  encodeFunctionData,
-  getAbiItem,
-  toFunctionSelector,
-  toFunctionSignature,
-  type Abi,
-  type AbiFunction,
-  type Address,
-  type Hex,
-} from 'viem'
-import { createInterfaceId } from '../fixtures/createInterfaceId.js'
+	type Abi,
+	type AbiFunction,
+	type Address,
+	encodeFunctionData,
+	getAbiItem,
+	type Hex,
+	toFunctionSelector,
+	toFunctionSignature,
+} from "viem";
+import { createInterfaceId } from "../fixtures/createInterfaceId.js";
 
 type SupportsInterfaceAbi = {
-  inputs: [
-    {
-      internalType: 'bytes4'
-      name: 'interfaceId'
-      type: 'bytes4'
-    },
-  ]
-  name: 'supportsInterface'
-  outputs: [
-    {
-      internalType: 'bool'
-      name: ''
-      type: 'bool'
-    },
-  ]
-  stateMutability: 'view'
-  type: 'function'
-}
+	inputs: [
+		{
+			internalType: "bytes4";
+			name: "interfaceId";
+			type: "bytes4";
+		},
+	];
+	name: "supportsInterface";
+	outputs: [
+		{
+			internalType: "bool";
+			name: "";
+			type: "bool";
+		},
+	];
+	stateMutability: "view";
+	type: "function";
+};
 
-type SupportsInterfaceContract = GetContractReturnType<[SupportsInterfaceAbi]>
+type SupportsInterfaceContract = GetContractReturnType<[SupportsInterfaceAbi]>;
 
 /**
  * @description Matches a function signature string to an exact ABI function.
@@ -50,67 +50,67 @@ type SupportsInterfaceContract = GetContractReturnType<[SupportsInterfaceAbi]>
  * @returns
  */
 const matchStringFunctionToAbi = ({
-  artifactAbi,
-  fnString,
+	artifactAbi,
+	fnString,
 }: {
-  artifactAbi: Abi
-  fnString: string
+	artifactAbi: Abi;
+	fnString: string;
 }) => {
-  // Extract the function name from the function signature string
-  const name = fnString.match(/(?<=function ).*?(?=\()/)![0]
+	// Extract the function name from the function signature string
+	const name = fnString.match(/(?<=function ).*?(?=\()/)?.[0];
 
-  // Find all functions with the same name
-  let matchingFunctions = artifactAbi.filter(
-    (abi): abi is AbiFunction => abi.type === 'function' && abi.name === name,
-  )
-  // If there is only one function with the same name, return it
-  if (matchingFunctions.length === 1) return matchingFunctions[0]
+	// Find all functions with the same name
+	let matchingFunctions = artifactAbi.filter(
+		(abi): abi is AbiFunction => abi.type === "function" && abi.name === name,
+	);
+	// If there is only one function with the same name, return it
+	if (matchingFunctions.length === 1) return matchingFunctions[0];
 
-  // Extract the input types as strings from the function signature string
-  const inputStrings = fnString
-    .match(/(?<=\().*?(?=\))/)![0]
-    .split(',')
-    .map((x) => x.trim())
+	// Extract the input types as strings from the function signature string
+	const inputStrings = fnString
+		.match(/(?<=\().*?(?=\))/)?.[0]
+		.split(",")
+		.map((x) => x.trim());
 
-  // Filter out functions with a different number of inputs
-  matchingFunctions = matchingFunctions.filter(
-    (abi) => abi.inputs.length === inputStrings.length,
-  )
-  // If there is only one function with the same number of inputs, return it
-  if (matchingFunctions.length === 1) return matchingFunctions[0]
+	// Filter out functions with a different number of inputs
+	matchingFunctions = matchingFunctions.filter(
+		(abi) => abi.inputs.length === inputStrings.length,
+	);
+	// If there is only one function with the same number of inputs, return it
+	if (matchingFunctions.length === 1) return matchingFunctions[0];
 
-  // Parse the input strings into input type/name
-  const parsedInputs = inputStrings.map((x) => {
-    const [type, name] = x.split(' ')
-    return { type, name }
-  })
+	// Parse the input strings into input type/name
+	const parsedInputs = inputStrings.map((x) => {
+		const [type, name] = x.split(" ");
+		return { type, name };
+	});
 
-  // Filter out functions with different input types
-  matchingFunctions = matchingFunctions.filter((abi) => {
-    for (let i = 0; i < abi.inputs.length; i++) {
-      const current = parsedInputs[i]
-      const reference = abi.inputs[i]
-      // Standard match for most cases (e.g. 'uint256' === 'uint256')
-      if (reference.type === current.type) continue
-      if ('internalType' in reference && reference.internalType) {
-        // Internal types that are equal
-        if (reference.internalType === current.type) continue
-        // Internal types that are effectively equal (e.g. 'contract INameWrapperUpgrade' === 'INameWrapperUpgrade')
-        // Multiple internal type aliases can't exist in the same contract, so this is safe
-        const internalTypeName = reference.internalType.split(' ')[1]
-        if (internalTypeName === current.type) continue
-      }
-      // Not matching
-      return false
-    }
-    // 0 length input - matched by default since the filter for input length already passed
-    return true
-  })
-  // If there is only one function with the same inputs, return it
-  if (matchingFunctions.length === 1) return matchingFunctions[0]
+	// Filter out functions with different input types
+	matchingFunctions = matchingFunctions.filter((abi) => {
+		for (let i = 0; i < abi.inputs.length; i++) {
+			const current = parsedInputs[i];
+			const reference = abi.inputs[i];
+			// Standard match for most cases (e.g. 'uint256' === 'uint256')
+			if (reference.type === current.type) continue;
+			if ("internalType" in reference && reference.internalType) {
+				// Internal types that are equal
+				if (reference.internalType === current.type) continue;
+				// Internal types that are effectively equal (e.g. 'contract INameWrapperUpgrade' === 'INameWrapperUpgrade')
+				// Multiple internal type aliases can't exist in the same contract, so this is safe
+				const internalTypeName = reference.internalType.split(" ")[1];
+				if (internalTypeName === current.type) continue;
+			}
+			// Not matching
+			return false;
+		}
+		// 0 length input - matched by default since the filter for input length already passed
+		return true;
+	});
+	// If there is only one function with the same inputs, return it
+	if (matchingFunctions.length === 1) return matchingFunctions[0];
 
-  throw new Error(`Could not find matching function for ${fnString}`)
-}
+	throw new Error(`Could not find matching function for ${fnString}`);
+};
 
 /**
  * @description Gets the interface ABI that would be used in Solidity
@@ -121,127 +121,126 @@ const matchStringFunctionToAbi = ({
  * @returns The explicitly defined ABI for the interface
  */
 const getSolidityReferenceInterfaceAbi = async (
-  interfaceName: keyof ArtifactsMap,
+	interfaceName: keyof ArtifactsMap,
 ) => {
-  const artifact = await hre.artifacts.readArtifact(interfaceName)
-  const fullyQualifiedNames = await hre.artifacts.getAllFullyQualifiedNames()
+	const artifact = await hre.artifacts.readArtifact(interfaceName);
+	const fullyQualifiedNames = await hre.artifacts.getAllFullyQualifiedNames();
 
-  const fullyQualifiedInterfaceName = fullyQualifiedNames.find((n) =>
-    n.endsWith(interfaceName),
-  )
+	const fullyQualifiedInterfaceName = fullyQualifiedNames.find((n) =>
+		n.endsWith(interfaceName),
+	);
 
-  if (!fullyQualifiedInterfaceName)
-    throw new Error("Couldn't find fully qualified interface name")
+	if (!fullyQualifiedInterfaceName)
+		throw new Error("Couldn't find fully qualified interface name");
 
-  const buildInfo = await hre.artifacts.getBuildInfo(
-    fullyQualifiedInterfaceName,
-  )
+	const buildInfo = await hre.artifacts.getBuildInfo(
+		fullyQualifiedInterfaceName,
+	);
 
-  if (!buildInfo) throw new Error("Couldn't find build info for interface")
+	if (!buildInfo) throw new Error("Couldn't find build info for interface");
 
-  const path = fullyQualifiedInterfaceName.split(':')[0]
-  const buildMetadata = JSON.parse(
-    (buildInfo.output.contracts[path][interfaceName] as any).metadata,
-  ) as CompilerInput
-  const { content } = buildMetadata.sources[path]
+	const path = fullyQualifiedInterfaceName.split(":")[0];
+	const buildMetadata = JSON.parse(
+		(buildInfo.output.contracts[path][interfaceName] as any).metadata,
+	) as CompilerInput;
+	const { content } = buildMetadata.sources[path];
 
-  return (
-    content
-      // Remove comments - single and multi-line
-      .replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, '')
-      // Match only the interface block + nested curly braces
-      .match(`interface ${interfaceName} .*?{(?:\{??[^{]*?})+`)![0]
-      // Remove the interface keyword and the interface name
-      .replace(/.*{/s, '')
-      // Remove the closing curly brace
-      .replace(/}$/s, '')
-      // Match array of all function signatures
-      .match(/function .*?;/gs)!
-      // Remove newlines and trailing semicolons
-      .map((fn) =>
-        fn
-          .split('\n')
-          .map((l) => l.trim())
-          .join('')
-          .replace(/;$/, ''),
-      )
-      // Match the function signature string to the exact ABI function
-      .map((fnString) =>
-        matchStringFunctionToAbi({
-          artifactAbi: artifact.abi as Abi,
-          fnString,
-        }),
-      )
-  )
-}
+	return (
+		content
+			// Remove comments - single and multi-line
+			.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, "")
+			// Match only the interface block + nested curly braces
+			.match(`interface ${interfaceName} .*?{(?:{??[^{]*?})+`)?.[0]
+			// Remove the interface keyword and the interface name
+			.replace(/.*{/s, "")
+			// Remove the closing curly brace
+			.replace(/}$/s, "")
+			// Match array of all function signatures
+			.match(/function .*?;/gs)
+			?.map((fn) =>
+				fn
+					.split("\n")
+					.map((l) => l.trim())
+					.join("")
+					.replace(/;$/, ""),
+			)
+			// Match the function signature string to the exact ABI function
+			.map((fnString) =>
+				matchStringFunctionToAbi({
+					artifactAbi: artifact.abi as Abi,
+					fnString,
+				}),
+			)
+	);
+};
 
 export const shouldSupportInterfaces = <
-  TContract extends {
-    abi: Abi
-    address: Address
-    read: {
-      supportsInterface: SupportsInterfaceContract['read']['supportsInterface']
-    }
-  },
+	TContract extends {
+		abi: Abi;
+		address: Address;
+		read: {
+			supportsInterface: SupportsInterfaceContract["read"]["supportsInterface"];
+		};
+	},
 >({
-  contract,
-  interfaces,
+	contract,
+	interfaces,
 }: {
-  contract: () => TContract | Promise<TContract>
-  interfaces: (keyof ArtifactsMap)[]
+	contract: () => TContract | Promise<TContract>;
+	interfaces: (keyof ArtifactsMap)[];
 }) => {
-  let deployedContract: TContract
+	let deployedContract: TContract;
 
-  before(async () => {
-    deployedContract = await contract()
-  })
+	before(async () => {
+		deployedContract = await contract();
+	});
 
-  describe('Contract interface', function () {
-    for (const interfaceName of interfaces) {
-      describe(interfaceName, function () {
-        let interfaceAbi: AbiFunction[]
-        let interfaceId: Hex
+	describe("Contract interface", () => {
+		for (const interfaceName of interfaces) {
+			describe(interfaceName, function () {
+				let interfaceAbi: AbiFunction[];
+				let interfaceId: Hex;
 
-        before(async () => {
-          interfaceAbi = await getSolidityReferenceInterfaceAbi(interfaceName)
-          interfaceId = createInterfaceId(interfaceAbi as Abi)
+				before(async () => {
+					interfaceAbi = await getSolidityReferenceInterfaceAbi(interfaceName);
+					interfaceId = createInterfaceId(interfaceAbi as Abi);
 
-          for (const fn of interfaceAbi) {
-            const sig = toFunctionSignature(fn)
-            const selector = toFunctionSelector(fn)
-            this.addTest(
-              it(`implements ${sig}`, () => {
-                expect(
-                  getAbiItem({ abi: deployedContract.abi, name: selector }),
-                ).not.toBeUndefined()
-              }),
-            )
-          }
-        })
+					for (const fn of interfaceAbi) {
+						const sig = toFunctionSignature(fn);
+						const selector = toFunctionSelector(fn);
+						this.addTest(
+							it(`implements ${sig}`, () => {
+								expect(
+									getAbiItem({ abi: deployedContract.abi, name: selector }),
+								).not.toBeUndefined();
+							}),
+						);
+					}
+				});
 
-        describe("ERC165's supportsInterface(bytes4)", () => {
-          it('uses less than 30k gas [skip-on-coverage]', async () => {
-            const publicClient = await hre.viem.getPublicClient()
+				describe("ERC165's supportsInterface(bytes4)", () => {
+					it("uses less than 30k gas [skip-on-coverage]", async () => {
+						const publicClient = await hre.viem.getPublicClient();
 
-            await expect(
-              publicClient.estimateGas({
-                to: deployedContract.address,
-                data: encodeFunctionData({
-                  abi: deployedContract.abi,
-                  functionName: 'supportsInterface',
-                  args: [interfaceId],
-                }),
-              }),
-            ).resolves.toBeLessThan(30000n)
-          })
+						await expect(
+							publicClient.estimateGas({
+								to: deployedContract.address,
+								data: encodeFunctionData({
+									abi: deployedContract.abi,
+									functionName: "supportsInterface",
+									args: [interfaceId],
+								}),
+							}),
+						).resolves.toBeLessThan(30000n);
+					});
 
-          it('claims support', async () => {
-            await expect(
-              deployedContract.read.supportsInterface([interfaceId]),
-            ).resolves.toBe(true)
-          })
-        })
-      })
-    }
-  })
-}
+					it("claims support", async () => {
+						await expect(
+							deployedContract.read.supportsInterface([interfaceId]),
+						).resolves.toBe(true);
+					});
+				});
+			});
+		}
+	});
+};

@@ -15,13 +15,13 @@ async function fixture() {
   return { recipient, other, mock, target, targetEther };
 }
 
-describe('Address', function () {
+describe('Address', () => {
   beforeEach(async function () {
     Object.assign(this, await loadFixture(fixture));
   });
 
-  describe('sendValue', function () {
-    describe('when sender contract has no funds', function () {
+  describe('sendValue', () => {
+    describe('when sender contract has no funds', () => {
       it('sends 0 wei', async function () {
         await expect(this.mock.$sendValue(this.other, 0n)).to.changeEtherBalance(this.recipient, 0n);
       });
@@ -33,14 +33,14 @@ describe('Address', function () {
       });
     });
 
-    describe('when sender contract has funds', function () {
+    describe('when sender contract has funds', () => {
       const funds = ethers.parseEther('1');
 
       beforeEach(async function () {
         await this.other.sendTransaction({ to: this.mock, value: funds });
       });
 
-      describe('with EOA recipient', function () {
+      describe('with EOA recipient', () => {
         it('sends 0 wei', async function () {
           await expect(this.mock.$sendValue(this.recipient, 0n)).to.changeEtherBalance(this.recipient, 0n);
         });
@@ -64,7 +64,7 @@ describe('Address', function () {
         });
       });
 
-      describe('with contract recipient', function () {
+      describe('with contract recipient', () => {
         it('sends funds', async function () {
           await this.targetEther.setAcceptEther(true);
           await expect(this.mock.$sendValue(this.targetEther, funds)).to.changeEtherBalance(this.targetEther, funds);
@@ -81,8 +81,8 @@ describe('Address', function () {
     });
   });
 
-  describe('functionCall', function () {
-    describe('with valid contract receiver', function () {
+  describe('functionCall', () => {
+    describe('with valid contract receiver', () => {
       it('calls the requested function', async function () {
         const call = this.target.interface.encodeFunctionData('mockFunction');
 
@@ -133,7 +133,7 @@ describe('Address', function () {
       });
     });
 
-    describe('with non-contract receiver', function () {
+    describe('with non-contract receiver', () => {
       it('reverts when address is not a contract', async function () {
         const call = this.target.interface.encodeFunctionData('mockFunction');
 
@@ -144,8 +144,8 @@ describe('Address', function () {
     });
   });
 
-  describe('functionCallWithValue', function () {
-    describe('with zero value', function () {
+  describe('functionCallWithValue', () => {
+    describe('with zero value', () => {
       it('calls the requested function', async function () {
         const call = this.target.interface.encodeFunctionData('mockFunction');
 
@@ -156,7 +156,7 @@ describe('Address', function () {
       });
     });
 
-    describe('with non-zero value', function () {
+    describe('with non-zero value', () => {
       const value = ethers.parseEther('1.2');
 
       it('reverts if insufficient sender balance', async function () {
@@ -207,7 +207,7 @@ describe('Address', function () {
     });
   });
 
-  describe('functionStaticCall', function () {
+  describe('functionStaticCall', () => {
     it('calls the requested function', async function () {
       const call = this.target.interface.encodeFunctionData('mockStaticFunction');
 
@@ -238,7 +238,7 @@ describe('Address', function () {
     });
   });
 
-  describe('functionDelegateCall', function () {
+  describe('functionDelegateCall', () => {
     it('delegate calls the requested function', async function () {
       const slot = ethers.hexlify(ethers.randomBytes(32));
       const value = ethers.hexlify(ethers.randomBytes(32));
@@ -271,7 +271,7 @@ describe('Address', function () {
     });
   });
 
-  describe('verifyCallResult', function () {
+  describe('verifyCallResult', () => {
     it('returns returndata on success', async function () {
       const returndata = '0x123abc';
       expect(await this.mock.$verifyCallResult(true, returndata)).to.equal(returndata);

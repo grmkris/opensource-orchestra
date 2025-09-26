@@ -27,7 +27,7 @@ async function fixture() {
   return { deployer, other, factory, constructorByteCode, constructorLessBytecode, mockFactory };
 }
 
-describe('Create2', function () {
+describe('Create2', () => {
   const salt = 'salt message';
   const saltHex = ethers.id(salt);
 
@@ -35,7 +35,7 @@ describe('Create2', function () {
     Object.assign(this, await loadFixture(fixture));
   });
 
-  describe('computeAddress', function () {
+  describe('computeAddress', () => {
     it('computes the correct contract address', async function () {
       const onChainComputed = await this.factory.$computeAddress(saltHex, ethers.keccak256(this.constructorByteCode));
       const offChainComputed = ethers.getCreate2Address(
@@ -61,7 +61,7 @@ describe('Create2', function () {
     });
   });
 
-  describe('deploy', function () {
+  describe('deploy', () => {
     it('deploys a contract without constructor', async function () {
       const offChainComputed = ethers.getCreate2Address(
         this.factory.target,
@@ -136,7 +136,7 @@ describe('Create2', function () {
         .withArgs(0n, 1n);
     });
 
-    describe('reverts error thrown during contract creation', function () {
+    describe('reverts error thrown during contract creation', () => {
       it('bubbles up without message', async function () {
         await expect(
           this.factory.$deploy(

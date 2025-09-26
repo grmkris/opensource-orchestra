@@ -1,28 +1,28 @@
-import { createAnvil } from '@viem/anvil'
-import { execSync } from 'child_process'
+import { execSync } from "node:child_process";
+import { createAnvil } from "@viem/anvil";
 
 const server = createAnvil({
-  host: '127.0.0.1',
-  port: 8545,
-})
+	host: "127.0.0.1",
+	port: 8545,
+});
 
-await server.start()
+await server.start();
 
 const exitHandler = async (c: number) => {
-  if (process.env.CI) process.exit(c)
-  else await server.stop()
-}
+	if (process.env.CI) process.exit(c);
+	else await server.stop();
+};
 
-process.on('exit', exitHandler)
+process.on("exit", exitHandler);
 
-process.on('beforeExit', exitHandler)
+process.on("beforeExit", exitHandler);
 
-execSync('bun run hardhat --network localhost deploy', {
-  stdio: 'inherit',
-  env: {
-    ...process.env,
-    NODE_OPTIONS: '--experimental-loader ts-node/esm/transpile-only',
-  },
-})
+execSync("bun run hardhat --network localhost deploy", {
+	stdio: "inherit",
+	env: {
+		...process.env,
+		NODE_OPTIONS: "--experimental-loader ts-node/esm/transpile-only",
+	},
+});
 
-await exitHandler(0)
+await exitHandler(0);

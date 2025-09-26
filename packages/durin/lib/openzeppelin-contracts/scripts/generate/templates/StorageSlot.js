@@ -1,5 +1,5 @@
-const format = require('../format-lines');
-const { TYPES } = require('./Slot.opts');
+const format = require("../format-lines");
+const { TYPES } = require("./Slot.opts");
 
 const header = `\
 pragma solidity ^0.8.20;
@@ -42,7 +42,7 @@ struct ${name}Slot {
 const get = ({ name }) => `\
 /**
  * @dev Returns ${
-   name.toLowerCase().startsWith('a') ? 'an' : 'a'
+		name.toLowerCase().startsWith("a") ? "an" : "a"
  } \`${name}Slot\` with member \`value\` located at \`slot\`.
  */
 function get${name}Slot(bytes32 slot) internal pure returns (${name}Slot storage r) {
@@ -65,13 +65,15 @@ function get${name}Slot(${type} storage store) internal pure returns (${name}Slo
 
 // GENERATE
 module.exports = format(
-  header.trimEnd(),
-  'library StorageSlot {',
-  format(
-    [].concat(
-      TYPES.map(type => struct(type)),
-      TYPES.flatMap(type => [get(type), !type.isValueType && getStorage(type)].filter(Boolean)),
-    ),
-  ).trimEnd(),
-  '}',
+	header.trimEnd(),
+	"library StorageSlot {",
+	format(
+		[].concat(
+			TYPES.map((type) => struct(type)),
+			TYPES.flatMap((type) =>
+				[get(type), !type.isValueType && getStorage(type)].filter(Boolean),
+			),
+		),
+	).trimEnd(),
+	"}",
 );

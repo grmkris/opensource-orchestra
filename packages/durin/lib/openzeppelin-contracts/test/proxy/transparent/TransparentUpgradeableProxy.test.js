@@ -1,28 +1,38 @@
-const { ethers } = require('hardhat');
-const { loadFixture } = require('@nomicfoundation/hardhat-network-helpers');
+const { ethers } = require("hardhat");
+const { loadFixture } = require("@nomicfoundation/hardhat-network-helpers");
 
-const shouldBehaveLikeProxy = require('../Proxy.behaviour');
-const shouldBehaveLikeTransparentUpgradeableProxy = require('./TransparentUpgradeableProxy.behaviour');
+const shouldBehaveLikeProxy = require("../Proxy.behaviour");
+const shouldBehaveLikeTransparentUpgradeableProxy = require("./TransparentUpgradeableProxy.behaviour");
 
 async function fixture() {
-  const [owner, other, ...accounts] = await ethers.getSigners();
+	const [owner, other, ...accounts] = await ethers.getSigners();
 
-  const implementation = await ethers.deployContract('DummyImplementation');
+	const implementation = await ethers.deployContract("DummyImplementation");
 
-  const createProxy = function (logic, initData, opts = undefined) {
-    return ethers.deployContract('TransparentUpgradeableProxy', [logic, owner, initData], opts);
-  };
+	const createProxy = (logic, initData, opts = undefined) =>
+		ethers.deployContract(
+			"TransparentUpgradeableProxy",
+			[logic, owner, initData],
+			opts,
+		);
 
-  return { nonContractAddress: owner, owner, other, accounts, implementation, createProxy };
+	return {
+		nonContractAddress: owner,
+		owner,
+		other,
+		accounts,
+		implementation,
+		createProxy,
+	};
 }
 
-describe('TransparentUpgradeableProxy', function () {
-  beforeEach(async function () {
-    Object.assign(this, await loadFixture(fixture));
-  });
+describe("TransparentUpgradeableProxy", () => {
+	beforeEach(async function () {
+		Object.assign(this, await loadFixture(fixture));
+	});
 
-  shouldBehaveLikeProxy();
+	shouldBehaveLikeProxy();
 
-  // createProxy, owner, otherAccounts
-  shouldBehaveLikeTransparentUpgradeableProxy();
+	// createProxy, owner, otherAccounts
+	shouldBehaveLikeTransparentUpgradeableProxy();
 });

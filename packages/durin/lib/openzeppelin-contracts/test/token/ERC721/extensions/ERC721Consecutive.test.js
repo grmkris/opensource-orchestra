@@ -7,9 +7,9 @@ const { sum } = require('../../../helpers/math');
 const name = 'Non Fungible Token';
 const symbol = 'NFT';
 
-describe('ERC721Consecutive', function () {
+describe('ERC721Consecutive', () => {
   for (const offset of [0n, 1n, 42n]) {
-    describe(`with offset ${offset}`, function () {
+    describe(`with offset ${offset}`, () => {
       async function fixture() {
         const accounts = await ethers.getSigners();
         const [alice, bruce, chris, receiver] = accounts;
@@ -40,7 +40,7 @@ describe('ERC721Consecutive', function () {
         Object.assign(this, await loadFixture(fixture));
       });
 
-      describe('minting during construction', function () {
+      describe('minting during construction', () => {
         it('events are emitted at construction', async function () {
           let first = offset;
           for (const batch of this.batches) {
@@ -67,7 +67,7 @@ describe('ERC721Consecutive', function () {
           ];
 
           for (const tokenId in owners) {
-            if (owners[tokenId] != ethers.ZeroAddress) {
+            if (owners[tokenId] !== ethers.ZeroAddress) {
               expect(await this.token.ownerOf(tokenId)).to.equal(owners[tokenId]);
             }
           }
@@ -108,7 +108,7 @@ describe('ERC721Consecutive', function () {
         });
       });
 
-      describe('minting after construction', function () {
+      describe('minting after construction', () => {
         it('consecutive minting is not possible after construction', async function () {
           await expect(this.token.$_mintConsecutive(this.alice, 10)).to.be.revertedWithCustomError(
             this.token,
@@ -139,7 +139,7 @@ describe('ERC721Consecutive', function () {
         });
       });
 
-      describe('ERC721 behavior', function () {
+      describe('ERC721 behavior', () => {
         const tokenId = offset + 1n;
 
         it('core takes over ownership on transfer', async function () {
@@ -198,10 +198,10 @@ describe('ERC721Consecutive', function () {
     });
   }
 
-  describe('invalid use', function () {
+  describe('invalid use', () => {
     const receiver = ethers.Wallet.createRandom();
 
-    it('cannot mint a batch larger than 5000', async function () {
+    it('cannot mint a batch larger than 5000', async () => {
       const { interface } = await ethers.getContractFactory('$ERC721ConsecutiveMock');
 
       await expect(ethers.deployContract('$ERC721ConsecutiveMock', [name, symbol, 0, [], [receiver], [5001n]]))
@@ -209,7 +209,7 @@ describe('ERC721Consecutive', function () {
         .withArgs(5001n, 5000n);
     });
 
-    it('cannot use single minting during construction', async function () {
+    it('cannot use single minting during construction', async () => {
       const { interface } = await ethers.getContractFactory('$ERC721ConsecutiveNoConstructorMintMock');
 
       await expect(
@@ -217,7 +217,7 @@ describe('ERC721Consecutive', function () {
       ).to.be.revertedWithCustomError({ interface }, 'ERC721ForbiddenMint');
     });
 
-    it('cannot use single minting during construction', async function () {
+    it('cannot use single minting during construction', async () => {
       const { interface } = await ethers.getContractFactory('$ERC721ConsecutiveNoConstructorMintMock');
 
       await expect(
@@ -225,7 +225,7 @@ describe('ERC721Consecutive', function () {
       ).to.be.revertedWithCustomError({ interface }, 'ERC721ForbiddenMint');
     });
 
-    it('consecutive mint not compatible with enumerability', async function () {
+    it('consecutive mint not compatible with enumerability', async () => {
       const { interface } = await ethers.getContractFactory('$ERC721ConsecutiveEnumerableMock');
 
       await expect(

@@ -1,7 +1,7 @@
-import { namehash, type Address } from 'viem'
+import { type Address, namehash } from "viem";
 
 export const getReverseNode = (address: Address) =>
-  `${address.slice(2)}.addr.reverse`
+	`${address.slice(2)}.addr.reverse`;
 
 export const getReverseNodeHash = (address: Address) =>
-  namehash(getReverseNode(address))
+	namehash(getReverseNode(address));
