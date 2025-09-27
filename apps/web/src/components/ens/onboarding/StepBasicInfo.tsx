@@ -25,7 +25,8 @@ export function StepBasicInfo({ ensName, onNext, onSkip }: StepBasicInfoProps) {
 						Tell us about yourself
 					</h2>
 					<p className="text-gray-600">
-						Add your display name and a short bio to help others know who you are.
+						Add your display name and a short bio to help others know who you
+						are.
 					</p>
 				</div>
 
@@ -49,10 +50,7 @@ export function StepBasicInfo({ ensName, onNext, onSkip }: StepBasicInfoProps) {
 						<span>Skip for now</span>
 					</Button>
 
-					<Button
-						onClick={onNext}
-						className="flex items-center space-x-2"
-					>
+					<Button onClick={onNext} className="flex items-center space-x-2">
 						<span>Continue</span>
 						<ArrowRight className="h-4 w-4" />
 					</Button>

@@ -163,13 +163,13 @@ export function SubdomainProfilePublic({ ensName }: { ensName: string }) {
 			<Card className="overflow-hidden">
 				{/* Header Image */}
 				{headerUrl && (
-					<div className="relative h-32 w-full">
+					<div className="h-48 w-full">
 						<ENSAvatar
 							src={headerUrl}
 							alt={`${ensName} header`}
 							size="lg"
 							rounded={false}
-							className="h-32 w-full object-cover"
+							className="h-48 w-full object-cover"
 						/>
 					</div>
 				)}

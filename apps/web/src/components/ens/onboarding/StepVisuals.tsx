@@ -26,7 +26,8 @@ export function StepVisuals({ ensName, onNext, onSkip }: StepVisualsProps) {
 						Visual Identity
 					</h2>
 					<p className="text-gray-600">
-						Upload a profile picture and header image to personalize your profile.
+						Upload a profile picture and header image to personalize your
+						profile.
 					</p>
 				</div>
 
@@ -35,9 +36,11 @@ export function StepVisuals({ ensName, onNext, onSkip }: StepVisualsProps) {
 					<div className="space-y-4">
 						<div className="flex items-center space-x-2">
 							<div className="h-6 w-1 rounded-full bg-blue-500" />
-							<h4 className="font-bold text-gray-900 text-lg">Profile Picture</h4>
+							<h4 className="font-bold text-gray-900 text-lg">
+								Profile Picture
+							</h4>
 						</div>
-						
+
 						<ENSAvatarField ensName={ensName} isOwner={true} />
 					</div>
 
@@ -47,7 +50,7 @@ export function StepVisuals({ ensName, onNext, onSkip }: StepVisualsProps) {
 							<div className="h-6 w-1 rounded-full bg-blue-500" />
 							<h4 className="font-bold text-gray-900 text-lg">Cover Image</h4>
 						</div>
-						
+
 						<ENSHeaderField ensName={ensName} isOwner={true} />
 					</div>
 				</div>
@@ -62,10 +65,7 @@ export function StepVisuals({ ensName, onNext, onSkip }: StepVisualsProps) {
 						<span>Skip for now</span>
 					</Button>
 
-					<Button
-						onClick={onNext}
-						className="flex items-center space-x-2"
-					>
+					<Button onClick={onNext} className="flex items-center space-x-2">
 						<span>Continue</span>
 						<ArrowRight className="h-4 w-4" />
 					</Button>

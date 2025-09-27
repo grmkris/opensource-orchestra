@@ -13,10 +13,14 @@ interface SubdomainRegistrationProps {
 	onSuccess?: () => void;
 }
 
-export function SubdomainRegistration({ onSuccess }: SubdomainRegistrationProps = {}) {
+export function SubdomainRegistration({
+	onSuccess,
+}: SubdomainRegistrationProps = {}) {
 	const [label, setLabel] = useState("");
 	const [debouncedLabel, setDebouncedLabel] = useState("");
-	const [currentPhase, setCurrentPhase] = useState<'register' | 'setPrimary' | 'complete'>('register');
+	const [currentPhase, setCurrentPhase] = useState<
+		"register" | "setPrimary" | "complete"
+	>("register");
 	const { address } = useAccount();
 
 	// Debounce the label input for availability checking
@@ -100,37 +104,48 @@ export function SubdomainRegistration({ onSuccess }: SubdomainRegistrationProps 
 	const availabilityStatus = getAvailabilityStatus();
 
 	// Phase indicator component
-	const PhaseIndicator = ({ phase }: { phase: 'register' | 'setPrimary' | 'complete' }) => (
+	const PhaseIndicator = ({
+		phase,
+	}: {
+		phase: "register" | "setPrimary" | "complete";
+	}) => (
 		<div className="mb-6">
-			<div className="text-center mb-2">
-				<span className="text-sm font-medium text-gray-600">
-					{phase === 'register' && 'Step 1 of 2: Register Username'}
-					{phase === 'setPrimary' && 'Step 2 of 2: Activate Username'}
-					{phase === 'complete' && 'Username Setup Complete!'}
+			<div className="mb-2 text-center">
+				<span className="font-medium text-gray-600 text-sm">
+					{phase === "register" && "Step 1 of 2: Register Username"}
+					{phase === "setPrimary" && "Step 2 of 2: Activate Username"}
+					{phase === "complete" && "Username Setup Complete!"}
 				</span>
 			</div>
 			<div className="flex items-center justify-center space-x-2">
-				<div className={`h-2 w-16 rounded-full transition-all duration-300 ${
-					phase !== 'register' ? 'bg-green-500' : 'bg-blue-500'
-				}`} />
-				<div className={`h-2 w-16 rounded-full transition-all duration-300 ${
-					phase === 'complete' ? 'bg-green-500' : 
-					phase === 'setPrimary' ? 'bg-blue-500' : 'bg-gray-300'
-				}`} />
+				<div
+					className={`h-2 w-16 rounded-full transition-all duration-300 ${
+						phase !== "register" ? "bg-green-500" : "bg-blue-500"
+					}`}
+				/>
+				<div
+					className={`h-2 w-16 rounded-full transition-all duration-300 ${
+						phase === "complete"
+							? "bg-green-500"
+							: phase === "setPrimary"
+								? "bg-blue-500"
+								: "bg-gray-300"
+					}`}
+				/>
 			</div>
 		</div>
 	);
 
 	// Auto-transition phases
 	useEffect(() => {
-		if (registerSuccess && registeredData && currentPhase === 'register') {
-			setCurrentPhase('setPrimary');
+		if (registerSuccess && registeredData && currentPhase === "register") {
+			setCurrentPhase("setPrimary");
 		}
 	}, [registerSuccess, registeredData, currentPhase]);
 
 	useEffect(() => {
-		if (primarySuccess && currentPhase === 'setPrimary') {
-			setCurrentPhase('complete');
+		if (primarySuccess && currentPhase === "setPrimary") {
+			setCurrentPhase("complete");
 			// Brief delay then call onSuccess
 			setTimeout(() => {
 				if (onSuccess) onSuccess();
@@ -148,7 +163,7 @@ export function SubdomainRegistration({ onSuccess }: SubdomainRegistrationProps 
 				<PhaseIndicator phase={currentPhase} />
 
 				{/* Phase-specific content */}
-				{currentPhase === 'register' && (
+				{currentPhase === "register" && (
 					<>
 						<div className="text-center">
 							<div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-100">
@@ -252,21 +267,22 @@ export function SubdomainRegistration({ onSuccess }: SubdomainRegistrationProps 
 				)}
 
 				{/* Phase 2: Set Primary Name */}
-				{currentPhase === 'setPrimary' && (
+				{currentPhase === "setPrimary" && (
 					<>
-						<div className="text-center space-y-4">
+						<div className="space-y-4 text-center">
 							<div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-green-100">
 								<div className="h-8 w-8 rounded-lg bg-green-500" />
 							</div>
 							<div>
-								<div className="text-2xl font-bold text-gray-900 mb-2">
+								<div className="mb-2 font-bold text-2xl text-gray-900">
 									{registeredData?.label}.catmisha.eth
 								</div>
-								<div className="text-green-600 font-medium text-sm mb-4">
+								<div className="mb-4 font-medium text-green-600 text-sm">
 									✅ Successfully registered!
 								</div>
-								<p className="text-gray-600 max-w-md mx-auto">
-									Almost done! Set this as your primary name to activate your identity on the Base network.
+								<p className="mx-auto max-w-md text-gray-600">
+									Almost done! Set this as your primary name to activate your
+									identity on the Base network.
 								</p>
 							</div>
 						</div>
@@ -298,8 +314,8 @@ export function SubdomainRegistration({ onSuccess }: SubdomainRegistrationProps 
 				)}
 
 				{/* Phase 3: Complete */}
-				{currentPhase === 'complete' && (
-					<div className="text-center space-y-4">
+				{currentPhase === "complete" && (
+					<div className="space-y-4 text-center">
 						<div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-green-100">
 							<div className="h-8 w-8 rounded-lg bg-green-500" />
 						</div>
@@ -307,19 +323,16 @@ export function SubdomainRegistration({ onSuccess }: SubdomainRegistrationProps 
 							<h2 className="mb-2 font-bold text-2xl text-gray-900">
 								Username Setup Complete! 🎉
 							</h2>
-							<div className="text-xl font-bold text-green-600 mb-2">
+							<div className="mb-2 font-bold text-green-600 text-xl">
 								{registeredData?.label}.catmisha.eth
 							</div>
-							<p className="text-gray-600">
-								Is now your primary name on Base!
-							</p>
+							<p className="text-gray-600">Is now your primary name on Base!</p>
 						</div>
-						<div className="text-sm text-gray-500">
+						<div className="text-gray-500 text-sm">
 							Continuing to profile setup...
 						</div>
 					</div>
 				)}
-
 			</div>
 		</div>
 	);

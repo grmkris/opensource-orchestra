@@ -13,24 +13,25 @@ interface OnboardingProgressProps {
 	currentStep: number;
 }
 
-export function OnboardingProgress({ steps, currentStep }: OnboardingProgressProps) {
+export function OnboardingProgress({
+	steps,
+	currentStep,
+}: OnboardingProgressProps) {
 	return (
-		<div className="w-full max-w-4xl mx-auto mb-8">
+		<div className="mx-auto mb-8 w-full max-w-4xl">
 			<div className="flex items-center justify-between">
 				{steps.map((step, index) => (
-					<div key={step.id} className="flex items-center flex-1">
+					<div key={step.id} className="flex flex-1 items-center">
 						{/* Step Circle */}
 						<div className="flex flex-col items-center">
 							<div
-								className={`
-									relative flex h-10 w-10 items-center justify-center rounded-full border-2 font-medium text-sm transition-all duration-300
-									${
-										index < currentStep
-											? "border-blue-500 bg-blue-500 text-white"
-											: index === currentStep
-												? "border-blue-500 bg-white text-blue-500"
-												: "border-gray-300 bg-gray-100 text-gray-400"
-									}
+								className={`relative flex h-10 w-10 items-center justify-center rounded-full border-2 font-medium text-sm transition-all duration-300${
+									index < currentStep
+										? "border-blue-500 bg-blue-500 text-white"
+										: index === currentStep
+											? "border-blue-500 bg-white text-blue-500"
+											: "border-gray-300 bg-gray-100 text-gray-400"
+								}
 								`}
 							>
 								{index < currentStep ? (
@@ -39,23 +40,19 @@ export function OnboardingProgress({ steps, currentStep }: OnboardingProgressPro
 									<span>{index + 1}</span>
 								)}
 							</div>
-							
+
 							{/* Step Title */}
 							<div className="mt-2 text-center">
 								<p
-									className={`
-										font-medium text-sm transition-colors duration-300
-										${
-											index <= currentStep
-												? "text-gray-900"
-												: "text-gray-400"
-										}
+									className={`font-medium text-sm transition-colors duration-300${
+										index <= currentStep ? "text-gray-900" : "text-gray-400"
+									}
 									`}
 								>
 									{step.title}
 								</p>
 								{!step.required && (
-									<p className="text-gray-400 text-xs mt-1">Optional</p>
+									<p className="mt-1 text-gray-400 text-xs">Optional</p>
 								)}
 							</div>
 						</div>
@@ -63,13 +60,9 @@ export function OnboardingProgress({ steps, currentStep }: OnboardingProgressPro
 						{/* Connector Line */}
 						{index < steps.length - 1 && (
 							<div
-								className={`
-									ml-4 mr-4 flex-1 h-0.5 transition-colors duration-300
-									${
-										index < currentStep
-											? "bg-blue-500"
-											: "bg-gray-300"
-									}
+								className={`mr-4 ml-4 h-0.5 flex-1 transition-colors duration-300${
+									index < currentStep ? "bg-blue-500" : "bg-gray-300"
+								}
 								`}
 							/>
 						)}

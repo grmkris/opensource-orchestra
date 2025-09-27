@@ -6,12 +6,12 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getAddress } from "viem";
 import { useAccount } from "wagmi";
-import { SubdomainRegistration } from "@/components/ens/SubdomainRegistration";
 import { OnboardingProgress } from "@/components/ens/OnboardingProgress";
-import { StepWallet } from "@/components/ens/onboarding/StepWallet";
 import { StepBasicInfo } from "@/components/ens/onboarding/StepBasicInfo";
-import { StepVisuals } from "@/components/ens/onboarding/StepVisuals";
 import { StepSocials } from "@/components/ens/onboarding/StepSocials";
+import { StepVisuals } from "@/components/ens/onboarding/StepVisuals";
+import { StepWallet } from "@/components/ens/onboarding/StepWallet";
+import { SubdomainRegistration } from "@/components/ens/SubdomainRegistration";
 import { Loader } from "@/components/loader";
 import { useEnsName } from "@/hooks/useEnsName";
 import { ENS_CHAIN } from "@/lib/ens/ens-contracts";
@@ -20,7 +20,7 @@ export default function OnboardingPage() {
 	const router = useRouter();
 	const { address } = useAccount();
 	const [currentStep, setCurrentStep] = useState(0);
-	
+
 	const userSubdomain = useEnsName({
 		address: getAddress(
 			address || "0x0000000000000000000000000000000000000000",
@@ -46,7 +46,7 @@ export default function OnboardingPage() {
 
 	const handleNext = () => {
 		if (currentStep < steps.length - 1) {
-			setCurrentStep(prev => prev + 1);
+			setCurrentStep((prev) => prev + 1);
 		} else {
 			// Onboarding complete - redirect to /me
 			router.push("/me");
@@ -146,7 +146,9 @@ export default function OnboardingPage() {
 						<div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-100">
 							<div className="h-8 w-8 rounded-lg bg-blue-500" />
 						</div>
-						<h1 className="font-bold text-4xl text-gray-900">Opensource Orchestra PIT</h1>
+						<h1 className="font-bold text-4xl text-gray-900">
+							Opensource Orchestra PIT
+						</h1>
 						<p className="mx-auto max-w-2xl text-gray-600 text-lg">
 							Create your decentralized identity
 						</p>

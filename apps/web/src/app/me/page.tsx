@@ -14,7 +14,7 @@ import { ENS_CHAIN } from "@/lib/ens/ens-contracts";
 export default function MePage() {
 	const router = useRouter();
 	const { address } = useAccount();
-	
+
 	const userSubdomain = useEnsName({
 		address: getAddress(
 			address || "0x0000000000000000000000000000000000000000",
@@ -43,9 +43,7 @@ export default function MePage() {
 				<div className="text-center">
 					<Loader className="mx-auto mb-4 h-8 w-8" />
 					<h1 className="mb-2 font-semibold text-2xl">Loading...</h1>
-					<p className="text-muted-foreground">
-						Loading your profile
-					</p>
+					<p className="text-muted-foreground">Loading your profile</p>
 				</div>
 			</div>
 		);

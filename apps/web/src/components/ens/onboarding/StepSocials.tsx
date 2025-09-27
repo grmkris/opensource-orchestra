@@ -25,7 +25,8 @@ export function StepSocials({ ensName, onNext, onSkip }: StepSocialsProps) {
 						Connect Your Social Presence
 					</h2>
 					<p className="text-gray-600">
-						Link your social media accounts so the community can find and connect with you.
+						Link your social media accounts so the community can find and
+						connect with you.
 					</p>
 				</div>
 
@@ -125,10 +126,7 @@ export function StepSocials({ ensName, onNext, onSkip }: StepSocialsProps) {
 						<span>Skip for now</span>
 					</Button>
 
-					<Button
-						onClick={onNext}
-						className="flex items-center space-x-2"
-					>
+					<Button onClick={onNext} className="flex items-center space-x-2">
 						<span>Complete Profile</span>
 						<ArrowRight className="h-4 w-4" />
 					</Button>
@@ -136,7 +134,8 @@ export function StepSocials({ ensName, onNext, onSkip }: StepSocialsProps) {
 
 				<div className="text-center">
 					<p className="text-gray-500 text-sm">
-						Each field saves individually when you update it. You can always add more links later.
+						Each field saves individually when you update it. You can always add
+						more links later.
 					</p>
 				</div>
 			</div>

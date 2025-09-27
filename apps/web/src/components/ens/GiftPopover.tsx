@@ -7,7 +7,6 @@ import { parseEther } from "viem";
 import { useAccount, useSendTransaction } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
 	Popover,
 	PopoverContent,
@@ -42,12 +41,15 @@ export function GiftPopover({
 		green: {
 			button: "border-green-200 text-green-700 hover:bg-green-50",
 			sendButton: "bg-green-600 hover:bg-green-700",
-			preset: "border-green-200 hover:bg-green-50 data-[state=on]:bg-green-100 data-[state=on]:border-green-300",
+			preset:
+				"border-green-200 hover:bg-green-50 data-[state=on]:bg-green-100 data-[state=on]:border-green-300",
 		},
 		amber: {
-			button: "border-amber-400/50 text-amber-300 hover:bg-amber-500/20 bg-amber-500/10",
+			button:
+				"border-amber-400/50 text-amber-300 hover:bg-amber-500/20 bg-amber-500/10",
 			sendButton: "bg-amber-500 hover:bg-amber-600 text-black",
-			preset: "border-amber-400/30 hover:bg-amber-500/20 data-[state=on]:bg-amber-500/30 data-[state=on]:border-amber-400",
+			preset:
+				"border-amber-400/30 hover:bg-amber-500/20 data-[state=on]:bg-amber-500/30 data-[state=on]:border-amber-400",
 		},
 	};
 
@@ -103,8 +105,8 @@ export function GiftPopover({
 			<PopoverContent className="w-72 border-opacity-50">
 				<div className="grid gap-3">
 					<div>
-						<h4 className="font-medium leading-none text-sm">Send a gift</h4>
-						<p className="text-muted-foreground text-xs mt-1">
+						<h4 className="font-medium text-sm leading-none">Send a gift</h4>
+						<p className="mt-1 text-muted-foreground text-xs">
 							to {recipientName}
 						</p>
 					</div>
@@ -144,7 +146,7 @@ export function GiftPopover({
 									value={amount}
 									onChange={(e) => setAmount(e.target.value)}
 									placeholder="0.001"
-									className="flex-1 h-8 text-sm"
+									className="h-8 flex-1 text-sm"
 								/>
 								<span className="text-muted-foreground text-xs">ETH</span>
 							</div>
@@ -160,7 +162,7 @@ export function GiftPopover({
 					<Button
 						onClick={handleSendGift}
 						disabled={!amount || isPending}
-						className={`w-full h-8 text-sm ${themeClasses[theme].sendButton}`}
+						className={`h-8 w-full text-sm ${themeClasses[theme].sendButton}`}
 					>
 						{isPending ? (
 							<>

@@ -1,19 +1,19 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { GlobalDonationsFeed } from "@/components/ens/GlobalDonationsFeed";
 import { GiftPopover } from "@/components/ens/GiftPopover";
+import { GlobalDonationsFeed } from "@/components/ens/GlobalDonationsFeed";
 
 export default function Home() {
 	const router = useRouter();
 
 	// Artist data positioned precisely on visible music stands in pit.png
 	const pendingArtists = [
-		{ id: "artist1.eth", name: "DJ Crypto", x: 20, y: 62 },        // Left front stand
-		{ id: "artist2.eth", name: "The Degens", x: 50, y: 66 },       // Center front stand
-		{ id: "artist3.eth", name: "NFT Beats", x: 80, y: 62 },        // Right front stand
-		{ id: "artist4.eth", name: "Web3 Symphony", x: 30, y: 54 },    // Left back stand
-		{ id: "artist5.eth", name: "Blockchain Band", x: 70, y: 54 },  // Right back stand
+		{ id: "artist1.eth", name: "DJ Crypto", x: 20, y: 62 }, // Left front stand
+		{ id: "artist2.eth", name: "The Degens", x: 50, y: 66 }, // Center front stand
+		{ id: "artist3.eth", name: "NFT Beats", x: 80, y: 62 }, // Right front stand
+		{ id: "artist4.eth", name: "Web3 Symphony", x: 30, y: 54 }, // Left back stand
+		{ id: "artist5.eth", name: "Blockchain Band", x: 70, y: 54 }, // Right back stand
 	];
 
 	const handleArtistClick = (artistId: string) => {
@@ -35,15 +35,12 @@ export default function Home() {
 
 				{/* YouTube video iframe positioned in the center black area of the stage */}
 				<div className="absolute inset-0 flex items-center justify-center">
-					<div className="-translate-x-[3%] relative h-[32%] w-[42%] transform">
+					<div>
 						<iframe
-							className="h-full w-full rounded-lg border-0 shadow-2xl"
-							src="https://www.youtube.com/embed/o_N5JQYHJXk?si=x-C2UzriyIlbyxSX&amp;controls=0&autoplay=0&loop=1&playlist=o_N5JQYHJXk&modestbranding=1&rel=0&showinfo=0&disablekb=1&fs=0&iv_load_policy=3&playsinline=1&enablejsapi=0&autohide=1"
-							title="YouTube video player"
-							frameBorder="0"
-							allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-							referrerPolicy="strict-origin-when-cross-origin"
-							allowFullScreen
+							src="https://player.twitch.tv/?channel=shakalei&parent=opensource-orchestra-web.vercel.app"
+							height="480"
+							width="720"
+							title="Shakalei"
 						/>
 					</div>
 				</div>
