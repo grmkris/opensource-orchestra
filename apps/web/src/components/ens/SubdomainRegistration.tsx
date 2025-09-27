@@ -71,7 +71,9 @@ export function SubdomainRegistration() {
 	const handleSetPrimary = () => {
 		if (!registeredData?.label) return;
 
-		setPrimaryMutation.mutate(registeredData.label);
+		const fullLabel = `${registeredData.label}.catmisha.eth`; // TODO don't hardcode this
+		console.log("setting primary", fullLabel);
+		setPrimaryMutation.mutate(fullLabel);
 	};
 
 	const handleLabelChange = (e: React.ChangeEvent<HTMLInputElement>) => {

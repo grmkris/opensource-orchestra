@@ -6,11 +6,12 @@ import { SubdomainRegistration } from "@/components/ens/SubdomainRegistration";
 import { Loader } from "@/components/loader";
 import { useEnsName } from "@/hooks/useEnsName";
 import { ENS_CHAIN } from "@/lib/ens/ens-contracts";
+import { getAddress } from "viem";
 
 export default function ENSPage() {
 	const { address } = useAccount();
 	const userSubdomain = useEnsName({
-		address,
+		address: getAddress(address || "0x0000000000000000000000000000000000000000"),
 		l1ChainId: 1,
 		l2ChainId: ENS_CHAIN.id,
 	});
