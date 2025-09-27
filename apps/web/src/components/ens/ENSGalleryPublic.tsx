@@ -69,17 +69,8 @@ export function ENSGalleryPublic({ ensName }: ENSGalleryPublicProps) {
 
   // We'll render the section and let individual items decide if they should show
   return (
-    <Card className="p-6">
-      <div className="mb-4">
-        <h3 className="font-semibold text-lg">Media Gallery</h3>
-        <p className="text-muted-foreground text-sm">
-          Explore {ensName}'s collection of images and videos
-        </p>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-        {galleryItems}
-      </div>
-    </Card>
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+      {galleryItems}
+    </div>
   );
 }

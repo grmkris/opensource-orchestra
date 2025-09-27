@@ -9,10 +9,12 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { normalize } from "viem/ens";
-import { useAccount, useEnsAddress } from "wagmi";
+import { useAccount, useEnsAddress, useEnsAvatar, useEnsText } from "wagmi";
 import { ProfileHeaderEditable } from "@/components/ens/ProfileHeaderEditable";
 import { ENSTextField } from "@/components/ens/ENSTextField";
 import { ENSGallerySection } from "@/components/ens/ENSGallerySection";
+import { ENSAvatarField } from "@/components/ens/ENSAvatarField";
+import { ENSHeaderField } from "@/components/ens/ENSHeaderField";
 import {
   ENSFieldsProvider,
   useENSFields,
@@ -31,7 +33,22 @@ function SubdomainProfileContent({
   isOwner: boolean;
 }) {
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("profile");
   const { saveAllFields, hasChanges, isSaving, saved } = useENSFields();
+
+  // Fetch avatar and header from blockchain
+  const { data: avatarUrl, isLoading: avatarLoading } = useEnsAvatar({
+    name: ensName,
+    query: { enabled: !!ensName },
+    chainId: 1,
+  });
+
+  const { data: headerUrl, isLoading: headerLoading } = useEnsText({
+    name: ensName,
+    key: "header",
+    query: { enabled: !!ensName },
+    chainId: 1,
+  });
 
   const handleCopy = async (text: string, field: string) => {
     try {
@@ -59,197 +76,464 @@ function SubdomainProfileContent({
 
   return (
     <div
-      className="overflow-hidden rounded-2xl border-2 border-gray-100 bg-white shadow-sm"
-      style={{ fontFamily: "var(--font-roboto)" }}
+      className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8"
+      style={{ fontFamily: "Roboto, sans-serif" }}
     >
-      {/* Profile Header with Cover Image and Avatar */}
-      <ProfileHeaderEditable
-        ensName={ensName}
-        ensAddress={ensAddress || ""}
-        onCopy={handleCopy}
-        copiedField={copiedField}
-        isOwner={isOwner}
-      />
+      {/* Avatar Card with Header and Profile Picture */}
+      <div
+        style={{
+          fontFamily:
+            "system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, sans-serif",
+          background: "#ffffff",
+          color: "#2f3044",
+          border: "2px solid #2f3044",
+          borderBottomWidth: "14px",
+          borderRadius: "2px",
+          maxWidth: "880px",
+          lineHeight: "1.35",
+          textAlign: "left",
+          overflow: "hidden",
+        }}
+      >
+        {/* Header Image */}
+        <ENSHeaderField
+          isOwner={isOwner}
+          ensName={ensName}
+          headerUrl={headerUrl || ""}
+        />
 
-      <div className="space-y-8 p-8">
-        {/* Header Info */}
-        <div className="space-y-6">
-          {/* Profile Actions */}
-          <div className="flex flex-wrap items-center gap-3">
+        {/* Profile Content */}
+        <div style={{ padding: "28px 32px 36px" }}>
+          {/* Avatar Section */}
+          <div style={{ marginBottom: "24px" }}>
+            <ENSAvatarField
+              isOwner={isOwner}
+              ensName={ensName}
+              avatarUrl={avatarUrl || ""}
+            />
+          </div>
+
+          {/* Profile Name and Verification */}
+          <div style={{ marginBottom: "16px", textAlign: "center" }}>
+            <span
+              style={{
+                display: "inline-block",
+                fontSize: "32px",
+                fontWeight: "800",
+                letterSpacing: "-0.3px",
+                marginRight: "8px",
+              }}
+            >
+              {ensName}
+            </span>
+            <span
+              style={{
+                display: "inline-block",
+                width: "24px",
+                height: "24px",
+                borderRadius: "50%",
+                background: "#156fb3",
+                color: "#ffffff",
+                fontSize: "14px",
+                fontWeight: "800",
+                textAlign: "center",
+                lineHeight: "24px",
+              }}
+            >
+              ✓
+            </span>
+          </div>
+
+          {/* Action Buttons */}
+          <div
+            style={{
+              display: "flex",
+              gap: "12px",
+              justifyContent: "center",
+            }}
+          >
             <button
               type="button"
               onClick={handleCopyProfileLink}
-              className="flex items-center space-x-2 rounded-lg border-2 border-gray-200 px-4 py-2 font-medium text-gray-700 transition-all duration-200 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600"
+              style={{
+                fontSize: "14px",
+                fontWeight: "600",
+                color: "#156fb3",
+                background: "transparent",
+                border: "1px solid #156fb3",
+                borderRadius: "6px",
+                padding: "8px 16px",
+                cursor: "pointer",
+              }}
             >
-              {copiedField === "profile-link" ? (
-                <CheckIcon className="h-4 w-4 text-green-600" />
-              ) : (
-                <LinkIcon className="h-4 w-4" />
-              )}
-              <span>Copy Profile Link</span>
+              {copiedField === "profile-link" ? "✓ Copied" : "Copy Link"}
             </button>
 
             <button
               type="button"
               onClick={handleOpenProfile}
-              className="flex items-center space-x-2 rounded-lg border-2 border-gray-200 px-4 py-2 font-medium text-gray-700 transition-all duration-200 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600"
+              style={{
+                fontSize: "14px",
+                fontWeight: "600",
+                color: "#ffffff",
+                background: "#156fb3",
+                border: "1px solid #156fb3",
+                borderRadius: "6px",
+                padding: "8px 16px",
+                cursor: "pointer",
+              }}
             >
-              <ExternalLinkIcon className="h-4 w-4" />
-              <span>View Public Profile</span>
+              View Public →
             </button>
           </div>
         </div>
+      </div>
 
-        {/* Profile Fields */}
-        <div className="space-y-8">
-          {/* Identity Section */}
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <div className="h-6 w-1 rounded-full bg-blue-500" />
-              <h4 className="font-bold text-gray-900 text-lg">Identity</h4>
+      {/* Tab Content */}
+      <div className="mt-6">
+        {activeTab === "profile" && (
+          <div className="space-y-6">
+            {/* Form Sections with Inline Styles */}
+            <div className="grid gap-6 md:grid-cols-2">
+              {/* Identity Card */}
+              <div
+                style={{
+                  fontFamily:
+                    "system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, sans-serif",
+                  background: "#ffffff",
+                  color: "#2f3044",
+                  border: "2px solid #2f3044",
+                  borderBottomWidth: "14px",
+                  borderRadius: "2px",
+                  maxWidth: "880px",
+                  padding: "28px 32px 36px",
+                  lineHeight: "1.35",
+                  textAlign: "left",
+                }}
+              >
+                <span
+                  style={{
+                    display: "block",
+                    fontSize: "40px",
+                    fontWeight: "800",
+                    letterSpacing: "-0.3px",
+                    marginBottom: "14px",
+                  }}
+                >
+                  For your identity
+                </span>
+
+                <span
+                  style={{
+                    display: "block",
+                    fontSize: "22px",
+                    fontWeight: "500",
+                    color: "#2f3044cc",
+                    marginBottom: "26px",
+                  }}
+                >
+                  Tell the world about yourself
+                </span>
+
+                <div className="space-y-4">
+                  <ENSTextField
+                    recordKey="description"
+                    label="Description"
+                    placeholder="Tell us about yourself"
+                    isOwner={isOwner}
+                    ensName={ensName}
+                  />
+                </div>
+              </div>
+
+              {/* Contact Card */}
+              <div
+                style={{
+                  fontFamily:
+                    "system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, sans-serif",
+                  background: "#ffffff",
+                  color: "#2f3044",
+                  border: "2px solid #2f3044",
+                  borderBottomWidth: "14px",
+                  borderRadius: "2px",
+                  maxWidth: "880px",
+                  padding: "28px 32px 36px",
+                  lineHeight: "1.35",
+                  textAlign: "left",
+                }}
+              >
+                <span
+                  style={{
+                    display: "block",
+                    fontSize: "40px",
+                    fontWeight: "800",
+                    letterSpacing: "-0.3px",
+                    marginBottom: "14px",
+                  }}
+                >
+                  For contact
+                </span>
+
+                <span
+                  style={{
+                    display: "block",
+                    fontSize: "22px",
+                    fontWeight: "500",
+                    color: "#2f3044cc",
+                    marginBottom: "26px",
+                  }}
+                >
+                  How people can reach you
+                </span>
+
+                <div className="space-y-4">
+                  <ENSTextField
+                    recordKey="url"
+                    label="Website"
+                    placeholder="https://yourwebsite.com"
+                    isOwner={isOwner}
+                    ensName={ensName}
+                  />
+
+                  <ENSTextField
+                    recordKey="email"
+                    label="Email"
+                    placeholder="your@email.com"
+                    isOwner={isOwner}
+                    ensName={ensName}
+                  />
+                </div>
+              </div>
             </div>
 
-            <ENSTextField
-              recordKey="description"
-              label="Description"
-              placeholder="Tell us about yourself"
-              isOwner={isOwner}
-              ensName={ensName}
-            />
-          </div>
+            {/* Social Links Card - Full Width */}
+            <div
+              style={{
+                fontFamily:
+                  "system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, sans-serif",
+                background: "#ffffff",
+                color: "#2f3044",
+                border: "2px solid #2f3044",
+                borderBottomWidth: "14px",
+                borderRadius: "2px",
+                maxWidth: "880px",
+                padding: "28px 32px 36px",
+                lineHeight: "1.35",
+                textAlign: "left",
+              }}
+            >
+              <span
+                style={{
+                  display: "block",
+                  fontSize: "40px",
+                  fontWeight: "800",
+                  letterSpacing: "-0.3px",
+                  marginBottom: "14px",
+                }}
+              >
+                For social connections
+              </span>
 
-          {/* Social Links Section */}
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <div className="h-6 w-1 rounded-full bg-blue-500" />
-              <h4 className="font-bold text-gray-900 text-lg">Social Links</h4>
+              <span
+                style={{
+                  display: "block",
+                  fontSize: "22px",
+                  fontWeight: "500",
+                  color: "#2f3044cc",
+                  marginBottom: "26px",
+                }}
+              >
+                Connect your social profiles and build your network
+              </span>
+
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <ENSTextField
+                  recordKey="com.twitter"
+                  label="Twitter"
+                  placeholder="username (without @)"
+                  isOwner={isOwner}
+                  ensName={ensName}
+                />
+
+                <ENSTextField
+                  recordKey="com.github"
+                  label="GitHub"
+                  placeholder="username"
+                  isOwner={isOwner}
+                  ensName={ensName}
+                />
+
+                <ENSTextField
+                  recordKey="com.discord"
+                  label="Discord"
+                  placeholder="username"
+                  isOwner={isOwner}
+                  ensName={ensName}
+                />
+
+                <ENSTextField
+                  recordKey="com.telegram"
+                  label="Telegram"
+                  placeholder="username"
+                  isOwner={isOwner}
+                  ensName={ensName}
+                />
+
+                <ENSTextField
+                  recordKey="social.farcaster"
+                  label="Farcaster"
+                  placeholder="username or FID"
+                  isOwner={isOwner}
+                  ensName={ensName}
+                />
+
+                <ENSTextField
+                  recordKey="social.lens"
+                  label="Lens Protocol"
+                  placeholder="username.lens"
+                  isOwner={isOwner}
+                  ensName={ensName}
+                />
+              </div>
             </div>
 
-            <div className="space-y-4">
-              <ENSTextField
-                recordKey="com.twitter"
-                label="Twitter"
-                placeholder="username (without @)"
-                isOwner={isOwner}
-                ensName={ensName}
-              />
+            {/* Media Gallery Card */}
+            <div
+              style={{
+                fontFamily:
+                  "system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, sans-serif",
+                background: "#ffffff",
+                color: "#2f3044",
+                border: "2px solid #2f3044",
+                borderBottomWidth: "14px",
+                borderRadius: "2px",
+                maxWidth: "880px",
+                padding: "28px 32px 36px",
+                lineHeight: "1.35",
+                textAlign: "left",
+              }}
+            >
+              <span
+                style={{
+                  display: "block",
+                  fontSize: "40px",
+                  fontWeight: "800",
+                  letterSpacing: "-0.3px",
+                  marginBottom: "14px",
+                }}
+              >
+                For media gallery
+              </span>
 
-              <ENSTextField
-                recordKey="com.github"
-                label="GitHub"
-                placeholder="username"
-                isOwner={isOwner}
-                ensName={ensName}
-              />
+              <span
+                style={{
+                  display: "block",
+                  fontSize: "22px",
+                  fontWeight: "500",
+                  color: "#2f3044cc",
+                  marginBottom: "26px",
+                }}
+              >
+                Showcase your visual content and creativity
+              </span>
 
-              <ENSTextField
-                recordKey="com.discord"
-                label="Discord"
-                placeholder="username"
-                isOwner={isOwner}
-                ensName={ensName}
-              />
-
-              <ENSTextField
-                recordKey="com.telegram"
-                label="Telegram"
-                placeholder="username"
-                isOwner={isOwner}
-                ensName={ensName}
-              />
-
-              <ENSTextField
-                recordKey="social.farcaster"
-                label="Farcaster"
-                placeholder="username or FID"
-                isOwner={isOwner}
-                ensName={ensName}
-              />
-
-              <ENSTextField
-                recordKey="social.lens"
-                label="Lens Protocol"
-                placeholder="username.lens"
-                isOwner={isOwner}
-                ensName={ensName}
-              />
-            </div>
-          </div>
-
-          {/* Contact Section */}
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <div className="h-6 w-1 rounded-full bg-blue-500" />
-              <h4 className="font-bold text-gray-900 text-lg">Contact</h4>
+              <ENSGallerySection isOwner={isOwner} />
             </div>
 
-            <ENSTextField
-              recordKey="url"
-              label="Website"
-              placeholder="https://yourwebsite.com"
-              isOwner={isOwner}
-              ensName={ensName}
-            />
-
-            <ENSTextField
-              recordKey="email"
-              label="Email"
-              placeholder="your@email.com"
-              isOwner={isOwner}
-              ensName={ensName}
-            />
-          </div>
-
-          {/* Media Gallery Section */}
-          <ENSGallerySection isOwner={isOwner} />
-
-          {/* Save All Button */}
-          {isOwner && (
-            <div className="flex justify-center pt-6">
-              <Button
+            {/* Save All Changes - Card Style Button */}
+            {isOwner && (
+              <button
                 onClick={handleSaveAll}
                 disabled={!hasChanges || isSaving}
-                size="lg"
-                className="min-w-32"
+                style={{
+                  fontFamily:
+                    "system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, sans-serif",
+                  background: "#ffffff",
+                  color: "#2f3044",
+                  border: "2px solid #2f3044",
+                  borderBottomWidth: "14px",
+                  borderRadius: "2px",
+                  maxWidth: "880px",
+                  padding: "18px 12px 16px",
+                  lineHeight: "1.35",
+                  textAlign: "center",
+                  cursor: "pointer",
+                  opacity: !hasChanges || isSaving ? "0.5" : "1",
+
+                  display: "block",
+                }}
               >
-                {isSaving ? (
-                  <Loader className="mr-2 h-4 w-4" />
-                ) : saved ? (
-                  <CheckIcon className="mr-2 h-4 w-4" />
-                ) : (
-                  <SaveIcon className="mr-2 h-4 w-4" />
-                )}
-                {isSaving ? "Saving..." : saved ? "Saved!" : "Save All Changes"}
-              </Button>
-            </div>
-          )}
-        </div>
-
-        {/* Secondary Actions */}
-        <div className="flex flex-wrap items-center gap-4 border-gray-100 border-t pt-6">
-          <button
-            type="button"
-            onClick={() => handleCopy(ensName || "", "name")}
-            className="flex items-center space-x-2 font-medium text-gray-600 text-sm transition-colors hover:text-blue-600"
-          >
-            {copiedField === "name" ? (
-              <CheckIcon className="h-4 w-4 text-green-600" />
-            ) : (
-              <CopyIcon className="h-4 w-4" />
+                <span
+                  style={{
+                    display: "block",
+                    textAlign: "center",
+                    fontSize: "20px",
+                    fontWeight: "800",
+                    color: "#156fb3",
+                  }}
+                >
+                  {isSaving
+                    ? "SAVING..."
+                    : saved
+                    ? "SAVED!"
+                    : "SAVE ALL CHANGES"}{" "}
+                </span>
+              </button>
             )}
-            <span>Copy Name</span>
-          </button>
+          </div>
+        )}
 
-          <a
-            href={`https://basescan.org/address/${ensAddress}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center space-x-2 font-medium text-gray-600 text-sm transition-colors hover:text-blue-600"
-          >
-            <span>View on Basescan</span>
-            <ExternalLinkIcon className="h-4 w-4" />
-          </a>
-        </div>
+        {activeTab === "settings" && (
+          <div className="rounded-2xl bg-white p-8 shadow-sm text-center">
+            <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center">
+              <div className="h-8 w-8 rounded bg-gray-500"></div>
+            </div>
+            <h3 className="mb-2 text-lg font-semibold text-gray-900">
+              Settings
+            </h3>
+            <p className="text-gray-600">Profile settings and preferences</p>
+          </div>
+        )}
+
+        {activeTab === "analytics" && (
+          <div className="rounded-2xl bg-white p-8 shadow-sm text-center">
+            <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-blue-100 flex items-center justify-center">
+              <div className="h-8 w-8 rounded bg-blue-500"></div>
+            </div>
+            <h3 className="mb-2 text-lg font-semibold text-gray-900">
+              Analytics
+            </h3>
+            <p className="text-gray-600">
+              Profile views and engagement metrics
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Footer Actions */}
+      <div className="mt-8 flex flex-wrap justify-center gap-4 border-t border-gray-200 pt-6">
+        <button
+          type="button"
+          onClick={() => handleCopy(ensName || "", "name")}
+          className="flex items-center space-x-2 rounded-lg border border-gray-300 bg-white px-4 py-2 font-medium text-gray-600 transition-all duration-200 hover:bg-gray-50"
+        >
+          {copiedField === "name" ? (
+            <CheckIcon className="h-4 w-4 text-green-600" />
+          ) : (
+            <CopyIcon className="h-4 w-4" />
+          )}
+          <span>Copy Name</span>
+        </button>
+
+        <a
+          href={`https://basescan.org/address/${ensAddress}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center space-x-2 rounded-lg border border-gray-300 bg-white px-4 py-2 font-medium text-gray-600 transition-all duration-200 hover:bg-gray-50"
+        >
+          <span>View on Basescan</span>
+          <ExternalLinkIcon className="h-4 w-4" />
+        </a>
       </div>
     </div>
   );

@@ -202,10 +202,9 @@ export function ENSGalleryField({
             variant="outline"
             onClick={handleRemove}
             disabled={isUploading}
-            className="w-full"
+            className=""
           >
-            <XIcon className="h-4 w-4 mr-2" />
-            Remove
+            <XIcon className="h-4 w-4 text-red-400" />
           </Button>
         )}
       </div>
