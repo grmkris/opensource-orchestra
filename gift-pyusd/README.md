@@ -42,6 +42,7 @@ PRIVATE_KEY=0x...
 PYUSD=0xCaC524BcA292aaade2DF8A05cC58F0a65B1B3bB9
 GIFT_PYUSD=0x...
 ARTIST_ID=1
+# ARTIST_PRIVATE_KEY=0x...  # Optional if payout wallet differs from deployer
 ```
 
 The repository keeps reusable artist metadata under `config/artists.json`:
@@ -171,6 +172,26 @@ Avoid deleting `cache/` unless you intend to invalidate stored simulation traces
      --rpc-url $SEPOLIA_RPC_URL
    ```
 4. Verify the mint and donation were recorded (see the "On-chain verification" section below for sample commands).
+
+### Withdraw Artist Balance
+
+1. Check the pending balance for the artist:
+   ```bash
+   cast call $GIFT_PYUSD "artistBalance(uint256)(uint256)" 1 --rpc-url $SEPOLIA_RPC_URL
+   ```
+2. From the registered payout wallet, withdraw the desired PYUSD amount. If the payout wallet is different from the deployer, export `ARTIST_PRIVATE_KEY` first.
+   ```bash
+   cast send $GIFT_PYUSD "withdrawForArtist(uint256,uint256)" \
+     1 \
+     2000000 \
+     --private-key ${ARTIST_PRIVATE_KEY:-$PRIVATE_KEY} \
+     --rpc-url $SEPOLIA_RPC_URL
+   ```
+3. Optionally confirm balances after withdrawal:
+   ```bash
+   cast call $GIFT_PYUSD "artistBalance(uint256)(uint256)" 1 --rpc-url $SEPOLIA_RPC_URL
+   cast call $GIFT_PYUSD "contractPYUSDBalance()(uint256)" --rpc-url $SEPOLIA_RPC_URL
+   ```
 
 ## Contract Interface
 
