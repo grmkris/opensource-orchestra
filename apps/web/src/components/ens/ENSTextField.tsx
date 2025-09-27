@@ -11,6 +11,7 @@ interface ENSTextFieldProps {
   label: string;
   placeholder: string;
   isOwner: boolean;
+  ensName: string;
 }
 
 export function ENSTextField({
@@ -18,6 +19,7 @@ export function ENSTextField({
   label,
   placeholder,
   isOwner,
+  ensName,
 }: ENSTextFieldProps) {
   const fieldId = useId();
   const { getValue, setValue, isLoading } = useENSFields();

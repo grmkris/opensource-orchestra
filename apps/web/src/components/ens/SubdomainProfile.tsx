@@ -114,6 +114,7 @@ function SubdomainProfileContent({
               label="Description"
               placeholder="Tell us about yourself"
               isOwner={isOwner}
+              ensName={ensName}
             />
           </div>
 
@@ -130,6 +131,7 @@ function SubdomainProfileContent({
                 label="Twitter"
                 placeholder="username (without @)"
                 isOwner={isOwner}
+                ensName={ensName}
               />
 
               <ENSTextField
@@ -137,6 +139,7 @@ function SubdomainProfileContent({
                 label="GitHub"
                 placeholder="username"
                 isOwner={isOwner}
+                ensName={ensName}
               />
 
               <ENSTextField
@@ -144,6 +147,7 @@ function SubdomainProfileContent({
                 label="Discord"
                 placeholder="username"
                 isOwner={isOwner}
+                ensName={ensName}
               />
 
               <ENSTextField
@@ -151,6 +155,7 @@ function SubdomainProfileContent({
                 label="Telegram"
                 placeholder="username"
                 isOwner={isOwner}
+                ensName={ensName}
               />
 
               <ENSTextField
@@ -158,6 +163,7 @@ function SubdomainProfileContent({
                 label="Farcaster"
                 placeholder="username or FID"
                 isOwner={isOwner}
+                ensName={ensName}
               />
 
               <ENSTextField
@@ -165,6 +171,7 @@ function SubdomainProfileContent({
                 label="Lens Protocol"
                 placeholder="username.lens"
                 isOwner={isOwner}
+                ensName={ensName}
               />
             </div>
           </div>
@@ -181,6 +188,7 @@ function SubdomainProfileContent({
               label="Website"
               placeholder="https://yourwebsite.com"
               isOwner={isOwner}
+              ensName={ensName}
             />
 
             <ENSTextField
@@ -188,6 +196,7 @@ function SubdomainProfileContent({
               label="Email"
               placeholder="your@email.com"
               isOwner={isOwner}
+              ensName={ensName}
             />
           </div>
 
