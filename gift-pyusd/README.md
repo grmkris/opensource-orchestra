@@ -100,8 +100,7 @@ forge test
 With the contract deployed, register artist metadata for any `artistId` present in `config/artists.json`:
 
 1. Confirm the contract owner wallet matches the `PRIVATE_KEY` you configured.
-2. Set `ARTIST_ID` in `.env` (or inline) to the target numeric ID.
-3. Run the registration script with broadcasting credentials:
+2. Run the registration script with broadcasting credentials:
 
 ```bash
 ARTIST_ID=1 forge script script/RegisterArtist.s.sol:RegisterArtist \
@@ -138,25 +137,6 @@ cast send $GIFT_PYUSD "updateArtist(uint256,address,string,string)" \
 
 Use `cast call` to audit contract state after deployments, registrations, or mints. Examples:
 
-```bash
-cast call $GIFT_PYUSD "artists(uint256)(address,string,string,bool)" 1 --rpc-url $SEPOLIA_RPC_URL
-cast call $GIFT_PYUSD "tokenAmounts(uint256)(uint256)" 1 --rpc-url $SEPOLIA_RPC_URL
-cast call $GIFT_PYUSD "totalIssued()(uint256)" --rpc-url $SEPOLIA_RPC_URL
-```
-
-Store frequently used helper commands in a shell script or task runner if you expect many updates.
-
-#### Clean up broadcast artifacts
-
-`forge` stores broadcast metadata in `broadcast/`. When the logs become noisy, you can archive or remove older runs:
-
-```bash
-rm -rf broadcast/RegisterArtist.s.sol/11155111/run-*.json
-```
-
-Avoid deleting `cache/` unless you intend to invalidate stored simulation traces.
-
-### Mint SBT
 
 1. Pick a donation amount in PYUSD (must be greater than or equal to the on-chain `mintPrice`). Example: `DONATION=1000000` equals 1.0 PYUSD because the token has 6 decimals.
 2. Approve the contract to pull that amount:
@@ -177,25 +157,97 @@ Avoid deleting `cache/` unless you intend to invalidate stored simulation traces
    ```
 4. Verify the mint and donation were recorded (see the "On-chain verification" section below for sample commands).
 
+### MultiGift (allocate donations to multiple artists + mint one receipt SBT)
+
+In this mode, the contract owner allocates a total PYUSD donation across multiple registered artists in a single transaction using `allocateDonation()`. No per-artist SBT is minted. Instead, you mint a single receipt SBT via `MultiGiftSBT` to record the split.
+
+Prerequisites:
+- `GIFT_PYUSD` is deployed and artists are registered.
+- `MULTI_GIFT_SBT` is deployed (see below) and exported in your `.env`.
+- `MULTI_GIFT_CONFIG` points to a JSON file describing `artistIds`, `amounts` and `title`.
+- You must run the script from the GiftPYUSD owner account.
+
+1) Deploy the receipt SBT (one-time):
+```bash
+forge script script/DeployMultiGift.s.sol:DeployMultiGift \
+  --rpc-url $SEPOLIA_RPC_URL \
+  --private-key $PRIVATE_KEY \
+  --broadcast \
+  --verify
+```
+Set the address in `.env`:
+```bash
+MULTI_GIFT_SBT=0x...
+MULTI_GIFT_CONFIG=./config/multi_gift.json
+```
+
+2) Prepare the config file (6 decimals for PYUSD):
+```bash
+cp config/multi_gift.example.json config/multi_gift.json
+```
+Example:
+```json
+{
+  "artistIds": [1, 2],
+  "amounts": [5000000, 5000000],
+  "title": "Alice & Bob Gift"
+}
+```
+Notes:
+- `artistIds.length` must equal `amounts.length`.
+- Each `amount` must be >= `mintPrice` (per-artist minimum).
+
+3) Approve total PYUSD (sum of `amounts`) to GiftPYUSD:
+```bash
+TOTAL=10000000 # 10.0 PYUSD
+cast send $PYUSD "approve(address,uint256)" \
+  $GIFT_PYUSD \
+  $TOTAL \
+  --private-key $PRIVATE_KEY \
+  --rpc-url $SEPOLIA_RPC_URL
+```
+
+4) Run the multi-gift script (owner-only):
+```bash
+forge script script/MintMulti.s.sol:MintMulti \
+  --rpc-url $SEPOLIA_RPC_URL \
+  --private-key $PRIVATE_KEY \
+  --broadcast
+```
+This will:
+- Validate artists and per-artist amounts (>= `mintPrice`).
+- Call `GiftPYUSD.allocateDonation(artistIds, amounts)` once to allocate balances.
+- Mint one `MultiGiftSBT` receipt NFT to the caller with the full split.
+
+5) Verify on-chain state:
+```bash
+# Check per-artist balances on GiftPYUSD
+cast call $GIFT_PYUSD "artistBalance(uint256)(uint256)" 1 --rpc-url $SEPOLIA_RPC_URL
+cast call $GIFT_PYUSD "artistBalance(uint256)(uint256)" 2 --rpc-url $SEPOLIA_RPC_URL
+
+# Inspect the receipt NFT data (tokenId = 1)
+cast call $MULTI_GIFT_SBT "getGift(uint256)(uint256[],uint256[],uint256,string)" 1 --rpc-url $SEPOLIA_RPC_URL
+```
+
 ### Withdraw Artist Balance
 
 1. Check the pending balance for the artist:
-   ```bash
-   cast call $GIFT_PYUSD "artistBalance(uint256)(uint256)" 1 --rpc-url $SEPOLIA_RPC_URL
-   ```
+```bash
+cast call $GIFT_PYUSD "artistBalance(uint256)(uint256)" 1 --rpc-url $SEPOLIA_RPC_URL
+```
 2. From the registered payout wallet, withdraw the desired PYUSD amount. If the payout wallet is different from the deployer, export `ARTIST_PRIVATE_KEY` first.
-   ```bash
-   cast send $GIFT_PYUSD "withdrawForArtist(uint256,uint256)" \
-     1 \
-     2000000 \
-     --private-key ${ARTIST_PRIVATE_KEY:-$PRIVATE_KEY} \
-     --rpc-url $SEPOLIA_RPC_URL
-   ```
+```bash
+cast send $GIFT_PYUSD "withdrawForArtist(uint256,uint256)" \
+  1 \
+  2000000 \
+  --private-key ${ARTIST_PRIVATE_KEY:-$PRIVATE_KEY} \
+  --rpc-url $SEPOLIA_RPC_URL
+```
 3. Optionally confirm balances after withdrawal:
-   ```bash
-   cast call $GIFT_PYUSD "artistBalance(uint256)(uint256)" 1 --rpc-url $SEPOLIA_RPC_URL
-   cast call $GIFT_PYUSD "contractPYUSDBalance()(uint256)" --rpc-url $SEPOLIA_RPC_URL
-   ```
+```bash
+cast call $GIFT_PYUSD "artistBalance(uint256)(uint256)" 1 --rpc-url $SEPOLIA_RPC_URL
+cast call $GIFT_PYUSD "contractPYUSDBalance()(uint256)" --rpc-url $SEPOLIA_RPC_URL
+```
 
 ## Contract Interface
 
