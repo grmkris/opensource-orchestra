@@ -1,33 +1,54 @@
 "use client";
 
-import { XIcon } from "lucide-react";
+import { CheckIcon, SaveIcon, XIcon } from "lucide-react";
 import Image from "next/image";
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
+import { useEnsText } from "wagmi";
+import { Loader } from "@/components/loader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useENSFields } from "./ENSFieldsProvider";
+import { useSetTextRecords } from "@/hooks/useSetTextRecords";
 import type { TextRecordKey } from "@/lib/ens/ens-contracts";
 
 interface ENSGalleryFieldProps {
+  ensName: string;
   artKey: TextRecordKey;
   label: string;
   isOwner: boolean;
 }
 
 export function ENSGalleryField({
+  ensName,
   artKey,
   label,
   isOwner,
 }: ENSGalleryFieldProps) {
   const fieldId = useId();
-  const { getValue, setValue, isLoading } = useENSFields();
 
-  // Local state for uploads only
+  // Fetch art data using the built-in wagmi hook
+  const { data: artUrl, isLoading } = useEnsText({
+    name: ensName,
+    key: artKey,
+    query: { enabled: !!ensName },
+    chainId: 1,
+  });
+
+  // Local state for this field
+  const [value, setValue] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
-  const value = getValue(artKey);
+  const setTextRecords = useSetTextRecords();
+
+  // Update local state when data loads
+  useEffect(() => {
+    if (artUrl) {
+      setValue(artUrl);
+    }
+  }, [artUrl]);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -59,14 +80,14 @@ export function ENSGalleryField({
         // Video upload returns fileName, construct the URL
         if (data.fileName) {
           const videoUrl = `/api/video/${encodeURIComponent(data.fileName)}`;
-          setValue(artKey, videoUrl);
+          setValue(videoUrl);
         } else if (data.url) {
-          setValue(artKey, data.url);
+          setValue(data.url);
         }
       } else {
         // Image upload returns url directly
         if (data.url) {
-          setValue(artKey, data.url);
+          setValue(data.url);
         }
       }
     } catch (error) {
@@ -79,8 +100,43 @@ export function ENSGalleryField({
     }
   };
 
-  const handleRemove = () => {
-    setValue(artKey, "");
+  const handleSave = async () => {
+    setIsSaving(true);
+    setSaved(false);
+
+    try {
+      await setTextRecords.mutateAsync({
+        label: ensName,
+        key: artKey,
+        value,
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (error) {
+      console.error(`Error saving ${artKey}:`, error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleRemove = async () => {
+    setIsSaving(true);
+    setSaved(false);
+
+    try {
+      await setTextRecords.mutateAsync({
+        label: ensName,
+        key: artKey,
+        value: "",
+      });
+      setValue("");
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (error) {
+      console.error(`Error removing ${artKey}:`, error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const isVideo = (url: string) => {
@@ -127,14 +183,13 @@ export function ENSGalleryField({
   if (isLoading) {
     return (
       <div className="space-y-4 rounded-lg border p-4">
-        <div className="mb-4 flex justify-center">
-          <div className="h-32 w-32 animate-pulse rounded-lg bg-muted" />
-        </div>
+        {mediaDisplay}
         <div className="flex items-end space-x-2">
           <div className="flex-1">
             <Label>{label}</Label>
             <div className="h-10 w-full animate-pulse rounded-md bg-muted" />
           </div>
+          <div className="h-9 w-16 animate-pulse rounded-md bg-muted" />
         </div>
       </div>
     );
@@ -144,12 +199,12 @@ export function ENSGalleryField({
   return (
     <div className="space-y-4 rounded-lg border p-4">
       {/* Media Preview */}
-      {value && (
+      {(value || artUrl) && (
         <div className="mb-4 flex justify-center">
           <div className="relative h-32 w-32 overflow-hidden rounded-lg border">
-            {isVideo(value) ? (
+            {isVideo(value || artUrl || "") ? (
               <video
-                src={value}
+                src={value || artUrl || ""}
                 className="h-full w-full object-cover"
                 controls
                 muted
@@ -157,11 +212,11 @@ export function ENSGalleryField({
               />
             ) : (
               <Image
-                src={value}
+                src={value || artUrl || ""}
                 alt={`${label} media`}
                 fill
                 className="object-cover"
-                unoptimized={value.startsWith("data:")}
+                unoptimized={(value || artUrl || "").startsWith("data:")}
               />
             )}
           </div>
@@ -195,19 +250,33 @@ export function ENSGalleryField({
           )}
         </div>
 
-        {/* Remove Button */}
-        {value && (
+        {/* Action Buttons */}
+        <div className="flex space-x-2">
           <Button
             size="sm"
-            variant="outline"
-            onClick={handleRemove}
-            disabled={isUploading}
-            className="w-full"
+            onClick={handleSave}
+            disabled={isSaving || isUploading || !value}
           >
-            <XIcon className="h-4 w-4 mr-2" />
-            Remove
+            {isSaving ? (
+              <Loader className="h-4 w-4" />
+            ) : saved ? (
+              <CheckIcon className="h-4 w-4" />
+            ) : (
+              <SaveIcon className="h-4 w-4" />
+            )}
           </Button>
-        )}
+
+          {(value || artUrl) && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleRemove}
+              disabled={isSaving || isUploading}
+            >
+              <XIcon className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -4,10 +4,12 @@ import { ENSGalleryField } from "./ENSGalleryField";
 import { TEXT_RECORD_KEYS } from "@/lib/ens/ens-contracts";
 
 interface ENSGallerySectionProps {
+  ensName: string;
   isOwner: boolean;
 }
 
 export function ENSGallerySection({
+  ensName,
   isOwner,
 }: ENSGallerySectionProps) {
   const galleryFields = [
@@ -32,6 +34,7 @@ export function ENSGallerySection({
         {galleryFields.map((field) => (
           <ENSGalleryField
             key={field.key}
+            ensName={ensName}
             artKey={field.key}
             label={field.label}
             isOwner={isOwner}
