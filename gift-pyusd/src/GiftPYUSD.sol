@@ -20,6 +20,7 @@ contract GiftPYUSD is ERC721 {
     mapping(uint256 => Artist) public artists;
     mapping(uint256 => uint256) public tokenArtist;
     mapping(uint256 => uint256) public artistBalances;
+    mapping(uint256 => uint256) public tokenAmounts;
 
     // SBT: disable all transfers/approvals
     error TRANSFERS_DISABLED();
@@ -29,6 +30,7 @@ contract GiftPYUSD is ERC721 {
     error INVALID_WALLET();
     error UNAUTHORIZED();
     error INSUFFICIENT_BALANCE();
+    error DONATION_TOO_LOW();
 
     event ArtistRegistered(uint256 indexed artistId, address payoutWallet, string name, string imageURI);
     event ArtistUpdated(uint256 indexed artistId, address payoutWallet, string name, string imageURI);
@@ -77,20 +79,23 @@ contract GiftPYUSD is ERC721 {
         emit ArtistUpdated(artistId, artist.payoutWallet, artist.name, artist.imageURI);
     }
 
-    function mint(uint256 artistId) external {
+    function mint(uint256 artistId, uint256 amount) external {
         Artist storage artist = artists[artistId];
         if (!artist.exists) revert ARTIST_NOT_FOUND();
 
+        if (amount < mintPrice) revert DONATION_TOO_LOW();
+
         // Pull PYUSD from caller first, then mint the NFT
-        mintToken.transferFrom(msg.sender, address(this), mintPrice);
+        mintToken.transferFrom(msg.sender, address(this), amount);
 
         uint256 newTokenId = ++totalIssued;
         tokenArtist[newTokenId] = artistId;
-        artistBalances[artistId] += mintPrice;
+        tokenAmounts[newTokenId] = amount;
+        artistBalances[artistId] += amount;
 
         _mint(msg.sender, newTokenId);
 
-        emit GiftMinted(newTokenId, msg.sender, artistId, mintPrice);
+        emit GiftMinted(newTokenId, msg.sender, artistId, amount);
     }
 
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
@@ -103,7 +108,7 @@ contract GiftPYUSD is ERC721 {
         if (!artist.exists) revert ARTIST_NOT_FOUND();
 
         string memory tokenIdStr = _uint2str(tokenId);
-        string memory mintPriceStr = _uint2str(mintPrice);
+        string memory mintAmountStr = _uint2str(tokenAmounts[tokenId]);
         string memory totalIssuedStr = _uint2str(totalIssued);
 
         // Build JSON metadata for the SBT with artist-specific fields
@@ -118,8 +123,8 @@ contract GiftPYUSD is ERC721 {
             artist.imageURI,
             '","attributes":[{"trait_type":"Artist ID","value":"',
             _uint2str(artistId),
-            '"},{"trait_type":"Mint Price","value":"',
-            mintPriceStr,
+            '"},{"trait_type":"Donation Amount","value":"',
+            mintAmountStr,
             '"},{"trait_type":"Total Issued","value":"',
             totalIssuedStr,
             '"},{"trait_type":"Token Standard","value":"SBT (Non-Transferable)"}]}'
