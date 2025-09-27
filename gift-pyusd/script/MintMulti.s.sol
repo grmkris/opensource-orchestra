@@ -28,36 +28,39 @@ contract MintMulti is Script {
 
         string memory raw = vm.readFile(configPath);
         uint256[] memory artistIds = raw.readUintArray(".artistIds");
-        uint256[] memory amounts = raw.readUintArray(".amounts");
+        uint256 total = raw.readUint(".total");
         string memory title = raw.readString(".title");
 
-        require(artistIds.length == amounts.length && artistIds.length > 0, "length mismatch or empty");
+        require(artistIds.length > 0, "length mismatch or empty");
 
         GiftPYUSD gift = GiftPYUSD(giftAddr);
-        MultiGiftSBT receipt = MultiGiftSBT(receiptAddr);
-        ERC20 pyusd = ERC20(pyusdAddr);
 
-        // Pre-validate against GiftPYUSD constraints
-        uint256 mintPrice = gift.mintPrice();
-        uint256 total;
-        for (uint256 i = 0; i < amounts.length; i++) {
-            // Artist must exist
+        // Pre-validate against GiftPYUSD constraints and artist existence
+        for (uint256 i = 0; i < artistIds.length; i++) {
             (,, , bool exists) = gift.artists(artistIds[i]);
             require(exists, "artist not registered");
-            total += amounts[i];
         }
-        require(total >= mintPrice, "total below mintPrice");
+        require(total >= gift.mintPrice(), "total below mintPrice");
+
+        // Compute equal split amounts from total and artist count
+        uint256 n = artistIds.length;
+        uint256 share = total / n;
+        uint256 rem = total % n;
+        uint256[] memory amounts = new uint256[](n);
+        for (uint256 i = 0; i < n; i++) {
+            amounts[i] = share + (i < rem ? 1 : 0);
+        }
 
         // Approve GiftPYUSD to pull the total PYUSD from the broadcaster EOA
         vm.broadcast();
-        pyusd.approve(giftAddr, total);
+        ERC20(pyusdAddr).approve(giftAddr, total);
 
-        // Allocate the donation (owner-only call)
+        // Allocate the donation
         vm.broadcast();
         gift.allocateDonation(artistIds, amounts);
 
         // Mint the single receipt NFT capturing the whole split
         vm.broadcast();
-        receipt.mint(artistIds, amounts, total, title);
+        MultiGiftSBT(receiptAddr).mint(artistIds, total, title);
     }
 }

@@ -1,5 +1,5 @@
 {
   "artistIds": [1, 2],
-  "amounts": [500000, 500000],
-  "title": "Alice & Bob Gift"
+  "total": 1000001,
+  "title": "Alice & Bob Gift (1.0 PYUSD)"
 }

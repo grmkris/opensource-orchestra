@@ -51,23 +51,24 @@ contract MultiGiftSBT is ERC721 {
     // --- External ---
     /// @notice Mint a soulbound receipt NFT representing a single multi-artist gift action.
     /// @param artistIds The list of artist IDs
-    /// @param amounts The list of per-artist amounts (same length as artistIds)
-    /// @param totalAmount The sum of all amounts (validated on-chain)
+    /// @param totalAmount The total donation amount (will be split equally across artistIds)
     /// @param title Optional title/label (empty string allowed)
     function mint(
         uint256[] calldata artistIds,
-        uint256[] calldata amounts,
         uint256 totalAmount,
         string calldata title
     ) external {
-        if (artistIds.length != amounts.length) revert LENGTH_MISMATCH();
-
-        uint256 sum;
-        for (uint256 i = 0; i < amounts.length; i++) {
-            sum += amounts[i];
-        }
-        if (sum != totalAmount) revert INVALID_SUM();
+        uint256 n = artistIds.length;
+        if (n == 0) revert LENGTH_MISMATCH();
         if (totalAmount < MIN_TOTAL_AMOUNT) revert TOTAL_TOO_LOW();
+
+        // Compute equal split with remainder distributed from the beginning
+        uint256 share = totalAmount / n;
+        uint256 rem = totalAmount % n;
+        uint256[] memory amounts = new uint256[](n);
+        for (uint256 i = 0; i < n; i++) {
+            amounts[i] = share + (i < rem ? 1 : 0);
+        }
 
         uint256 tokenId = ++totalIssued;
 

@@ -13,64 +13,44 @@ contract MultiGiftSBTTest is Test {
         receipt = new MultiGiftSBT();
     }
 
-    function testMint_Succeeds() public {
+    function testMint_Succeeds_EqualSplitWithRemainder() public {
         uint256[] memory ids = new uint256[](2);
         ids[0] = 1; ids[1] = 2;
-        uint256[] memory amts = new uint256[](2);
-        amts[0] = 600_000; amts[1] = 500_000;
+        uint256 total = 1_100_001; // share=550000, rem=1 => [550001, 550000]
 
-        receipt.mint(ids, amts, 1_100_000, "Alice & Bob");
+        receipt.mint(ids, total, "Alice & Bob");
 
         assertEq(receipt.balanceOf(address(this)), 1);
         assertEq(receipt.totalIssued(), 1);
 
-        (uint256[] memory rIds, uint256[] memory rAmts, uint256 total, string memory title) = receipt.getGift(1);
+        (uint256[] memory rIds, uint256[] memory rAmts, uint256 rTotal, string memory title) = receipt.getGift(1);
         assertEq(rIds.length, 2);
         assertEq(rAmts.length, 2);
         assertEq(rIds[0], 1);
         assertEq(rIds[1], 2);
-        assertEq(rAmts[0], 600_000);
-        assertEq(rAmts[1], 500_000);
-        assertEq(total, 1_100_000);
+        assertEq(rAmts[0], 550_001);
+        assertEq(rAmts[1], 550_000);
+        assertEq(rTotal, total);
         assertEq(keccak256(bytes(title)), keccak256(bytes("Alice & Bob")));
     }
 
-    function testMint_RevertIfLengthMismatch() public {
-        uint256[] memory ids = new uint256[](2);
-        ids[0] = 1; ids[1] = 2;
-        uint256[] memory amts = new uint256[](1);
-        amts[0] = 100;
-
+    function testMint_RevertIfEmptyArtistIds() public {
+        uint256[] memory ids = new uint256[](0);
         vm.expectRevert(MultiGiftSBT.LENGTH_MISMATCH.selector);
-        receipt.mint(ids, amts, 100, "Mismatch");
-    }
-
-    function testMint_RevertIfInvalidSum() public {
-        uint256[] memory ids = new uint256[](2);
-        ids[0] = 1; ids[1] = 2;
-        uint256[] memory amts = new uint256[](2);
-        amts[0] = 600_000; amts[1] = 500_000;
-
-        vm.expectRevert(MultiGiftSBT.INVALID_SUM.selector);
-        receipt.mint(ids, amts, 1_000_000, "Bad sum");
+        receipt.mint(ids, MIN_TOTAL, "Empty");
     }
 
     function testMint_RevertIfTotalTooLow() public {
         uint256[] memory ids = new uint256[](2);
         ids[0] = 1; ids[1] = 2;
-        uint256[] memory amts = new uint256[](2);
-        amts[0] = 400_000; amts[1] = 599_999;
-
         vm.expectRevert(MultiGiftSBT.TOTAL_TOO_LOW.selector);
-        receipt.mint(ids, amts, MIN_TOTAL - 1, "Too low");
+        receipt.mint(ids, MIN_TOTAL - 1, "Too low");
     }
 
     function testSBT_DisablesTransfersAndApprovals() public {
         uint256[] memory ids = new uint256[](1);
         ids[0] = 1;
-        uint256[] memory amts = new uint256[](1);
-        amts[0] = MIN_TOTAL;
-        receipt.mint(ids, amts, MIN_TOTAL, "One");
+        receipt.mint(ids, MIN_TOTAL, "One");
 
         vm.expectRevert(MultiGiftSBT.TRANSFERS_DISABLED.selector);
         receipt.approve(address(0xBEEF), 1);

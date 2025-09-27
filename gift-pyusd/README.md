@@ -168,7 +168,7 @@ In this mode, the contract owner allocates a total PYUSD donation across multipl
 Prerequisites:
 - `GIFT_PYUSD` is deployed and artists are registered.
 - `MULTI_GIFT_SBT` is deployed (see below) and exported in your `.env`.
-- `MULTI_GIFT_CONFIG` points to a JSON file describing `artistIds`, `amounts` and `title`.
+- `MULTI_GIFT_CONFIG` points to a JSON file describing `artistIds`, a single `total` amount (6 decimals), and `title`.
 - You must run the script from the GiftPYUSD owner account.
 
 1) Deploy the MultiGiftSBT contract:
@@ -198,7 +198,7 @@ Example:
 ```json
 {
   "artistIds": [1, 2],
-  "amounts": [5000000, 5000000],
+  "total": 1000000,
   "title": "Alice & Bob Gift"
 }
 ```
@@ -207,7 +207,7 @@ Notes:
 
 3) Approve total PYUSD (sum of `amounts`) to GiftPYUSD:
 ```bash
-TOTAL=10000000 # 10.0 PYUSD
+TOTAL=10000000 # 10.0 PYUSD (must match the config's total)
 cast send $PYUSD "approve(address,uint256)" \
   $GIFT_PYUSD \
   $TOTAL \
@@ -215,7 +215,7 @@ cast send $PYUSD "approve(address,uint256)" \
   --rpc-url $SEPOLIA_RPC_URL
 ```
 
-4) Run the multi-gift script (owner-only):
+4) Run the multi-gift script:
 ```bash
 forge script script/MintMulti.s.sol:MintMulti \
   --rpc-url $SEPOLIA_RPC_URL \
@@ -224,7 +224,7 @@ forge script script/MintMulti.s.sol:MintMulti \
 ```
 This will:
 - Call `GiftPYUSD.allocateDonation(artistIds, amounts)` once to allocate balances.
-- Mint one `MultiGiftSBT`to the caller with the full split.
+- Mint one `MultiGiftSBT` to the caller with the full split (stored with the computed equal amounts).
 
 5) Verify on-chain state:
 ```bash

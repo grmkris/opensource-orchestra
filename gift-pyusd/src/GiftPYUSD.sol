@@ -101,7 +101,7 @@ contract GiftPYUSD is ERC721 {
         emit GiftMinted(newTokenId, msg.sender, artistId, amount);
     }
 
-    function allocateDonation(uint256[] calldata artistIds, uint256[] calldata amounts) external onlyOwner {
+    function allocateDonation(uint256[] calldata artistIds, uint256[] calldata amounts) external {
         uint256 length = artistIds.length;
         if (length == 0) revert EMPTY_DONATION();
         if (length != amounts.length) revert LENGTH_MISMATCH();
