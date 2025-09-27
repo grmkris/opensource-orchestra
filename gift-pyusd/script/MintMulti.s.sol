@@ -2,21 +2,20 @@
 pragma solidity 0.8.23;
 
 import {Script} from "forge-std/Script.sol";
-import {stdJson} from "forge-std/StdJson.sol";
 import {ERC20} from "solmate/tokens/ERC20.sol";
 import {GiftPYUSD} from "../src/GiftPYUSD.sol";
 import {MultiGiftSBT} from "../src/MultiGiftSBT.sol";
 
-/// @notice A script that splits a total PYUSD donation across multiple artists via GiftPYUSD
+/// @notice Splits a total PYUSD donation across multiple artists via GiftPYUSD
 ///         and mints a single MultiGiftSBT receipt NFT summarizing the gift.
-/// @dev    Expects a JSON config file with fields:
-///         {
-///           "artistIds": [1,2,3],
-///           "amounts": [500000, 500000, 1000000],
-///           "title": "Alice & Bob & Charlie"
-///         }
+/// @dev    This script uses CLI arguments (no JSON required). Call with:
+///         forge script script/MintMulti.s.sol:MintMulti \
+///           --sig "run(uint256[],uint256,string)" \
+///           "[1,2]" 1000000 "Alice & Bob Gift" \
+///           --rpc-url $SEPOLIA_RPC_URL \
+///           --private-key $PRIVATE_KEY \
+///           --broadcast
 contract MintMulti is Script {
-    using stdJson for string;
 
     string internal constant CONFIG_ENV = "MULTI_GIFT_CONFIG"; // deprecated: path like ./config/multi_gift.json
 
