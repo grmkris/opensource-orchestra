@@ -13,6 +13,39 @@ interface SubdomainRegistrationProps {
 	onSuccess?: () => void;
 }
 
+// Phase indicator component
+const PhaseIndicator = ({
+	phase,
+}: {
+	phase: "register" | "setPrimary" | "complete";
+}) => (
+	<div className="mb-6">
+		<div className="mb-2 text-center">
+			<span className="font-medium text-gray-600 text-sm">
+				{phase === "register" && "Step 1 of 2: Register Username"}
+				{phase === "setPrimary" && "Step 2 of 2: Activate Username"}
+				{phase === "complete" && "Username Setup Complete!"}
+			</span>
+		</div>
+		<div className="flex items-center justify-center space-x-2">
+			<div
+				className={`h-2 w-16 rounded-full transition-all duration-300 ${
+					phase !== "register" ? "bg-green-500" : "bg-blue-500"
+				}`}
+			/>
+			<div
+				className={`h-2 w-16 rounded-full transition-all duration-300 ${
+					phase === "complete"
+						? "bg-green-500"
+						: phase === "setPrimary"
+							? "bg-blue-500"
+							: "bg-gray-300"
+				}`}
+			/>
+		</div>
+	</div>
+);
+
 export function SubdomainRegistration({
 	onSuccess,
 }: SubdomainRegistrationProps = {}) {
@@ -102,39 +135,6 @@ export function SubdomainRegistration({
 	};
 
 	const availabilityStatus = getAvailabilityStatus();
-
-	// Phase indicator component
-	const PhaseIndicator = ({
-		phase,
-	}: {
-		phase: "register" | "setPrimary" | "complete";
-	}) => (
-		<div className="mb-6">
-			<div className="mb-2 text-center">
-				<span className="font-medium text-gray-600 text-sm">
-					{phase === "register" && "Step 1 of 2: Register Username"}
-					{phase === "setPrimary" && "Step 2 of 2: Activate Username"}
-					{phase === "complete" && "Username Setup Complete!"}
-				</span>
-			</div>
-			<div className="flex items-center justify-center space-x-2">
-				<div
-					className={`h-2 w-16 rounded-full transition-all duration-300 ${
-						phase !== "register" ? "bg-green-500" : "bg-blue-500"
-					}`}
-				/>
-				<div
-					className={`h-2 w-16 rounded-full transition-all duration-300 ${
-						phase === "complete"
-							? "bg-green-500"
-							: phase === "setPrimary"
-								? "bg-blue-500"
-								: "bg-gray-300"
-					}`}
-				/>
-			</div>
-		</div>
-	);
 
 	// Auto-transition phases
 	useEffect(() => {
