@@ -43,8 +43,8 @@ function DonationFeedItem({ donation }: { donation: Donation }) {
 						<div className="flex flex-wrap items-center space-x-2">
 							<span className="font-medium text-gray-900">{senderDisplay}</span>
 							<span className="text-gray-500 text-sm">gifted</span>
-							<Link
-								href={`/ens/${donation.toEns || donation.to}`}
+								<Link
+									href={`/profile/${donation.toEns || donation.to}`}
 								className="font-medium text-blue-600 hover:text-blue-800 hover:underline"
 							>
 								{artistDisplay}
@@ -222,7 +222,7 @@ export function GlobalDonationsFeed() {
 					<p className="text-gray-600 text-sm">
 						Musician?{" "}
 						<Link
-							href="/ens"
+							href="/onboarding"
 							className="font-medium text-blue-600 hover:text-blue-800 hover:underline"
 						>
 							Join the Orchestra
