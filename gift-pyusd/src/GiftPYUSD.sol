@@ -52,7 +52,7 @@ contract GiftPYUSD is ERC721 {
         owner = msg.sender;
     }
 
-    function registerArtist(address wallet, string calldata name, string calldata imageURI) external onlyOwner {
+    function registerArtist(address wallet, string calldata name, string calldata imageURI) external {
         if (artists[wallet].exists) revert ARTIST_EXISTS();
         if (wallet == address(0)) revert INVALID_WALLET();
 
@@ -66,9 +66,10 @@ contract GiftPYUSD is ERC721 {
         emit ArtistRegistered(wallet, name, imageURI);
     }
 
-    function updateArtist(address wallet, string calldata name, string calldata imageURI) external onlyOwner {
+    function updateArtist(address wallet, string calldata name, string calldata imageURI) external {
         Artist storage artist = artists[wallet];
         if (!artist.exists) revert ARTIST_NOT_FOUND();
+        if (msg.sender != wallet) revert UNAUTHORIZED();
 
         if (bytes(name).length != 0) {
             artist.name = name;

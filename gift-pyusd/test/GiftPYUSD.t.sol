@@ -48,16 +48,23 @@ contract GiftPYUSDTest is Test {
         giftPYUSD.registerArtist(address(0), ANOTHER_ARTIST_NAME, ANOTHER_ARTIST_IMAGE);
     }
 
-    function testRegisterArtist_RevertIfNotOwner() public {
+    function testRegisterArtist_AllowsNonOwner() public {
         vm.prank(address(0xBEEF));
-        vm.expectRevert(GiftPYUSD.NOT_OWNER.selector);
         giftPYUSD.registerArtist(ANOTHER_ARTIST_WALLET, ANOTHER_ARTIST_NAME, ANOTHER_ARTIST_IMAGE);
+
+        (address payoutWallet, string memory name, string memory imageURI, bool exists) = giftPYUSD.artists(ANOTHER_ARTIST_WALLET);
+
+        assertEq(payoutWallet, ANOTHER_ARTIST_WALLET);
+        assertEq(name, ANOTHER_ARTIST_NAME);
+        assertEq(imageURI, ANOTHER_ARTIST_IMAGE);
+        assertTrue(exists);
     }
 
     function testUpdateArtist_Succeeds() public {
         string memory newName = "Alice Deluxe";
         string memory newImage = "https://example.com/alice-deluxe.png";
 
+        vm.prank(ARTIST_WALLET);
         giftPYUSD.updateArtist(ARTIST_WALLET, newName, newImage);
 
         (address payoutWallet, string memory name, string memory imageURI, bool exists) = giftPYUSD.artists(ARTIST_WALLET);
@@ -73,9 +80,9 @@ contract GiftPYUSDTest is Test {
         giftPYUSD.updateArtist(address(0xDEAD), ARTIST_NAME, ARTIST_IMAGE);
     }
 
-    function testUpdateArtist_RevertIfNotOwner() public {
+    function testUpdateArtist_RevertIfUnauthorized() public {
         vm.prank(address(0xBEEF));
-        vm.expectRevert(GiftPYUSD.NOT_OWNER.selector);
+        vm.expectRevert(GiftPYUSD.UNAUTHORIZED.selector);
         giftPYUSD.updateArtist(ARTIST_WALLET, ARTIST_NAME, ARTIST_IMAGE);
     }
 

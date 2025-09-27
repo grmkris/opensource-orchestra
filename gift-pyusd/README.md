@@ -7,14 +7,14 @@ A Solidity smart contract that implements a non-transferable Soulbound Token (SB
 This project demonstrates a **Soulbound Token (SBT)** implementation where:
 - Users can mint SBTs by paying with PYUSD tokens
 - Once minted, SBTs are **non-transferable** and **non-approvable**
-- Only the contract owner can withdraw accumulated PYUSD funds
+- Artists can withdraw their own accumulated PYUSD balances (artist wallet only)
 - Built on Ethereum-compatible networks using Solidity
 
 ## Features
 
 - **PYUSD Gift**: Mint SBTs by gifting PYUSD tokens (minimum `minGiftAmount`, no upper bound)
 - **Non-Transferable**: All transfer and approval functions are disabled
-- **Owner Withdrawal**: Contract owner can withdraw accumulated PYUSD
+- **Artist Withdrawal**: Registered artist payout wallet can withdraw its accumulated PYUSD
 - **Token Metadata**: Basic ERC-721 interface with custom tokenURI support
 - **Comprehensive Testing**: Full test coverage including SBT behavior verification
 
@@ -99,10 +99,12 @@ forge test
 
 ### Register Artists
 
-With the contract deployed, register artist metadata for any wallet present in `config/artists.json`:
+With the contract deployed, you can register artist metadata for any wallet present in `config/artists.json`.
 
-1. Confirm the contract owner wallet matches the `PRIVATE_KEY` you configured.
-2. Run the registration script with broadcasting credentials:
+- Registration is permissionless: anyone can call `registerArtist` for a new wallet.
+- The on-chain unique key is the `wallet` address; duplicates will revert.
+
+Run the registration script with broadcasting credentials:
 
 ```bash
 ARTIST_WALLET=0x... forge script script/RegisterArtist.s.sol:RegisterArtist \
@@ -123,7 +125,7 @@ If the call returns the configured wallet, metadata, and `true`, the artist is r
 
 #### Update an existing artist
 
-If metadata needs to change for an existing artist (by wallet), use the `updateArtist` function from the owner account. Empty strings keep current values:
+If metadata needs to change for an existing artist (by wallet), call `updateArtist` from that artist's payout wallet (artist wallet only). Empty strings keep current values:
 
 ```bash
 cast send $GIFT_PYUSD "updateArtist(address,string,string)" \
@@ -259,6 +261,8 @@ constructor(address _mintToken, uint256 _minGiftAmount)
 - `contractPYUSDBalance()`: Returns current PYUSD balance of the contract
  - `tokenAmounts(uint256 tokenId)`: Returns the gift amount associated with a minted token
 - `artistBalance(address wallet)`: Returns the accumulated PYUSD balance available for an artist to withdraw
+ - `registerArtist(address wallet, string name, string imageURI)`: Permissionless registration for a new artist. Reverts if `wallet` already exists or `wallet` is zero.
+ - `updateArtist(address wallet, string name, string imageURI)`: Only callable by the artist wallet (must equal `wallet`). Reverts with `UNAUTHORIZED` otherwise. Empty strings keep current values.
 
 #### Withdrawal
 - `withdrawForArtist(address wallet, uint256 amount)`: Withdraw PYUSD to the registered payout wallet for the specified artist. Only callable by that artist's payout wallet.
