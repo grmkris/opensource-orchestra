@@ -90,6 +90,10 @@ forge test
      --verify
    ```
 3. After deployment, copy the resulting contract address into `GIFT_PYUSD` inside `.env`. If you re-deploy, remember to sync `config/artists.json` and re-register artists.
+   ```bash
+   set -a; source .env; set +a
+   ```
+   Set the environment variables in the `.env` file.
 
 ### Register Artists
 

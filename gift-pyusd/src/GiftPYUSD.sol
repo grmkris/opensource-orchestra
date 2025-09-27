@@ -115,9 +115,9 @@ contract GiftPYUSD is ERC721 {
         return string(abi.encodePacked(
             'data:application/json,{"name":"',
             artist.name,
-            ' Gift SBT #',
+            ' #',
             tokenIdStr,
-            '","description":"A soulbound token representing a PYUSD gift to artist ',
+            '","description":"A soulbound token representing a gift by pyUSD to artist ',
             artist.name,
             '. This token is non-transferable and acknowledges the supporter.","image":"',
             artist.imageURI,
