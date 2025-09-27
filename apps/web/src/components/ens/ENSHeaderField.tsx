@@ -29,6 +29,7 @@ export function ENSHeaderField({ ensName, isOwner }: ENSHeaderFieldProps) {
 	// Local state for this field
 	const [value, setValue] = useState("");
 	const [isSaving, setIsSaving] = useState(false);
+	const [isUploading, setIsUploading] = useState(false);
 	const [saved, setSaved] = useState(false);
 
 	const setTextRecords = useSetTextRecords();
@@ -39,6 +40,33 @@ export function ENSHeaderField({ ensName, isOwner }: ENSHeaderFieldProps) {
 			setValue(headerUrl);
 		}
 	}, [headerUrl]);
+
+	const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0];
+		if (!file) return;
+
+		setIsUploading(true);
+		try {
+			const formData = new FormData();
+			formData.append("file", file);
+
+			const response = await fetch("/api/upload/image", {
+				method: "POST",
+				body: formData,
+			});
+
+			if (!response.ok) {
+				throw new Error("Failed to upload image");
+			}
+
+			const { url } = await response.json();
+			setValue(url);
+		} catch (error) {
+			console.error("Error uploading header image:", error);
+		} finally {
+			setIsUploading(false);
+		}
+	};
 
 	const handleSave = async () => {
 		setIsSaving(true);
@@ -60,17 +88,17 @@ export function ENSHeaderField({ ensName, isOwner }: ENSHeaderFieldProps) {
 	};
 
 	// Header display (only show if there's a header image)
-	const headerDisplay = headerUrl && (
+	const headerDisplay = (headerUrl || value) && (
 		<div className="relative mb-6 h-32 w-full">
 			{isLoading ? (
 				<div className="h-32 w-full animate-pulse rounded-t-lg bg-muted" />
 			) : (
 				<ENSAvatar
-					src={headerUrl}
+					src={value || headerUrl || undefined}
 					alt={`${ensName} header`}
 					size="lg"
 					rounded={false}
-					className="h-32 w-full rounded-t-lg"
+					className="h-32 w-full rounded-t-lg object-cover"
 				/>
 			)}
 		</div>
@@ -99,17 +127,37 @@ export function ENSHeaderField({ ensName, isOwner }: ENSHeaderFieldProps) {
 	// Editable view for owners
 	return (
 		<div className="space-y-4">
+			{/* Image Preview */}
+			{headerDisplay}
+
+			{/* File Upload */}
 			<div className="flex items-end space-x-2">
 				<div className="flex-1">
-					<Label htmlFor={fieldId}>Header Image URL</Label>
+					<Label htmlFor={fieldId}>Upload Header Image</Label>
 					<Input
 						id={fieldId}
-						placeholder="https://example.com/header.jpg"
-						value={value}
-						onChange={(e) => setValue(e.target.value)}
+						type="file"
+						accept="image/*"
+						onChange={handleFileSelect}
+						disabled={isUploading}
+						className="cursor-pointer"
 					/>
+					{isUploading && (
+						<p className="mt-1 text-muted-foreground text-sm">
+							Uploading image...
+						</p>
+					)}
+					{value && !isUploading && (
+						<p className="mt-1 text-muted-foreground text-sm">
+							Image uploaded successfully
+						</p>
+					)}
 				</div>
-				<Button size="sm" onClick={handleSave} disabled={isSaving}>
+				<Button
+					size="sm"
+					onClick={handleSave}
+					disabled={isSaving || isUploading || !value}
+				>
 					{isSaving ? (
 						<Loader className="h-4 w-4" />
 					) : saved ? (

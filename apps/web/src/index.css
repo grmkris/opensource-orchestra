@@ -1,7 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-
 @theme {
 	--font-sans:
 		"Inter", "Geist", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
@@ -57,7 +56,6 @@ body {
 	--devconnect-gray: oklch(0.97 0 0);
 	--devconnect-text: oklch(0.2 0 0);
 }
-
 
 @theme inline {
 	--radius-sm: calc(var(--radius) - 4px);

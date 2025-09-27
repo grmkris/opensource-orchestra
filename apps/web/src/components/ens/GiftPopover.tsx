@@ -26,7 +26,10 @@ const PRESET_AMOUNTS = [
 	{ value: "1", label: "1 ETH" },
 ];
 
-export function GiftPopover({ recipientAddress, recipientName }: GiftPopoverProps) {
+export function GiftPopover({
+	recipientAddress,
+	recipientName,
+}: GiftPopoverProps) {
 	const [open, setOpen] = useState(false);
 	const [amount, setAmount] = useState("");
 	const [isCustom, setIsCustom] = useState(false);
@@ -49,7 +52,7 @@ export function GiftPopover({ recipientAddress, recipientName }: GiftPopoverProp
 			return;
 		}
 
-		if (!amount || parseFloat(amount) <= 0) {
+		if (!amount || Number.parseFloat(amount) <= 0) {
 			toast.error("Please enter a valid amount");
 			return;
 		}
@@ -59,7 +62,7 @@ export function GiftPopover({ recipientAddress, recipientName }: GiftPopoverProp
 				to: recipientAddress as `0x${string}`,
 				value: parseEther(amount),
 			});
-			
+
 			toast.success(`Gift of ${amount} ETH sent to ${recipientName}!`);
 			setOpen(false);
 			setAmount("");
@@ -86,18 +89,20 @@ export function GiftPopover({ recipientAddress, recipientName }: GiftPopoverProp
 				<div className="grid gap-4">
 					<div className="space-y-2">
 						<h4 className="font-medium leading-none">Send a gift</h4>
-						<p className="text-sm text-muted-foreground">
+						<p className="text-muted-foreground text-sm">
 							Choose an amount to gift to {recipientName}
 						</p>
 					</div>
-					
+
 					<div className="grid gap-2">
 						<Label>Select amount</Label>
 						<div className="grid grid-cols-2 gap-2">
 							{PRESET_AMOUNTS.map((preset) => (
 								<Button
 									key={preset.value}
-									variant={amount === preset.value && !isCustom ? "default" : "outline"}
+									variant={
+										amount === preset.value && !isCustom ? "default" : "outline"
+									}
 									size="sm"
 									onClick={() => handlePresetClick(preset.value)}
 									className="justify-start"
@@ -106,7 +111,7 @@ export function GiftPopover({ recipientAddress, recipientName }: GiftPopoverProp
 								</Button>
 							))}
 						</div>
-						
+
 						<Button
 							variant={isCustom ? "default" : "outline"}
 							size="sm"
@@ -115,9 +120,9 @@ export function GiftPopover({ recipientAddress, recipientName }: GiftPopoverProp
 						>
 							Custom Amount
 						</Button>
-						
+
 						{isCustom && (
-							<div className="flex items-center gap-2 mt-2">
+							<div className="mt-2 flex items-center gap-2">
 								<Input
 									type="number"
 									step="0.000001"
@@ -127,18 +132,18 @@ export function GiftPopover({ recipientAddress, recipientName }: GiftPopoverProp
 									placeholder="Enter amount"
 									className="flex-1"
 								/>
-								<span className="text-sm text-muted-foreground">ETH</span>
+								<span className="text-muted-foreground text-sm">ETH</span>
 							</div>
 						)}
 					</div>
-					
+
 					{amount && (
 						<div className="rounded-lg bg-muted p-3">
-							<p className="text-sm text-muted-foreground">You're sending</p>
-							<p className="text-lg font-semibold">{amount} ETH</p>
+							<p className="text-muted-foreground text-sm">You're sending</p>
+							<p className="font-semibold text-lg">{amount} ETH</p>
 						</div>
 					)}
-					
+
 					<Button
 						onClick={handleSendGift}
 						disabled={!amount || isPending}

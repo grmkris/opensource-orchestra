@@ -1,20 +1,9 @@
 "use client";
 
-import {
-	CheckIcon,
-	CopyIcon,
-	ExternalLinkIcon,
-	LinkIcon,
-	Music,
-} from "lucide-react";
-import Link from "next/link";
+import { CheckIcon, CopyIcon, ExternalLinkIcon, LinkIcon } from "lucide-react";
 import { useState } from "react";
 import { normalize } from "viem/ens";
-import {
-	useEnsAddress,
-	useEnsAvatar,
-	useEnsText,
-} from "wagmi";
+import { useEnsAddress, useEnsAvatar, useEnsText } from "wagmi";
 import { GiftsSection } from "@/components/ens/DonationsSection";
 import { ENSAvatar } from "@/components/ens/ENSAvatar";
 import { GiftPopover } from "@/components/ens/GiftPopover";
@@ -250,7 +239,6 @@ export function SubdomainProfilePublic({ ensName }: { ensName: string }) {
 									recipientName={ensName}
 								/>
 							</div>
-
 						</div>
 					</div>
 

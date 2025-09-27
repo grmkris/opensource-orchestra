@@ -28,6 +28,7 @@ export function ENSAvatarField({ ensName, isOwner }: ENSAvatarFieldProps) {
 	// Local state for this field
 	const [value, setValue] = useState("");
 	const [isSaving, setIsSaving] = useState(false);
+	const [isUploading, setIsUploading] = useState(false);
 	const [saved, setSaved] = useState(false);
 
 	const setTextRecords = useSetTextRecords();
@@ -39,10 +40,37 @@ export function ENSAvatarField({ ensName, isOwner }: ENSAvatarFieldProps) {
 		}
 	}, [avatarUrl]);
 
+	const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0];
+		if (!file) return;
+
+		setIsUploading(true);
+		try {
+			const formData = new FormData();
+			formData.append("file", file);
+
+			const response = await fetch("/api/upload/image", {
+				method: "POST",
+				body: formData,
+			});
+
+			if (!response.ok) {
+				throw new Error("Failed to upload image");
+			}
+
+			const { url } = await response.json();
+			setValue(url);
+		} catch (error) {
+			console.error("Error uploading avatar:", error);
+		} finally {
+			setIsUploading(false);
+		}
+	};
+
 	const handleSave = async () => {
 		setIsSaving(true);
 		setSaved(false);
-
+		alert(value);
 		try {
 			await setTextRecords.mutateAsync({
 				label: ensName,
@@ -65,7 +93,11 @@ export function ENSAvatarField({ ensName, isOwner }: ENSAvatarFieldProps) {
 				<div className="h-24 w-24 animate-pulse rounded-full bg-muted" />
 			) : (
 				avatarUrl && (
-					<ENSAvatar src={avatarUrl} alt={`${ensName} avatar`} size="md" />
+					<ENSAvatar
+						src={avatarUrl || undefined}
+						alt={`${ensName} avatar`}
+						size="md"
+					/>
 				)
 			)}
 		</div>
@@ -95,18 +127,47 @@ export function ENSAvatarField({ ensName, isOwner }: ENSAvatarFieldProps) {
 	// Editable view for owners
 	return (
 		<div className="space-y-4">
-			{avatarDisplay}
+			{/* Image Preview */}
+			<div className="mb-4 flex justify-center">
+				{isLoading ? (
+					<div className="h-24 w-24 animate-pulse rounded-full bg-muted" />
+				) : (
+					<ENSAvatar
+						src={value || avatarUrl || undefined}
+						alt={`${ensName} avatar`}
+						size="md"
+					/>
+				)}
+			</div>
+
+			{/* File Upload */}
 			<div className="flex items-end space-x-2">
 				<div className="flex-1">
-					<Label htmlFor={fieldId}>Avatar URL</Label>
+					<Label htmlFor={fieldId}>Upload Avatar Image</Label>
 					<Input
 						id={fieldId}
-						placeholder="https://example.com/avatar.jpg"
-						value={value}
-						onChange={(e) => setValue(e.target.value)}
+						type="file"
+						accept="image/*"
+						onChange={handleFileSelect}
+						disabled={isUploading}
+						className="cursor-pointer"
 					/>
+					{isUploading && (
+						<p className="mt-1 text-muted-foreground text-sm">
+							Uploading image...
+						</p>
+					)}
+					{value && !isUploading && (
+						<p className="mt-1 text-muted-foreground text-sm">
+							Image uploaded successfully
+						</p>
+					)}
 				</div>
-				<Button size="sm" onClick={handleSave} disabled={isSaving}>
+				<Button
+					size="sm"
+					onClick={handleSave}
+					disabled={isSaving || isUploading || !value}
+				>
 					{isSaving ? (
 						<Loader className="h-4 w-4" />
 					) : saved ? (
