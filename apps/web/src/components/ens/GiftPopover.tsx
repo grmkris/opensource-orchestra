@@ -17,24 +17,39 @@ import {
 interface GiftPopoverProps {
 	recipientAddress: string;
 	recipientName: string;
+	theme?: "green" | "amber";
 }
 
 const PRESET_AMOUNTS = [
-	{ value: "0.001", label: "0.001 ETH" },
-	{ value: "0.01", label: "0.01 ETH" },
-	{ value: "0.1", label: "0.1 ETH" },
-	{ value: "1", label: "1 ETH" },
+	{ value: "0.001", label: "0.001" },
+	{ value: "0.01", label: "0.01" },
+	{ value: "0.1", label: "0.1" },
+	{ value: "1", label: "1" },
 ];
 
 export function GiftPopover({
 	recipientAddress,
 	recipientName,
+	theme = "green",
 }: GiftPopoverProps) {
 	const [open, setOpen] = useState(false);
 	const [amount, setAmount] = useState("");
 	const [isCustom, setIsCustom] = useState(false);
 	const { address: userAddress } = useAccount();
 	const { sendTransaction, isPending } = useSendTransaction();
+
+	const themeClasses = {
+		green: {
+			button: "border-green-200 text-green-700 hover:bg-green-50",
+			sendButton: "bg-green-600 hover:bg-green-700",
+			preset: "border-green-200 hover:bg-green-50 data-[state=on]:bg-green-100 data-[state=on]:border-green-300",
+		},
+		amber: {
+			button: "border-amber-400/50 text-amber-300 hover:bg-amber-500/20 bg-amber-500/10",
+			sendButton: "bg-amber-500 hover:bg-amber-600 text-black",
+			preset: "border-amber-400/30 hover:bg-amber-500/20 data-[state=on]:bg-amber-500/30 data-[state=on]:border-amber-400",
+		},
+	};
 
 	const handlePresetClick = (presetAmount: string) => {
 		setAmount(presetAmount);
@@ -79,24 +94,23 @@ export function GiftPopover({
 				<Button
 					size="sm"
 					variant="outline"
-					className="border-green-200 text-green-700 hover:bg-green-50"
+					className={themeClasses[theme].button}
 				>
 					<Gift className="mr-2 h-4 w-4" />
-					Gift ETH
+					Gift
 				</Button>
 			</PopoverTrigger>
-			<PopoverContent className="w-80">
-				<div className="grid gap-4">
-					<div className="space-y-2">
-						<h4 className="font-medium leading-none">Send a gift</h4>
-						<p className="text-muted-foreground text-sm">
-							Choose an amount to gift to {recipientName}
+			<PopoverContent className="w-72 border-opacity-50">
+				<div className="grid gap-3">
+					<div>
+						<h4 className="font-medium leading-none text-sm">Send a gift</h4>
+						<p className="text-muted-foreground text-xs mt-1">
+							to {recipientName}
 						</p>
 					</div>
 
 					<div className="grid gap-2">
-						<Label>Select amount</Label>
-						<div className="grid grid-cols-2 gap-2">
+						<div className="grid grid-cols-4 gap-1">
 							{PRESET_AMOUNTS.map((preset) => (
 								<Button
 									key={preset.value}
@@ -105,7 +119,7 @@ export function GiftPopover({
 									}
 									size="sm"
 									onClick={() => handlePresetClick(preset.value)}
-									className="justify-start"
+									className={`h-8 text-xs ${themeClasses[theme].preset}`}
 								>
 									{preset.label}
 								</Button>
@@ -116,47 +130,46 @@ export function GiftPopover({
 							variant={isCustom ? "default" : "outline"}
 							size="sm"
 							onClick={handleCustomClick}
-							className="w-full"
+							className={`h-8 text-xs ${themeClasses[theme].preset}`}
 						>
-							Custom Amount
+							Custom
 						</Button>
 
 						{isCustom && (
-							<div className="mt-2 flex items-center gap-2">
+							<div className="flex items-center gap-2">
 								<Input
 									type="number"
 									step="0.000001"
 									min="0.000001"
 									value={amount}
 									onChange={(e) => setAmount(e.target.value)}
-									placeholder="Enter amount"
-									className="flex-1"
+									placeholder="0.001"
+									className="flex-1 h-8 text-sm"
 								/>
-								<span className="text-muted-foreground text-sm">ETH</span>
+								<span className="text-muted-foreground text-xs">ETH</span>
 							</div>
 						)}
 					</div>
 
 					{amount && (
-						<div className="rounded-lg bg-muted p-3">
-							<p className="text-muted-foreground text-sm">You're sending</p>
-							<p className="font-semibold text-lg">{amount} ETH</p>
+						<div className="rounded bg-muted/50 px-2 py-1">
+							<p className="font-medium text-sm">{amount} ETH</p>
 						</div>
 					)}
 
 					<Button
 						onClick={handleSendGift}
 						disabled={!amount || isPending}
-						className="w-full bg-green-600 text-white hover:bg-green-700"
+						className={`w-full h-8 text-sm ${themeClasses[theme].sendButton}`}
 					>
 						{isPending ? (
 							<>
-								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+								<Loader2 className="mr-2 h-3 w-3 animate-spin" />
 								Sending...
 							</>
 						) : (
 							<>
-								<Gift className="mr-2 h-4 w-4" />
+								<Gift className="mr-2 h-3 w-3" />
 								Send Gift
 							</>
 						)}

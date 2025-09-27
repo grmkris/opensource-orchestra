@@ -2,17 +2,18 @@
 
 import { useRouter } from "next/navigation";
 import { GlobalDonationsFeed } from "@/components/ens/GlobalDonationsFeed";
+import { GiftPopover } from "@/components/ens/GiftPopover";
 
 export default function Home() {
 	const router = useRouter();
 
-	// Hardcoded artist data - positioned to align with music stands in pit.png
+	// Artist data positioned precisely on music stands in pit.png
 	const pendingArtists = [
-		{ id: "artist1.eth", name: "DJ Crypto", x: 25, y: 60 },
-		{ id: "artist2.eth", name: "The Degens", x: 40, y: 70 },
-		{ id: "artist3.eth", name: "NFT Beats", x: 50, y: 75 },
-		{ id: "artist4.eth", name: "Web3 Symphony", x: 60, y: 70 },
-		{ id: "artist5.eth", name: "Blockchain Band", x: 75, y: 60 },
+		{ id: "artist1.eth", name: "DJ Crypto", x: 20, y: 48 },        // Front left stand
+		{ id: "artist2.eth", name: "The Degens", x: 50, y: 52 },       // Front center stand
+		{ id: "artist3.eth", name: "NFT Beats", x: 80, y: 48 },        // Front right stand
+		{ id: "artist4.eth", name: "Web3 Symphony", x: 35, y: 38 },    // Back left stand
+		{ id: "artist5.eth", name: "Blockchain Band", x: 65, y: 38 },  // Back right stand
 	];
 
 	const handleArtistClick = (artistId: string) => {
@@ -69,17 +70,11 @@ export default function Home() {
 									</p>
 								</div>
 							</div>
-							<button
-								type="button"
-								onClick={() => {
-									// Gift functionality would go here
-									console.log("Gift clicked for plswork.catmisha.eth");
-								}}
-								className="ml-4 flex items-center space-x-1 rounded-lg border border-amber-400/50 bg-amber-500/20 px-3 py-2 transition-all duration-200 hover:scale-105 hover:bg-amber-500/30"
-							>
-								<span className="text-lg">🎁</span>
-								<span className="font-medium text-amber-300 text-sm">Gift</span>
-							</button>
+							<GiftPopover
+								recipientAddress="0x1234567890123456789012345678901234567890"
+								recipientName="plswork.catmisha.eth"
+								theme="amber"
+							/>
 						</div>
 					</div>
 				</div>
