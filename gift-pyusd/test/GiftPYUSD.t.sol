@@ -134,6 +134,83 @@ contract GiftPYUSDTest is Test {
         giftPYUSD.mint(999, MINT_PRICE);
     }
 
+    function testAllocateDonation_Succeeds() public {
+        giftPYUSD.registerArtist(ANOTHER_ARTIST_ID, ANOTHER_ARTIST_WALLET, ANOTHER_ARTIST_NAME, ANOTHER_ARTIST_IMAGE);
+
+        uint256[] memory artistIds = new uint256[](2);
+        artistIds[0] = ARTIST_ID;
+        artistIds[1] = ANOTHER_ARTIST_ID;
+        uint256[] memory amounts = new uint256[](2);
+        amounts[0] = MINT_PRICE;
+        amounts[1] = MINT_PRICE * 2;
+
+        uint256 total = amounts[0] + amounts[1];
+        pyusd.mint(address(this), total);
+        pyusd.approve(address(giftPYUSD), total);
+
+        vm.expectEmit(true, false, false, true, address(giftPYUSD));
+        emit GiftPYUSD.DonationAllocated(address(this), total, artistIds, amounts);
+        giftPYUSD.allocateDonation(artistIds, amounts);
+
+        assertEq(pyusd.balanceOf(address(giftPYUSD)), total);
+        assertEq(giftPYUSD.artistBalance(ARTIST_ID), amounts[0]);
+        assertEq(giftPYUSD.artistBalance(ANOTHER_ARTIST_ID), amounts[1]);
+    }
+
+    function testAllocateDonation_RevertIfLengthMismatch() public {
+        giftPYUSD.registerArtist(ANOTHER_ARTIST_ID, ANOTHER_ARTIST_WALLET, ANOTHER_ARTIST_NAME, ANOTHER_ARTIST_IMAGE);
+
+        uint256[] memory artistIds = new uint256[](1);
+        artistIds[0] = ARTIST_ID;
+        uint256[] memory amounts = new uint256[](2);
+        amounts[0] = MINT_PRICE;
+        amounts[1] = MINT_PRICE;
+
+        vm.expectRevert(GiftPYUSD.LENGTH_MISMATCH.selector);
+        giftPYUSD.allocateDonation(artistIds, amounts);
+    }
+
+    function testAllocateDonation_RevertIfEmpty() public {
+        uint256[] memory artistIds = new uint256[](0);
+        uint256[] memory amounts = new uint256[](0);
+
+        vm.expectRevert(GiftPYUSD.EMPTY_DONATION.selector);
+        giftPYUSD.allocateDonation(artistIds, amounts);
+    }
+
+    function testAllocateDonation_RevertIfArtistMissing() public {
+        uint256[] memory artistIds = new uint256[](1);
+        artistIds[0] = 999;
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = MINT_PRICE;
+
+        vm.expectRevert(GiftPYUSD.ARTIST_NOT_FOUND.selector);
+        giftPYUSD.allocateDonation(artistIds, amounts);
+    }
+
+    function testAllocateDonation_RevertIfDonationTooLow() public {
+        uint256[] memory artistIds = new uint256[](1);
+        artistIds[0] = ARTIST_ID;
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = MINT_PRICE - 1;
+
+        vm.expectRevert(GiftPYUSD.DONATION_TOO_LOW.selector);
+        giftPYUSD.allocateDonation(artistIds, amounts);
+    }
+
+    function testAllocateDonation_RevertIfNotOwner() public {
+        giftPYUSD.registerArtist(ANOTHER_ARTIST_ID, ANOTHER_ARTIST_WALLET, ANOTHER_ARTIST_NAME, ANOTHER_ARTIST_IMAGE);
+
+        uint256[] memory artistIds = new uint256[](1);
+        artistIds[0] = ARTIST_ID;
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = MINT_PRICE;
+
+        vm.prank(address(0xBEEF));
+        vm.expectRevert(GiftPYUSD.NOT_OWNER.selector);
+        giftPYUSD.allocateDonation(artistIds, amounts);
+    }
+
     function testSBT_ApproveReverts() public {
         // Mint one to self first
         pyusd.mint(address(this), MINT_PRICE);

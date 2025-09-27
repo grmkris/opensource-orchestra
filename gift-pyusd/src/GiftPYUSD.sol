@@ -31,11 +31,14 @@ contract GiftPYUSD is ERC721 {
     error UNAUTHORIZED();
     error INSUFFICIENT_BALANCE();
     error DONATION_TOO_LOW();
+    error EMPTY_DONATION();
+    error LENGTH_MISMATCH();
 
     event ArtistRegistered(uint256 indexed artistId, address payoutWallet, string name, string imageURI);
     event ArtistUpdated(uint256 indexed artistId, address payoutWallet, string name, string imageURI);
     event GiftMinted(uint256 indexed tokenId, address indexed giver, uint256 indexed artistId, uint256 amount);
     event ArtistWithdrawn(uint256 indexed artistId, address indexed payoutWallet, uint256 amount);
+    event DonationAllocated(address indexed donor, uint256 totalAmount, uint256[] artistIds, uint256[] amounts);
 
     modifier onlyOwner() {
         if (msg.sender != owner) revert NOT_OWNER();
@@ -96,6 +99,31 @@ contract GiftPYUSD is ERC721 {
         _mint(msg.sender, newTokenId);
 
         emit GiftMinted(newTokenId, msg.sender, artistId, amount);
+    }
+
+    function allocateDonation(uint256[] calldata artistIds, uint256[] calldata amounts) external onlyOwner {
+        uint256 length = artistIds.length;
+        if (length == 0) revert EMPTY_DONATION();
+        if (length != amounts.length) revert LENGTH_MISMATCH();
+
+        uint256 totalAmount;
+        for (uint256 i = 0; i < length; i++) {
+            uint256 artistId = artistIds[i];
+            Artist storage artist = artists[artistId];
+            if (!artist.exists) revert ARTIST_NOT_FOUND();
+
+            uint256 amount = amounts[i];
+            if (amount < mintPrice) revert DONATION_TOO_LOW();
+            totalAmount += amount;
+        }
+
+        mintToken.transferFrom(msg.sender, address(this), totalAmount);
+
+        for (uint256 i = 0; i < length; i++) {
+            artistBalances[artistIds[i]] += amounts[i];
+        }
+
+        emit DonationAllocated(msg.sender, totalAmount, artistIds, amounts);
     }
 
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
