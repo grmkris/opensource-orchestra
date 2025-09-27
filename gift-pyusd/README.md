@@ -47,8 +47,6 @@ GIFT_PYUSD=0x...
 # MultiGiftSBT
 # Deployed contract address for the MULTI_GIFT_SBT
 MULTI_GIFT_SBT=0x...
-# JSON config file path used by script/MintMulti.s.sol
-MULTI_GIFT_CONFIG=./config/multi_gift.json
 ```
 
 The repository keeps reusable artist metadata under `config/artists.json`:
@@ -87,9 +85,12 @@ forge test
 ### Deploy Contract
 
 1. Populate `.env` with RPC URL, private key, and other required variables.
-2. Deploy to Sepolia (adjust flags if you do not need verification):
+2. Deploy to Sepolia (mintPrice is passed via CLI; adjust flags if you do not need verification):
    ```bash
+   # PYUSD from .env, mintPrice via CLI (1.0 PYUSD = 1_000_000 since PYUSD has 6 decimals)
    forge script script/Deploy.s.sol:Deploy \
+     --sig "run(uint256)" \
+     1000000 \
      --rpc-url $SEPOLIA_RPC_URL \
      --private-key $PRIVATE_KEY \
      --broadcast \
@@ -99,7 +100,6 @@ forge test
    ```bash
    set -a; source .env; set +a
    ```
-   Set the environment variables in the `.env` file.
 
 ### Register Artists
 
@@ -140,9 +140,9 @@ cast send $GIFT_PYUSD "updateArtist(uint256,address,string,string)" \
 ```
 
 
-#### Gift pyUSD to artist and Mint SBT
+#### Gift PYUSD to artist and Mint SBT
 
-1. Pick a donation amount in PYUSD (must be greater than or equal to the on-chain `mintPrice`). Example: 1.0 PYUSD = `1000000` (PYUSD has 6 decimals).
+1. Pick a donation amount in PYUSD (must be greater than or equal to the on-chain `mintPrice`). Example: 1.0 PYUSD = `1_000_000` (PYUSD has 6 decimals).
 2. Approve the contract to pull that amount:
    ```bash
    cast send $PYUSD "approve(address,uint256)" \
@@ -263,8 +263,8 @@ constructor(address _mintToken, uint256 _mintPrice)
 - `tokenAmounts(uint256 tokenId)`: Returns the donation amount associated with a minted token
 - `artistBalance(uint256 artistId)`: Returns the accumulated PYUSD balance available for an artist to withdraw
 
-#### Owner Functions
-- `withdraw(address to, uint256 amount)`: Withdraw PYUSD to specified address
+#### Withdrawal
+- `withdrawForArtist(uint256 artistId, uint256 amount)`: Withdraw PYUSD to the registered payout wallet for the specified artist. Only callable by that artist's payout wallet.
 
 #### ERC-721 Functions (Disabled for SBT)
 All transfer and approval functions revert with `TRANSFERS_DISABLED()`:

@@ -3,6 +3,7 @@ pragma solidity 0.8.23;
 
 import {ERC721} from "solmate/tokens/ERC721.sol";
 import {ERC20} from "solmate/tokens/ERC20.sol";
+import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
 
 contract GiftPYUSD is ERC721 {
     uint256 public totalIssued;
@@ -89,7 +90,7 @@ contract GiftPYUSD is ERC721 {
         if (amount < mintPrice) revert DONATION_TOO_LOW();
 
         // Pull PYUSD from caller first, then mint the NFT
-        mintToken.transferFrom(msg.sender, address(this), amount);
+        SafeTransferLib.safeTransferFrom(mintToken, msg.sender, address(this), amount);
 
         uint256 newTokenId = ++totalIssued;
         tokenArtist[newTokenId] = artistId;
@@ -116,7 +117,7 @@ contract GiftPYUSD is ERC721 {
             totalAmount += amount;
         }
 
-        mintToken.transferFrom(msg.sender, address(this), totalAmount);
+        SafeTransferLib.safeTransferFrom(mintToken, msg.sender, address(this), totalAmount);
 
         for (uint256 i = 0; i < length; i++) {
             artistBalances[artistIds[i]] += amounts[i];
@@ -185,7 +186,7 @@ contract GiftPYUSD is ERC721 {
         if (amount > artistBalances[artistId]) revert INSUFFICIENT_BALANCE();
 
         artistBalances[artistId] -= amount;
-        mintToken.transfer(artist.payoutWallet, amount);
+        SafeTransferLib.safeTransfer(mintToken, artist.payoutWallet, amount);
 
         emit ArtistWithdrawn(artistId, artist.payoutWallet, amount);
     }

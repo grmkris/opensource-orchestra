@@ -16,9 +16,7 @@ import {MultiGiftSBT} from "../src/MultiGiftSBT.sol";
 ///           --private-key $PRIVATE_KEY \
 ///           --broadcast
 contract MintMulti is Script {
-
-    string internal constant CONFIG_ENV = "MULTI_GIFT_CONFIG"; // deprecated: path like ./config/multi_gift.json
-
+    
     function run() external pure {
         revert("Use run(uint256[],uint256,string) with --sig and CLI args");
     }
@@ -48,16 +46,11 @@ contract MintMulti is Script {
             amounts[i] = share + (i < rem ? 1 : 0);
         }
 
-        // Approve GiftPYUSD to pull the total PYUSD from the broadcaster EOA
-        vm.broadcast();
+        // Approve + Allocate + Mint under a single broadcast session
+        vm.startBroadcast();
         ERC20(pyusdAddr).approve(giftAddr, total);
-
-        // Allocate the donation
-        vm.broadcast();
         gift.allocateDonation(artistIds, amounts);
-
-        // Mint the single receipt NFT capturing the whole split
-        vm.broadcast();
         MultiGiftSBT(receiptAddr).mint(artistIds, total, title);
+        vm.stopBroadcast();
     }
 }

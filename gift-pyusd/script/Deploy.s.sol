@@ -5,17 +5,24 @@ import {Script} from "forge-std/Script.sol";
 import {GiftPYUSD} from "../src/GiftPYUSD.sol";
 
 contract Deploy is Script {
-    // 1e6 = 1.000000 PYUSD (6 decimals)
-    uint256 public constant MINT_PRICE = 1e6;
+    function run() public pure {
+        revert("Use run(uint256) or run(address,uint256)");
+    }
 
-    function run() public {
+    // Run with: forge script script/Deploy.s.sol:Deploy --sig "run(uint256)" 1000000 ...
+    function run(uint256 mintPrice) external {
         // Read PYUSD token address from env var
         address pyusd = vm.envAddress("PYUSD");
 
-        // Start broadcasting transactions using default private key from env
-        vm.broadcast();
+        vm.startBroadcast();
+        new GiftPYUSD(pyusd, mintPrice);
+        vm.stopBroadcast();
+    }
 
-        // Deploy the contract
-        new GiftPYUSD(pyusd, MINT_PRICE);
+    // Run with: forge script script/Deploy.s.sol:Deploy --sig "run(address,uint256)" 0xPyUsd... 1000000 ...
+    function run(address pyusd, uint256 mintPrice) external {
+        vm.startBroadcast();
+        new GiftPYUSD(pyusd, mintPrice);
+        vm.stopBroadcast();
     }
 }

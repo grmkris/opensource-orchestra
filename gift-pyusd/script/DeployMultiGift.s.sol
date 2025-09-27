@@ -6,7 +6,8 @@ import {MultiGiftSBT} from "../src/MultiGiftSBT.sol";
 
 contract DeployMultiGift is Script {
     function run() external {
-        vm.broadcast();
+        vm.startBroadcast();
         new MultiGiftSBT();
+        vm.stopBroadcast();
     }
 }
