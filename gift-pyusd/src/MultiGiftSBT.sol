@@ -8,6 +8,7 @@ import {ERC721} from "solmate/tokens/ERC721.sol";
 ///         actual PYUSD transfers and artist accounting live in GiftPYUSD.
 contract MultiGiftSBT is ERC721 {
     // --- State ---
+    uint256 public constant MIN_TOTAL_AMOUNT = 1e6;
     uint256 public totalIssued;
     address public immutable owner;
 
@@ -25,6 +26,7 @@ contract MultiGiftSBT is ERC721 {
     error TRANSFERS_DISABLED();
     error LENGTH_MISMATCH();
     error INVALID_SUM();
+    error TOTAL_TOO_LOW();
 
     // --- Events ---
     event ReceiptMinted(
@@ -65,6 +67,7 @@ contract MultiGiftSBT is ERC721 {
             sum += amounts[i];
         }
         if (sum != totalAmount) revert INVALID_SUM();
+        if (totalAmount < MIN_TOTAL_AMOUNT) revert TOTAL_TOO_LOW();
 
         uint256 tokenId = ++totalIssued;
 

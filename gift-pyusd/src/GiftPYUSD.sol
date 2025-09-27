@@ -113,7 +113,6 @@ contract GiftPYUSD is ERC721 {
             if (!artist.exists) revert ARTIST_NOT_FOUND();
 
             uint256 amount = amounts[i];
-            if (amount < mintPrice) revert DONATION_TOO_LOW();
             totalAmount += amount;
         }
 

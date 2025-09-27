@@ -44,10 +44,9 @@ contract MintMulti is Script {
             // Artist must exist
             (,, , bool exists) = gift.artists(artistIds[i]);
             require(exists, "artist not registered");
-            // Each split must meet minimum mint price
-            require(amounts[i] >= mintPrice, "amount below mintPrice");
             total += amounts[i];
         }
+        require(total >= mintPrice, "total below mintPrice");
 
         // Approve GiftPYUSD to pull the total PYUSD from the broadcaster EOA
         vm.broadcast();

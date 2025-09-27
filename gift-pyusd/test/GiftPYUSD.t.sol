@@ -188,14 +188,20 @@ contract GiftPYUSDTest is Test {
         giftPYUSD.allocateDonation(artistIds, amounts);
     }
 
-    function testAllocateDonation_RevertIfDonationTooLow() public {
+    function testAllocateDonation_AllowsDonationBelowMintPrice() public {
         uint256[] memory artistIds = new uint256[](1);
         artistIds[0] = ARTIST_ID;
         uint256[] memory amounts = new uint256[](1);
         amounts[0] = MINT_PRICE - 1;
 
-        vm.expectRevert(GiftPYUSD.DONATION_TOO_LOW.selector);
+        uint256 total = amounts[0];
+        pyusd.mint(address(this), total);
+        pyusd.approve(address(giftPYUSD), total);
+
         giftPYUSD.allocateDonation(artistIds, amounts);
+
+        assertEq(pyusd.balanceOf(address(giftPYUSD)), total);
+        assertEq(giftPYUSD.artistBalance(ARTIST_ID), total);
     }
 
     function testAllocateDonation_RevertIfNotOwner() public {

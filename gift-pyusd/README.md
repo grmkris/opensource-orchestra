@@ -41,8 +41,14 @@ ETHERSCAN_API_KEY=<etherscan-api-key>
 PRIVATE_KEY=0x...
 PYUSD=0xCaC524BcA292aaade2DF8A05cC58F0a65B1B3bB9
 GIFT_PYUSD=0x...
-ARTIST_ID=1
+
 # ARTIST_PRIVATE_KEY=0x...  # Optional if payout wallet differs from deployer
+
+# MultiGiftSBT
+# Deployed contract address for the MULTI_GIFT_SBT
+MULTI_GIFT_SBT=0x...
+# JSON config file path used by script/MintMulti.s.sol
+MULTI_GIFT_CONFIG=./config/multi_gift.json
 ```
 
 The repository keeps reusable artist metadata under `config/artists.json`:
@@ -133,10 +139,8 @@ cast send $GIFT_PYUSD "updateArtist(uint256,address,string,string)" \
   --rpc-url $SEPOLIA_RPC_URL
 ```
 
-#### On-chain verification shortcuts
 
-Use `cast call` to audit contract state after deployments, registrations, or mints. Examples:
-
+#### Gift pyUSD to artist and Mint SBT
 
 1. Pick a donation amount in PYUSD (must be greater than or equal to the on-chain `mintPrice`). Example: `DONATION=1000000` equals 1.0 PYUSD because the token has 6 decimals.
 2. Approve the contract to pull that amount:
@@ -157,7 +161,7 @@ Use `cast call` to audit contract state after deployments, registrations, or min
    ```
 4. Verify the mint and donation were recorded (see the "On-chain verification" section below for sample commands).
 
-### MultiGift (allocate donations to multiple artists + mint one receipt SBT)
+### MultiGift (allocate donations to multiple artists + mint one SBT)
 
 In this mode, the contract owner allocates a total PYUSD donation across multiple registered artists in a single transaction using `allocateDonation()`. No per-artist SBT is minted. Instead, you mint a single receipt SBT via `MultiGiftSBT` to record the split.
 
@@ -167,7 +171,7 @@ Prerequisites:
 - `MULTI_GIFT_CONFIG` points to a JSON file describing `artistIds`, `amounts` and `title`.
 - You must run the script from the GiftPYUSD owner account.
 
-1) Deploy the receipt SBT (one-time):
+1) Deploy the MultiGiftSBT contract:
 ```bash
 forge script script/DeployMultiGift.s.sol:DeployMultiGift \
   --rpc-url $SEPOLIA_RPC_URL \
@@ -180,6 +184,11 @@ Set the address in `.env`:
 MULTI_GIFT_SBT=0x...
 MULTI_GIFT_CONFIG=./config/multi_gift.json
 ```
+Set the environment variables in the `.env` file.
+```bash
+set -a; source .env; set +a
+```
+   
 
 2) Prepare the config file (6 decimals for PYUSD):
 ```bash
@@ -195,7 +204,6 @@ Example:
 ```
 Notes:
 - `artistIds.length` must equal `amounts.length`.
-- Each `amount` must be >= `mintPrice` (per-artist minimum).
 
 3) Approve total PYUSD (sum of `amounts`) to GiftPYUSD:
 ```bash
@@ -215,9 +223,8 @@ forge script script/MintMulti.s.sol:MintMulti \
   --broadcast
 ```
 This will:
-- Validate artists and per-artist amounts (>= `mintPrice`).
 - Call `GiftPYUSD.allocateDonation(artistIds, amounts)` once to allocate balances.
-- Mint one `MultiGiftSBT` receipt NFT to the caller with the full split.
+- Mint one `MultiGiftSBT`to the caller with the full split.
 
 5) Verify on-chain state:
 ```bash
