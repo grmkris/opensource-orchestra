@@ -50,7 +50,9 @@ export const CardContainer = ({
 					perspective: "1000px",
 				}}
 			>
-				<div
+				
+				{/** biome-ignore lint/a11y/noStaticElementInteractions: <hmmmmmm> */}
+<div
 					ref={containerRef}
 					onMouseEnter={handleMouseEnter}
 					onMouseMove={handleMouseMove}
@@ -114,11 +116,6 @@ export const CardItem = ({
 }) => {
 	const ref = useRef<HTMLDivElement>(null);
 	const [isMouseEntered] = useMouseEnter();
-
-	useEffect(() => {
-		handleAnimations();
-	}, [handleAnimations]);
-
 	const handleAnimations = () => {
 		if (!ref.current) return;
 		if (isMouseEntered) {
@@ -128,6 +125,13 @@ export const CardItem = ({
 				"translateX(0px) translateY(0px) translateZ(0px) rotateX(0deg) rotateY(0deg) rotateZ(0deg)";
 		}
 	};
+
+
+	useEffect(() => {
+		handleAnimations();
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <🤨>
+		}, [handleAnimations]);
+
 
 	return (
 		<Tag

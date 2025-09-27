@@ -49,7 +49,7 @@ export function PyusdGiftPopover({
 	const approvePyusd = usePyusdApprove();
 
 	// Calculate amount in wei for allowance checks
-	const amountInWei = amount ? parseUnits(amount, 6) : 0n;
+	const amountInWei = amount ? parseUnits(amount, 6) : BigInt(0);
 
 	// Check allowance
 	const { data: allowance } = usePyusdAllowance(
@@ -63,7 +63,7 @@ export function PyusdGiftPopover({
 	const needsApproval =
 		amount &&
 		allowance !== undefined &&
-		amountInWei > 0n &&
+		amountInWei > BigInt(0) &&
 		allowance < amountInWei;
 
 	const themeClasses = {
