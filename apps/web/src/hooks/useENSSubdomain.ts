@@ -8,13 +8,13 @@ interface SubdomainData {
 	address?: Address;
 	avatar?: string;
 	description?: string;
-	display?: string;
 	twitter?: string;
 	github?: string;
 	discord?: string;
 	telegram?: string;
 	url?: string;
 	email?: string;
+	header?: string;
 }
 
 // Hook to get subdomain data by label
@@ -34,13 +34,6 @@ export function useSubdomainData(ensName: string | undefined) {
 	const { data: description, isLoading: descriptionLoading } = useEnsText({
 		name: ensName,
 		key: TEXT_RECORD_KEYS.DESCRIPTION,
-		query: { enabled: !!ensName },
-		chainId: 1,
-	});
-
-	const { data: display, isLoading: displayLoading } = useEnsText({
-		name: ensName,
-		key: TEXT_RECORD_KEYS.DISPLAY,
 		query: { enabled: !!ensName },
 		chainId: 1,
 	});
@@ -86,17 +79,24 @@ export function useSubdomainData(ensName: string | undefined) {
 		chainId: 1,
 	});
 
+	const { data: header, isLoading: headerLoading } = useEnsText({
+		name: ensName,
+		key: TEXT_RECORD_KEYS.HEADER,
+		query: { enabled: !!ensName },
+		chainId: 1,
+	});
+
 	const isLoading =
 		addressLoading ||
 		avatarLoading ||
 		descriptionLoading ||
-		displayLoading ||
 		twitterLoading ||
 		githubLoading ||
 		discordLoading ||
 		telegramLoading ||
 		urlLoading ||
-		emailLoading;
+		emailLoading ||
+		headerLoading;
 
 	const exists = !!address;
 
@@ -106,13 +106,13 @@ export function useSubdomainData(ensName: string | undefined) {
 				address: address || undefined,
 				avatar: avatar || undefined,
 				description: description || undefined,
-				display: display || undefined,
 				twitter: twitter || undefined,
 				github: github || undefined,
 				discord: discord || undefined,
 				telegram: telegram || undefined,
 				url: url || undefined,
 				email: email || undefined,
+				header: header || undefined,
 			}
 		: null;
 

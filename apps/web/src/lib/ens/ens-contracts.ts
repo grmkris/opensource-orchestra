@@ -24,9 +24,9 @@ export const ENS_CHAIN = base;
 export const TEXT_RECORD_KEYS = {
 	AVATAR: "avatar",
 	DESCRIPTION: "description",
-	DISPLAY: "display",
 	EMAIL: "email",
 	URL: "url",
+	HEADER: "header",
 	TWITTER: "com.twitter",
 	GITHUB: "com.github",
 	DISCORD: "com.discord",
