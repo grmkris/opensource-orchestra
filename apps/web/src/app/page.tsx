@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { ENSAvatar } from "@/components/ens/ENSAvatar";
 import { GiftPopover } from "@/components/ens/GiftPopover";
+import { PyusdGiftPopover } from "@/components/ens/PyusdGiftPopover";
 import { GlobalDonationsFeed } from "@/components/ens/GlobalDonationsFeed";
 
 export default function Home() {
@@ -59,21 +60,28 @@ export default function Home() {
 									</p>
 									<button
 										type="button"
-										onClick={() => router.push("/profile/plswork.catmisha.eth")}
+										onClick={() => router.push("/profile/shaka.osopit.eth")}
 										className="cursor-pointer text-left font-bold text-lg transition-colors duration-200 hover:text-amber-300"
 									>
-										plswork.catmisha.eth
+										shaka.osopit.eth
 									</button>
 									<p className="text-gray-300 text-sm">
 										Green Room Set (Maka's Birthday, Rome)
 									</p>
 								</div>
 							</div>
-							<GiftPopover
-								recipientAddress="0x1234567890123456789012345678901234567890"
-								recipientName="plswork.catmisha.eth"
-								theme="amber"
-							/>
+							<div className="flex space-x-2">
+								<GiftPopover
+									recipientAddress="0x1234567890123456789012345678901234567890"
+									recipientName="shaka.osopit.eth"
+									theme="amber"
+								/>
+								<PyusdGiftPopover
+									recipientAddress="0x1234567890123456789012345678901234567890"
+									recipientName="shaka.osopit.eth"
+									theme="amber"
+								/>
+							</div>
 						</div>
 					</div>
 				</div>

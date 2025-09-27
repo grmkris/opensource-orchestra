@@ -5,8 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { getAddress } from "viem";
-import { useAccount } from "wagmi";
+import { useAccount, useEnsAvatar } from "wagmi";
 import { OnboardingProgress } from "@/components/ens/OnboardingProgress";
+import { StepArtistRegistration } from "@/components/ens/onboarding/StepArtistRegistration";
 import { StepBasicInfo } from "@/components/ens/onboarding/StepBasicInfo";
 import { StepSocials } from "@/components/ens/onboarding/StepSocials";
 import { StepVisuals } from "@/components/ens/onboarding/StepVisuals";
@@ -15,6 +16,7 @@ import { SubdomainRegistration } from "@/components/ens/SubdomainRegistration";
 import { Loader } from "@/components/loader";
 import { useEnsName } from "@/hooks/useEnsName";
 import { ENS_CHAIN } from "@/lib/ens/ens-contracts";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 
 export default function OnboardingPage() {
 	const router = useRouter();
@@ -27,6 +29,13 @@ export default function OnboardingPage() {
 		),
 		l1ChainId: 1,
 		l2ChainId: ENS_CHAIN.id,
+	});
+
+	// Get avatar URL for artist registration
+	const { data: avatarUrl } = useEnsAvatar({
+		name: userSubdomain.data,
+		query: { enabled: !!userSubdomain.data },
+		chainId: 1,
 	});
 
 	// Redirect to /me if user already has a subdomain and it is primary and they configured everything
@@ -42,6 +51,7 @@ export default function OnboardingPage() {
 		{ id: "basic", title: "Basic Info", required: false },
 		{ id: "visuals", title: "Profile Images", required: false },
 		{ id: "socials", title: "Social Links", required: false },
+		{ id: "artist", title: "Artist Registration", required: false },
 	];
 
 	const handleNext = () => {
@@ -110,6 +120,15 @@ export default function OnboardingPage() {
 						onSkip={handleSkip}
 					/>
 				);
+			case 5:
+				return (
+					<StepArtistRegistration
+						ensName={userSubdomain.data || ""}
+						onNext={handleNext}
+						onSkip={handleSkip}
+						avatarUrl={avatarUrl || ""}
+					/>
+				);
 			default:
 				return null;
 		}
@@ -149,10 +168,9 @@ export default function OnboardingPage() {
 						<h1 className="font-bold text-4xl text-gray-900">
 							Opensource Orchestra PIT
 						</h1>
-						<p className="mx-auto max-w-2xl text-gray-600 text-lg">
-							Create your decentralized identity
-						</p>
-						<p className="text-gray-600 text-lg">{address}</p>
+						<div className="flex justify-center max-w-2xl mx-auto text-gray-600 text-lg">
+							<ConnectButton />
+						</div>
 					</div>
 
 					{/* Progress Indicator */}

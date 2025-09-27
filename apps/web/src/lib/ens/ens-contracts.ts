@@ -3,9 +3,9 @@ import { base } from "viem/chains";
 // Contract addresses on Base
 export const ENS_CONTRACTS = {
 	// L2Registry deployed on Base - stores subdomains as NFTs
-	L2_REGISTRY: "0x0ce4122ca2f0466891f0a8c023ef8091585adfc8" as const,
+	L2_REGISTRY: "0xfdf982948acb8e1922ff2162a2f5ac14a02e64e3" as const,
 	// L2Registrar address will be set after deployment
-	L2_REGISTRAR: "0xfDde380E6502FF463F9234d76fDf5A4d1eF256d7" as const,
+	L2_REGISTRAR: "0xd90e4c76760Da613f37379a1df8a25929df78EA1" as const,
 	// L1 Resolver on Ethereum Mainnet (for CCIP Read)
 	L1_RESOLVER: "0x8A968aB9eb8C084FBC44c531058Fc9ef945c3D61" as const,
 	// Base Reverse Registrar (official ENS deployment)
@@ -15,7 +15,7 @@ export const ENS_CONTRACTS = {
 } as const;
 
 // Parent ENS domain
-export const PARENT_DOMAIN = "catmisha.eth" as const;
+export const PARENT_DOMAIN = "osopit.eth" as const;
 
 // Chain configuration
 export const ENS_CHAIN = base;

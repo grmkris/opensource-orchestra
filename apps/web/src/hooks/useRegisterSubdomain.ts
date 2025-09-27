@@ -47,6 +47,11 @@ export function useSubdomainAvailability(props: { label?: string }) {
 			if (!props.label || !basePublicClient) {
 				throw new Error("Missing required parameters");
 			}
+			console.log({
+				label: props.label,
+				registrar: ENS_CONTRACTS.L2_REGISTRAR,
+				msg: "Checking availability",
+			});
 			const isAvailable = await basePublicClient.readContract({
 				address: ENS_CONTRACTS.L2_REGISTRAR,
 				abi: L2_REGISTRAR_ABI,

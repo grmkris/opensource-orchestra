@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { getAddress } from "viem";
 import { useAccount } from "wagmi";
+import { PyusdBalanceCard } from "@/components/ens/PyusdBalanceCard";
 import { SubdomainProfile } from "@/components/ens/SubdomainProfile";
 import { Loader } from "@/components/loader";
 import { useEnsName } from "@/hooks/useEnsName";
@@ -91,6 +92,9 @@ export default function MePage() {
 
 					{/* Profile */}
 					<SubdomainProfile ensName={userSubdomain.data} />
+
+					{/* PYUSD Balance */}
+					<PyusdBalanceCard artistAddress={address} />
 				</div>
 			</div>
 		</div>

@@ -4,8 +4,9 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Gift, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { parseEther } from "viem";
-import { useAccount, useSendTransaction } from "wagmi";
+import { parseUnits } from "viem";
+import { sepolia } from "viem/chains";
+import { useAccount, useChainId, useSwitchChain } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -13,30 +14,57 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+	useGiftToArtist,
+	usePyusdAllowance,
+	usePyusdApprove,
+} from "@/lib/pyusd/pyUsdHooks";
+import { PY_USD_CONTRACTS } from "@/lib/pyusd/py-usd-contract";
 
-interface GiftPopoverProps {
+interface PyusdGiftPopoverProps {
 	recipientAddress: string;
 	recipientName: string;
 	theme?: "green" | "amber";
 }
 
 const PRESET_AMOUNTS = [
-	{ value: "0.001", label: "0.001" },
-	{ value: "0.01", label: "0.01" },
-	{ value: "0.1", label: "0.1" },
 	{ value: "1", label: "1" },
+	{ value: "5", label: "5" },
+	{ value: "10", label: "10" },
+	{ value: "25", label: "25" },
 ];
 
-export function GiftPopover({
+export function PyusdGiftPopover({
 	recipientAddress,
 	recipientName,
-	theme = "green",
-}: GiftPopoverProps) {
+	theme = "amber",
+}: PyusdGiftPopoverProps) {
 	const [open, setOpen] = useState(false);
 	const [amount, setAmount] = useState("");
 	const [isCustom, setIsCustom] = useState(false);
 	const { address: userAddress } = useAccount();
-	const { sendTransaction, isPending } = useSendTransaction();
+	const chainId = useChainId();
+	const { switchChain } = useSwitchChain();
+	const giftToArtist = useGiftToArtist();
+	const approvePyusd = usePyusdApprove();
+
+	// Calculate amount in wei for allowance checks
+	const amountInWei = amount ? parseUnits(amount, 6) : 0n;
+
+	// Check allowance
+	const { data: allowance } = usePyusdAllowance(
+		userAddress,
+		PY_USD_CONTRACTS.GIFT_SINGLE as `0x${string}`,
+	);
+
+	const isOnSepolia = chainId === sepolia.id;
+
+	// Check if approval is needed
+	const needsApproval =
+		amount &&
+		allowance !== undefined &&
+		amountInWei > 0n &&
+		allowance < amountInWei;
 
 	const themeClasses = {
 		green: {
@@ -64,9 +92,47 @@ export function GiftPopover({
 		setAmount("");
 	};
 
+	const handleSwitchToSepolia = async () => {
+		try {
+			await switchChain({ chainId: sepolia.id });
+		} catch (error) {
+			console.error("Failed to switch to Sepolia:", error);
+			toast.error("Failed to switch network");
+		}
+	};
+
+	const handleApprove = async () => {
+		if (!userAddress || !amount) {
+			toast.error("Please connect your wallet and enter an amount");
+			return;
+		}
+
+		if (!isOnSepolia) {
+			toast.error("Please switch to Sepolia network for PYUSD approval");
+			return;
+		}
+
+		try {
+			await approvePyusd.mutateAsync({
+				spender: PY_USD_CONTRACTS.GIFT_SINGLE as `0x${string}`,
+				amount: amountInWei,
+			});
+
+			toast.success("PYUSD approval successful! You can now send the gift.");
+		} catch (error) {
+			console.error("Approval error:", error);
+			toast.error("Failed to approve PYUSD spending. Please try again.");
+		}
+	};
+
 	const handleSendGift = async () => {
 		if (!userAddress) {
 			toast.error("Please connect your wallet first");
+			return;
+		}
+
+		if (!isOnSepolia) {
+			toast.error("Please switch to Sepolia network for PYUSD gifts");
 			return;
 		}
 
@@ -76,18 +142,18 @@ export function GiftPopover({
 		}
 
 		try {
-			await sendTransaction({
-				to: recipientAddress as `0x${string}`,
-				value: parseEther(amount),
+			await giftToArtist.mutateAsync({
+				artist: recipientAddress as `0x${string}`,
+				amount: amountInWei,
 			});
 
-			toast.success(`Gift of ${amount} ETH sent to ${recipientName}!`);
+			toast.success(`Gift of ${amount} PYUSD sent to ${recipientName}!`);
 			setOpen(false);
 			setAmount("");
 			setIsCustom(false);
 		} catch (error) {
 			console.error("Transaction error:", error);
-			toast.error("Failed to send gift. Please try again.");
+			toast.error("Failed to send PYUSD gift. Please try again.");
 		}
 	};
 
@@ -100,7 +166,7 @@ export function GiftPopover({
 					className={themeClasses[theme].button}
 				>
 					<Gift className="mr-2 h-4 w-4" />
-					Gift
+					Gift PYUSD
 				</Button>
 			</PopoverTrigger>
 			<PopoverContent className="w-72 border-opacity-50">
@@ -109,7 +175,7 @@ export function GiftPopover({
 						<div>
 							<h4 className="font-medium text-sm leading-none">Connect Wallet</h4>
 							<p className="mt-1 text-muted-foreground text-xs">
-								Connect your wallet to send a gift to {recipientName}
+								Connect your wallet to send PYUSD gift to {recipientName}
 							</p>
 						</div>
 						<ConnectButton />
@@ -117,11 +183,34 @@ export function GiftPopover({
 				) : (
 					<div className="grid gap-3">
 						<div>
-							<h4 className="font-medium text-sm leading-none">Send a gift</h4>
+							<h4 className="font-medium text-sm leading-none">Send PYUSD gift</h4>
 							<p className="mt-1 text-muted-foreground text-xs">
 								to {recipientName}
 							</p>
 						</div>
+
+						{!isOnSepolia && (
+							<div className="rounded-lg border border-yellow-200 bg-yellow-50 p-3">
+								<div className="flex items-center justify-between">
+									<div>
+										<p className="font-medium text-yellow-800 text-sm">
+											Switch to Sepolia
+										</p>
+										<p className="text-yellow-700 text-xs">
+											PYUSD gifts require Sepolia testnet
+										</p>
+									</div>
+									<Button
+										onClick={handleSwitchToSepolia}
+										variant="outline"
+										size="sm"
+										className="text-xs"
+									>
+										Switch
+									</Button>
+								</div>
+							</div>
+						)}
 
 						<div className="grid gap-2">
 							<div className="grid grid-cols-4 gap-1">
@@ -153,38 +242,53 @@ export function GiftPopover({
 								<div className="flex items-center gap-2">
 									<Input
 										type="number"
-										step="0.000001"
-										min="0.000001"
+										step="0.01"
+										min="0.01"
 										value={amount}
 										onChange={(e) => setAmount(e.target.value)}
-										placeholder="0.001"
+										placeholder="1"
 										className="h-8 flex-1 text-sm"
 									/>
-									<span className="text-muted-foreground text-xs">ETH</span>
+									<span className="text-muted-foreground text-xs">PYUSD</span>
 								</div>
 							)}
 						</div>
 
 						{amount && (
 							<div className="rounded bg-muted/50 px-2 py-1">
-								<p className="font-medium text-sm">{amount} ETH</p>
+								<p className="font-medium text-sm">{amount} PYUSD</p>
 							</div>
 						)}
 
 						<Button
-							onClick={handleSendGift}
-							disabled={!amount || isPending}
+							onClick={needsApproval ? handleApprove : handleSendGift}
+							disabled={
+								!amount ||
+								!isOnSepolia ||
+								giftToArtist.isPending ||
+								approvePyusd.isPending
+							}
 							className={`h-8 w-full text-sm ${themeClasses[theme].sendButton}`}
 						>
-							{isPending ? (
+							{approvePyusd.isPending ? (
+								<>
+									<Loader2 className="mr-2 h-3 w-3 animate-spin" />
+									Approving...
+								</>
+							) : giftToArtist.isPending ? (
 								<>
 									<Loader2 className="mr-2 h-3 w-3 animate-spin" />
 									Sending...
 								</>
+							) : needsApproval ? (
+								<>
+									<Gift className="mr-2 h-3 w-3" />
+									Approve PYUSD
+								</>
 							) : (
 								<>
 									<Gift className="mr-2 h-3 w-3" />
-									Send Gift
+									Send PYUSD Gift
 								</>
 							)}
 						</Button>

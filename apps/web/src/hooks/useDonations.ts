@@ -1,3 +1,4 @@
+import { PARENT_DOMAIN } from "@/lib/ens/ens-contracts";
 import { useQuery } from "@tanstack/react-query";
 import type { Address } from "viem";
 import { base, mainnet } from "wagmi/chains";
@@ -24,42 +25,42 @@ interface UseDonationsParams {
 const MOCK_ARTISTS = [
 	{
 		address: "0x1234567890123456789012345678901234567890" as Address,
-		ens: "plswork.catmisha.eth",
+		ens: `plswork.${PARENT_DOMAIN}`,
 	},
 	{
 		address: "0x2345678901234567890123456789012345678901" as Address,
-		ens: "vibes.catmisha.eth",
+		ens: `vibes.${PARENT_DOMAIN}`,
 	},
 	{
 		address: "0x3456789012345678901234567890123456789012" as Address,
-		ens: "beats.catmisha.eth",
+		ens: `beats.${PARENT_DOMAIN}`,
 	},
 	{
 		address: "0x4567890123456789012345678901234567890123" as Address,
-		ens: "melody.catmisha.eth",
+		ens: `melody.${PARENT_DOMAIN}`,
 	},
 	{
 		address: "0x5678901234567890123456789012345678901234" as Address,
-		ens: "harmony.catmisha.eth",
+		ens: `harmony.${PARENT_DOMAIN}`,
 	},
 ];
 
 const MOCK_DONORS = [
 	{
 		address: "0xABCDEF1234567890123456789012345678901234" as Address,
-		ens: "supporter.eth",
+		ens: `supporter.${PARENT_DOMAIN}`,
 	},
 	{
 		address: "0xBCDEF12345678901234567890123456789012345" as Address,
-		ens: "musiclover.eth",
+		ens: `musiclover.${PARENT_DOMAIN}`,
 	},
 	{
 		address: "0xCDEF123456789012345678901234567890123456" as Address,
-		ens: "patron.eth",
+		ens: `patron.${PARENT_DOMAIN}`,
 	},
 	{
 		address: "0xDEF1234567890123456789012345678901234567" as Address,
-		ens: "fan.eth",
+		ens: `fan.${PARENT_DOMAIN}`,
 	},
 	{
 		address: "0xEF12345678901234567890123456789012345678" as Address,
@@ -86,7 +87,7 @@ function generateMockDonations(targetAddress?: Address): Donation[] {
 	if (targetAddress && artists.length === 0) {
 		artists.push({
 			address: targetAddress,
-			ens: `${targetAddress.slice(0, 6)}...${targetAddress.slice(-4)}.catmisha.eth`,
+			ens: `${targetAddress.slice(0, 6)}...${targetAddress.slice(-4)}.${PARENT_DOMAIN}`,
 		});
 	}
 

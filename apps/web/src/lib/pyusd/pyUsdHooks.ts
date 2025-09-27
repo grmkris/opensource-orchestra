@@ -1,5 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import type { Address } from "viem";
+import { erc20Abi } from "viem";
 import { waitForTransactionReceipt } from "viem/actions";
 import { sepolia } from "viem/chains";
 import { usePublicClient, useReadContract, useWriteContract } from "wagmi";
@@ -62,12 +63,14 @@ export const useGiftToArtist = () => {
 	return giftToArtist;
 };
 
-export const useArtistBalance = () => {
+export const useArtistBalance = (artistAddress: Address | undefined) => {
 	const artistBalance = useReadContract({
 		abi: PY_USD_ABI,
 		address: PY_USD_CONTRACTS.GIFT_SINGLE,
 		functionName: "artistBalance",
+		args: artistAddress ? [artistAddress] : undefined,
 		chainId: sepolia.id,
+		query: { enabled: !!artistAddress },
 	});
 	return artistBalance;
 };
@@ -96,4 +99,44 @@ export const useWithdrawForArtist = () => {
 	});
 
 	return withdrawForArtist;
+};
+
+export const usePyusdAllowance = (
+	owner: Address | undefined,
+	spender: Address | undefined,
+) => {
+	return useReadContract({
+		address: PY_USD_CONTRACTS.PYUSD,
+		abi: erc20Abi,
+		functionName: "allowance",
+		args: owner && spender ? [owner, spender] : undefined,
+		chainId: sepolia.id,
+		query: { enabled: !!(owner && spender) },
+	});
+};
+
+export const usePyusdApprove = () => {
+	const { writeContractAsync } = useWriteContract();
+	const publicClient = usePublicClient();
+
+	const approvePyusd = useMutation({
+		mutationFn: async (variables: { spender: Address; amount: bigint }) => {
+			if (!publicClient) {
+				throw Error("NO public client");
+			}
+			const result = await writeContractAsync({
+				address: PY_USD_CONTRACTS.PYUSD,
+				abi: erc20Abi,
+				functionName: "approve",
+				args: [variables.spender, variables.amount],
+				chainId: sepolia.id,
+			});
+
+			const waited = waitForTransactionReceipt(publicClient, { hash: result });
+
+			return waited;
+		},
+	});
+
+	return approvePyusd;
 };

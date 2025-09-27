@@ -8,6 +8,7 @@ import {
 	useSubdomainAvailability,
 } from "@/hooks/useRegisterSubdomain";
 import { useSetPrimaryName } from "@/hooks/useSetPrimaryName";
+import { PARENT_DOMAIN } from "@/lib/ens/ens-contracts";
 
 interface SubdomainRegistrationProps {
 	onSuccess?: () => void;
@@ -109,7 +110,7 @@ export function SubdomainRegistration({
 	const handleSetPrimary = () => {
 		if (!registeredData?.label) return;
 
-		const fullLabel = `${registeredData.label}.catmisha.eth`; // TODO don't hardcode this
+		const fullLabel = `${registeredData.label}.${PARENT_DOMAIN}`;
 		console.log("setting primary", fullLabel);
 		setPrimaryMutation.mutate(fullLabel);
 	};
@@ -173,7 +174,7 @@ export function SubdomainRegistration({
 								Choose Your Username
 							</h2>
 							<p className="text-gray-600">
-								Get your own .catmisha.eth subdomain on Base L2
+								Get your own .{PARENT_DOMAIN} subdomain on Base L2
 							</p>
 						</div>
 
@@ -194,7 +195,7 @@ export function SubdomainRegistration({
 									className="flex-1 rounded-l-lg border-2 border-gray-200 px-4 py-3 font-medium text-gray-900 transition-colors focus:border-blue-400 focus:outline-none"
 								/>
 								<div className="whitespace-nowrap rounded-r-lg border-2 border-gray-200 border-l-0 bg-gray-50 px-4 py-3 font-medium text-gray-600">
-									.catmisha.eth
+									.{PARENT_DOMAIN}
 								</div>
 							</div>
 
@@ -223,7 +224,7 @@ export function SubdomainRegistration({
 								<div className="text-gray-600 text-sm">
 									Your subdomain:{" "}
 									<span className="font-bold font-mono">
-										{debouncedLabel}.catmisha.eth
+										{debouncedLabel}.{PARENT_DOMAIN}
 									</span>
 								</div>
 							)}
@@ -275,7 +276,7 @@ export function SubdomainRegistration({
 							</div>
 							<div>
 								<div className="mb-2 font-bold text-2xl text-gray-900">
-									{registeredData?.label}.catmisha.eth
+									{registeredData?.label}.{PARENT_DOMAIN}
 								</div>
 								<div className="mb-4 font-medium text-green-600 text-sm">
 									✅ Successfully registered!
@@ -324,7 +325,7 @@ export function SubdomainRegistration({
 								Username Setup Complete! 🎉
 							</h2>
 							<div className="mb-2 font-bold text-green-600 text-xl">
-								{registeredData?.label}.catmisha.eth
+								{registeredData?.label}.{PARENT_DOMAIN}
 							</div>
 							<p className="text-gray-600">Is now your primary name on Base!</p>
 						</div>

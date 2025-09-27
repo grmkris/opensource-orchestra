@@ -6,6 +6,7 @@ import { normalize } from "viem/ens";
 import { useEnsAddress, useEnsAvatar, useEnsText } from "wagmi";
 import { GiftsSection } from "@/components/ens/DonationsSection";
 import { GiftPopover } from "@/components/ens/GiftPopover";
+import { PyusdGiftPopover } from "@/components/ens/PyusdGiftPopover";
 import { ProfileHeader } from "@/components/ens/ProfileHeader";
 import { Loader } from "@/components/loader";
 import { Button } from "@/components/ui/button";
@@ -185,6 +186,11 @@ export function SubdomainProfilePublic({ ensName }: { ensName: string }) {
 							</Button>
 
 							<GiftPopover
+								recipientAddress={ensAddress}
+								recipientName={ensName}
+							/>
+
+							<PyusdGiftPopover
 								recipientAddress={ensAddress}
 								recipientName={ensName}
 							/>
