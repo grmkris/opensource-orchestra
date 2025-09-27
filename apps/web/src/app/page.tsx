@@ -9,16 +9,16 @@ export default function Home() {
 
 	// Artist data positioned precisely on visible music stands in pit.png
 	const pendingArtists = [
-		{ id: "artist1.eth", name: "DJ Crypto", x: 35, y: 68 },        // Left-center front stand
-		{ id: "artist2.eth", name: "The Degens", x: 50, y: 70 },       // Center front stand
-		{ id: "artist3.eth", name: "NFT Beats", x: 65, y: 68 },        // Right-center front stand
-		{ id: "artist4.eth", name: "Web3 Symphony", x: 45, y: 57 },    // Back center-left stand
-		{ id: "artist5.eth", name: "Blockchain Band", x: 55, y: 57 },  // Back center-right stand
+		{ id: "artist1.eth", name: "DJ Crypto", x: 20, y: 62 },        // Left front stand
+		{ id: "artist2.eth", name: "The Degens", x: 50, y: 66 },       // Center front stand
+		{ id: "artist3.eth", name: "NFT Beats", x: 80, y: 62 },        // Right front stand
+		{ id: "artist4.eth", name: "Web3 Symphony", x: 30, y: 54 },    // Left back stand
+		{ id: "artist5.eth", name: "Blockchain Band", x: 70, y: 54 },  // Right back stand
 	];
 
 	const handleArtistClick = (artistId: string) => {
-		// Navigate to ENS profile page
-		router.push(`/ens/${artistId}`);
+		// Navigate to public profile page
+		router.push(`/profile/${artistId}`);
 	};
 
 	return (
@@ -60,7 +60,7 @@ export default function Home() {
 									</p>
 									<button
 										type="button"
-										onClick={() => router.push("/ens/plswork.catmisha.eth")}
+										onClick={() => router.push("/profile/plswork.catmisha.eth")}
 										className="cursor-pointer text-left font-bold text-lg transition-colors duration-200 hover:text-amber-300"
 									>
 										plswork.catmisha.eth

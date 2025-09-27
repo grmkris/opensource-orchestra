@@ -2,10 +2,10 @@
 
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { getAddress } from "viem";
 import { useAccount } from "wagmi";
-import { SubdomainProfile } from "@/components/ens/SubdomainProfile";
 import { SubdomainRegistration } from "@/components/ens/SubdomainRegistration";
 import { OnboardingProgress } from "@/components/ens/OnboardingProgress";
 import { StepWallet } from "@/components/ens/onboarding/StepWallet";
@@ -16,10 +16,10 @@ import { Loader } from "@/components/loader";
 import { useEnsName } from "@/hooks/useEnsName";
 import { ENS_CHAIN } from "@/lib/ens/ens-contracts";
 
-export default function ENSPage() {
+export default function OnboardingPage() {
+	const router = useRouter();
 	const { address } = useAccount();
 	const [currentStep, setCurrentStep] = useState(0);
-	const [isOnboarding, setIsOnboarding] = useState(true);
 	
 	const userSubdomain = useEnsName({
 		address: getAddress(
@@ -28,6 +28,13 @@ export default function ENSPage() {
 		l1ChainId: 1,
 		l2ChainId: ENS_CHAIN.id,
 	});
+
+	// Redirect to /me if user already has a subdomain
+	useEffect(() => {
+		if (userSubdomain.data && !userSubdomain.isLoading) {
+			router.push("/me");
+		}
+	}, [userSubdomain.data, userSubdomain.isLoading, router]);
 
 	const steps = [
 		{ id: "wallet", title: "Connect Wallet", required: true },
@@ -41,8 +48,8 @@ export default function ENSPage() {
 		if (currentStep < steps.length - 1) {
 			setCurrentStep(prev => prev + 1);
 		} else {
-			// Onboarding complete
-			setIsOnboarding(false);
+			// Onboarding complete - redirect to /me
+			router.push("/me");
 		}
 	};
 
@@ -58,11 +65,6 @@ export default function ENSPage() {
 		setCurrentStep(1);
 	};
 
-	// Check if user already has a subdomain and should skip onboarding
-	if (userSubdomain.data && isOnboarding) {
-		setIsOnboarding(false);
-	}
-
 	if (userSubdomain.isLoading) {
 		return (
 			<div className="container mx-auto max-w-2xl px-4 py-8">
@@ -72,35 +74,6 @@ export default function ENSPage() {
 					<p className="text-muted-foreground">
 						Checking your ENS subdomain status
 					</p>
-				</div>
-			</div>
-		);
-	}
-
-	// Show existing profile if user has subdomain and not in onboarding mode
-	if (userSubdomain.data && !isOnboarding) {
-		return (
-			<div
-				className="min-h-screen bg-white"
-				style={{ fontFamily: "var(--font-roboto)" }}
-			>
-				<div className="container mx-auto max-w-4xl px-4 py-8">
-					<div className="space-y-8">
-						{/* Back to Home Button */}
-						<div className="flex justify-start">
-							<Link href="/">
-								<button
-									type="button"
-									className="flex items-center space-x-2 rounded-lg border-2 border-gray-200 px-4 py-2 text-gray-600 transition-all duration-200 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600"
-								>
-									<ArrowLeft className="h-4 w-4" />
-									<span className="font-medium">Back to Orchestra</span>
-								</button>
-							</Link>
-						</div>
-
-						<SubdomainProfile ensName={userSubdomain.data} />
-					</div>
 				</div>
 			</div>
 		);
@@ -141,6 +114,11 @@ export default function ENSPage() {
 				return null;
 		}
 	};
+
+	// Don't render if user already has subdomain (will redirect)
+	if (userSubdomain.data) {
+		return null;
+	}
 
 	// Onboarding flow
 	return (

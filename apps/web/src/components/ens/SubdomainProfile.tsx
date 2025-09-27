@@ -8,12 +8,10 @@ import { ENSAvatarField } from "@/components/ens/ENSAvatarField";
 import { ENSHeaderField } from "@/components/ens/ENSHeaderField";
 import { ENSTextField } from "@/components/ens/ENSTextField";
 import { Loader } from "@/components/loader";
-import { useSetPrimaryName } from "@/hooks/useSetPrimaryName";
 
 export function SubdomainProfile({ ensName }: { ensName: string }) {
   const { address } = useAccount();
   const [copiedField, setCopiedField] = useState<string | null>(null);
-  const setPrimaryName = useSetPrimaryName();
 
   const isCurrentlyPrimary = false;
 
@@ -34,18 +32,13 @@ export function SubdomainProfile({ ensName }: { ensName: string }) {
     }
   };
 
-  const handleSetPrimaryName = () => {
-    if (!ensName) return;
-    setPrimaryName.mutate(ensName);
-  };
-
   const handleCopyProfileLink = () => {
-    const profileUrl = `${window.location.origin}/ens/${ensName}`;
+    const profileUrl = `${window.location.origin}/profile/${ensName}`;
     handleCopy(profileUrl, "profile-link");
   };
 
   const handleOpenProfile = () => {
-    const profileUrl = `/ens/${ensName}`;
+    const profileUrl = `/profile/${ensName}`;
     window.open(profileUrl, "_blank");
   };
 
@@ -145,39 +138,8 @@ export function SubdomainProfile({ ensName }: { ensName: string }) {
               <ExternalLinkIcon className="h-4 w-4" />
               <span>View Public Profile</span>
             </button>
-
-            {isOwner && !isCurrentlyPrimary && (
-              <button
-                type="button"
-                onClick={handleSetPrimaryName}
-                disabled={setPrimaryName.isPending}
-                className="flex items-center space-x-2 rounded-lg bg-blue-500 px-4 py-2 font-medium text-white transition-all duration-200 hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {setPrimaryName.isPending ? (
-                  <>
-                    <Loader className="h-4 w-4" />
-                    <span>Setting...</span>
-                  </>
-                ) : (
-                  <span>Set as Primary</span>
-                )}
-              </button>
-            )}
           </div>
         </div>
-
-        {/* Primary Name Status & Errors */}
-        {setPrimaryName.error && (
-          <div className="text-red-600 text-sm">
-            Error setting primary name: {setPrimaryName.error.message}
-          </div>
-        )}
-
-        {setPrimaryName.isSuccess && (
-          <div className="text-green-600 text-sm">
-            Primary name set successfully! It may take a few moments to update.
-          </div>
-        )}
 
         {/* Avatar */}
         <ENSAvatarField ensName={ensName} isOwner={isOwner} />
