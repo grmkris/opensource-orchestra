@@ -142,12 +142,12 @@ cast send $GIFT_PYUSD "updateArtist(uint256,address,string,string)" \
 
 #### Gift pyUSD to artist and Mint SBT
 
-1. Pick a donation amount in PYUSD (must be greater than or equal to the on-chain `mintPrice`). Example: `DONATION=1000000` equals 1.0 PYUSD because the token has 6 decimals.
+1. Pick a donation amount in PYUSD (must be greater than or equal to the on-chain `mintPrice`). Example: 1.0 PYUSD = `1000000` (PYUSD has 6 decimals).
 2. Approve the contract to pull that amount:
    ```bash
    cast send $PYUSD "approve(address,uint256)" \
      $GIFT_PYUSD \
-     $DONATION \
+     1000000 \
      --private-key $PRIVATE_KEY \
      --rpc-url $SEPOLIA_RPC_URL
    ```
@@ -155,7 +155,7 @@ cast send $GIFT_PYUSD "updateArtist(uint256,address,string,string)" \
    ```bash
    cast send $GIFT_PYUSD "mint(uint256,uint256)" \
      1 \
-     $DONATION \
+     1000000 \
      --private-key $PRIVATE_KEY \
      --rpc-url $SEPOLIA_RPC_URL
    ```
@@ -163,13 +163,12 @@ cast send $GIFT_PYUSD "updateArtist(uint256,address,string,string)" \
 
 ### MultiGift (allocate donations to multiple artists + mint one SBT)
 
-In this mode, the contract owner allocates a total PYUSD donation across multiple registered artists in a single transaction using `allocateDonation()`. No per-artist SBT is minted. Instead, you mint a single receipt SBT via `MultiGiftSBT` to record the split.
+Allocate a total PYUSD amount across multiple registered artists in one transaction and mint a single receipt SBT. The script now accepts CLI arguments directly (no JSON config needed).
 
 Prerequisites:
 - `GIFT_PYUSD` is deployed and artists are registered.
 - `MULTI_GIFT_SBT` is deployed (see below) and exported in your `.env`.
-- `MULTI_GIFT_CONFIG` points to a JSON file describing `artistIds`, a single `total` amount (6 decimals), and `title`.
-- You must run the script from the GiftPYUSD owner account.
+- Use 6 decimals for PYUSD values.
 
 1) Deploy the MultiGiftSBT contract:
 ```bash
@@ -182,7 +181,6 @@ forge script script/DeployMultiGift.s.sol:DeployMultiGift \
 Set the address in `.env`:
 ```bash
 MULTI_GIFT_SBT=0x...
-MULTI_GIFT_CONFIG=./config/multi_gift.json
 ```
 Set the environment variables in the `.env` file.
 ```bash
@@ -190,41 +188,28 @@ set -a; source .env; set +a
 ```
    
 
-2) Prepare the config file (6 decimals for PYUSD):
+2) Approve total PYUSD to GiftPYUSD (example: 1.0 PYUSD = 1_000_000):
 ```bash
-cp config/multi_gift.example.json config/multi_gift.json
-```
-Example:
-```json
-{
-  "artistIds": [1, 2],
-  "total": 1000000,
-  "title": "Alice & Bob Gift"
-}
-```
-Notes:
-- `artistIds.length` must equal `amounts.length`.
-
-3) Approve total PYUSD (sum of `amounts`) to GiftPYUSD:
-```bash
-TOTAL=10000000 # 10.0 PYUSD (must match the config's total)
 cast send $PYUSD "approve(address,uint256)" \
   $GIFT_PYUSD \
-  $TOTAL \
+  1000000 \
   --private-key $PRIVATE_KEY \
   --rpc-url $SEPOLIA_RPC_URL
 ```
 
-4) Run the multi-gift script:
+3) Run the multi-gift script with CLI args:
 ```bash
 forge script script/MintMulti.s.sol:MintMulti \
+  --sig "run(uint256[],uint256,string)" \
+  "[1,2]" 1000000 "Alice & Bob Gift" \
   --rpc-url $SEPOLIA_RPC_URL \
   --private-key $PRIVATE_KEY \
   --broadcast
 ```
 This will:
+- Compute equal split amounts from `TOTAL` across `artistIds` (remainder distributed from the first artist).
 - Call `GiftPYUSD.allocateDonation(artistIds, amounts)` once to allocate balances.
-- Mint one `MultiGiftSBT` to the caller with the full split (stored with the computed equal amounts).
+- Mint one `MultiGiftSBT` to the caller with the full split.
 
 5) Verify on-chain state:
 ```bash
@@ -235,6 +220,10 @@ cast call $GIFT_PYUSD "artistBalance(uint256)(uint256)" 2 --rpc-url $SEPOLIA_RPC
 # Inspect the receipt NFT data (tokenId = 1)
 cast call $MULTI_GIFT_SBT "getGift(uint256)(uint256[],uint256[],uint256,string)" 1 --rpc-url $SEPOLIA_RPC_URL
 ```
+
+Notes:
+- PYUSD uses 6 decimals. Make sure `TOTAL` matches your intent (e.g., `1_000_000` = 1.0 PYUSD).
+- The default `run()` entrypoint now reverts; always use `--sig` with the typed `run(uint256[],uint256,string)`.
 
 ### Withdraw Artist Balance
 

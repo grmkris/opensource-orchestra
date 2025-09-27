@@ -18,18 +18,16 @@ import {MultiGiftSBT} from "../src/MultiGiftSBT.sol";
 contract MintMulti is Script {
     using stdJson for string;
 
-    string internal constant CONFIG_ENV = "MULTI_GIFT_CONFIG"; // path like ./config/multi_gift.json
+    string internal constant CONFIG_ENV = "MULTI_GIFT_CONFIG"; // deprecated: path like ./config/multi_gift.json
 
-    function run() external {
+    function run() external pure {
+        revert("Use run(uint256[],uint256,string) with --sig and CLI args");
+    }
+
+    function run(uint256[] calldata artistIds, uint256 total, string calldata title) external {
         address giftAddr = vm.envAddress("GIFT_PYUSD");
         address receiptAddr = vm.envAddress("MULTI_GIFT_SBT");
         address pyusdAddr = vm.envAddress("PYUSD");
-        string memory configPath = vm.envString(CONFIG_ENV);
-
-        string memory raw = vm.readFile(configPath);
-        uint256[] memory artistIds = raw.readUintArray(".artistIds");
-        uint256 total = raw.readUint(".total");
-        string memory title = raw.readString(".title");
 
         require(artistIds.length > 0, "length mismatch or empty");
 
