@@ -11,109 +11,170 @@ import { Label } from "@/components/ui/label";
 import { useSetTextRecords } from "@/hooks/useSetTextRecords";
 
 interface ENSAvatarFieldProps {
-	ensName: string;
-	isOwner: boolean;
+  ensName: string;
+  isOwner: boolean;
 }
 
 export function ENSAvatarField({ ensName, isOwner }: ENSAvatarFieldProps) {
-	const fieldId = useId();
+  const fieldId = useId();
 
-	// Fetch avatar data using the built-in wagmi hook
-	const { data: avatarUrl, isLoading } = useEnsAvatar({
-		name: ensName,
-		query: { enabled: !!ensName },
-		chainId: 1,
-	});
+  // Fetch avatar data using the built-in wagmi hook
+  const { data: avatarUrl, isLoading } = useEnsAvatar({
+    name: ensName,
+    query: { enabled: !!ensName },
+    chainId: 1,
+  });
 
-	// Local state for this field
-	const [value, setValue] = useState("");
-	const [isSaving, setIsSaving] = useState(false);
-	const [saved, setSaved] = useState(false);
+  // Local state for this field
+  const [value, setValue] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [saved, setSaved] = useState(false);
 
-	const setTextRecords = useSetTextRecords();
+  const setTextRecords = useSetTextRecords();
 
-	// Update local state when data loads
-	useEffect(() => {
-		if (avatarUrl) {
-			setValue(avatarUrl);
-		}
-	}, [avatarUrl]);
+  // Update local state when data loads
+  useEffect(() => {
+    if (avatarUrl) {
+      setValue(avatarUrl);
+    }
+  }, [avatarUrl]);
 
-	const handleSave = async () => {
-		setIsSaving(true);
-		setSaved(false);
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-		try {
-			await setTextRecords.mutateAsync({
-				label: ensName,
-				key: "avatar",
-				value,
-			});
-			setSaved(true);
-			setTimeout(() => setSaved(null), 3000);
-		} catch (error) {
-			console.error("Error saving avatar:", error);
-		} finally {
-			setIsSaving(false);
-		}
-	};
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
 
-	// Avatar display (always show this)
-	const avatarDisplay = (
-		<div className="mb-4 flex justify-center">
-			{isLoading ? (
-				<div className="h-24 w-24 animate-pulse rounded-full bg-muted" />
-			) : (
-				<ENSAvatar src={avatarUrl} alt={`${ensName} avatar`} size="md" />
-			)}
-		</div>
-	);
+      const response = await fetch("/api/upload/image", {
+        method: "POST",
+        body: formData,
+      });
 
-	// If not owner, just show the avatar
-	if (!isOwner) {
-		return avatarDisplay;
-	}
+      if (!response.ok) {
+        throw new Error("Failed to upload image");
+      }
 
-	// Loading state for the input
-	if (isLoading) {
-		return (
-			<div className="space-y-4">
-				{avatarDisplay}
-				<div className="flex items-end space-x-2">
-					<div className="flex-1">
-						<Label>Avatar URL</Label>
-						<div className="h-10 w-full animate-pulse rounded-md bg-muted" />
-					</div>
-					<div className="h-9 w-16 animate-pulse rounded-md bg-muted" />
-				</div>
-			</div>
-		);
-	}
+      const { url } = await response.json();
+      setValue(url);
+    } catch (error) {
+      console.error("Error uploading avatar:", error);
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
-	// Editable view for owners
-	return (
-		<div className="space-y-4">
-			{avatarDisplay}
-			<div className="flex items-end space-x-2">
-				<div className="flex-1">
-					<Label htmlFor={fieldId}>Avatar URL</Label>
-					<Input
-						id={fieldId}
-						placeholder="https://example.com/avatar.jpg"
-						value={value}
-						onChange={(e) => setValue(e.target.value)}
-					/>
-				</div>
-				<Button size="sm" onClick={handleSave} disabled={isSaving}>
-					{isSaving ? (
-						<Loader className="h-4 w-4" />
-					) : saved ? (
-						<CheckIcon className="h-4 w-4" />
-					) : (
-						<SaveIcon className="h-4 w-4" />
-					)}
-				</Button>
-			</div>
-		</div>
-	);
+  const handleSave = async () => {
+    setIsSaving(true);
+    setSaved(false);
+    alert(value);
+    try {
+      await setTextRecords.mutateAsync({
+        label: ensName,
+        key: "avatar",
+        value,
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (error) {
+      console.error("Error saving avatar:", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Avatar display (always show this)
+  const avatarDisplay = (
+    <div className="mb-4 flex justify-center">
+      {isLoading ? (
+        <div className="h-24 w-24 animate-pulse rounded-full bg-muted" />
+      ) : (
+        <ENSAvatar
+          src={avatarUrl || undefined}
+          alt={`${ensName} avatar`}
+          size="md"
+        />
+      )}
+    </div>
+  );
+
+  // If not owner, just show the avatar
+  if (!isOwner) {
+    return avatarDisplay;
+  }
+
+  // Loading state for the input
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        {avatarDisplay}
+        <div className="flex items-end space-x-2">
+          <div className="flex-1">
+            <Label>Avatar URL</Label>
+            <div className="h-10 w-full animate-pulse rounded-md bg-muted" />
+          </div>
+          <div className="h-9 w-16 animate-pulse rounded-md bg-muted" />
+        </div>
+      </div>
+    );
+  }
+
+  // Editable view for owners
+  return (
+    <div className="space-y-4">
+      {/* Image Preview */}
+      <div className="mb-4 flex justify-center">
+        {isLoading ? (
+          <div className="h-24 w-24 animate-pulse rounded-full bg-muted" />
+        ) : (
+          <ENSAvatar
+            src={value || avatarUrl || undefined}
+            alt={`${ensName} avatar`}
+            size="md"
+          />
+        )}
+      </div>
+
+      {/* File Upload */}
+      <div className="flex items-end space-x-2">
+        <div className="flex-1">
+          <Label htmlFor={fieldId}>Upload Avatar Image</Label>
+          <Input
+            id={fieldId}
+            type="file"
+            accept="image/*"
+            onChange={handleFileSelect}
+            disabled={isUploading}
+            className="cursor-pointer"
+          />
+          {isUploading && (
+            <p className="mt-1 text-sm text-muted-foreground">
+              Uploading image...
+            </p>
+          )}
+          {value && !isUploading && (
+            <p className="mt-1 text-sm text-muted-foreground">
+              Image uploaded successfully
+            </p>
+          )}
+        </div>
+        <Button
+          size="sm"
+          onClick={handleSave}
+          disabled={isSaving || isUploading || !value}
+        >
+          {isSaving ? (
+            <Loader className="h-4 w-4" />
+          ) : saved ? (
+            <CheckIcon className="h-4 w-4" />
+          ) : (
+            <SaveIcon className="h-4 w-4" />
+          )}
+        </Button>
+      </div>
+    </div>
+  );
 }
