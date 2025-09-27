@@ -3,7 +3,7 @@
 import { ArrowDownToLine, DollarSign, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { formatUnits, parseUnits, type Address } from "viem";
+import { type Address, formatUnits, parseUnits } from "viem";
 import { sepolia } from "viem/chains";
 import { useAccount, useChainId, useSwitchChain } from "wagmi";
 import { Button } from "@/components/ui/button";
@@ -26,9 +26,7 @@ export function PyusdBalanceCard({ artistAddress }: PyusdBalanceCardProps) {
 	const isOnSepolia = chainId === sepolia.id;
 	const isOwner = artistAddress?.toLowerCase() === userAddress?.toLowerCase();
 
-	const formattedBalance = balance.data
-		? formatUnits(balance.data, 6)
-		: "0";
+	const formattedBalance = balance.data ? formatUnits(balance.data, 6) : "0";
 
 	const handleWithdraw = async () => {
 		if (!withdrawAmount || !artistAddress) return;
@@ -41,7 +39,7 @@ export function PyusdBalanceCard({ artistAddress }: PyusdBalanceCardProps) {
 			}
 
 			const amount = parseUnits(withdrawAmount, 6);
-			
+
 			if (balance.data && amount > balance.data) {
 				toast.error("Withdrawal amount exceeds available balance");
 				return;
@@ -101,7 +99,7 @@ export function PyusdBalanceCard({ artistAddress }: PyusdBalanceCardProps) {
 				</div>
 
 				{/* Withdrawal Form */}
-				{parseFloat(formattedBalance) > 0 && (
+				{Number.parseFloat(formattedBalance) > 0 && (
 					<div className="space-y-4">
 						<div className="flex items-center space-x-2">
 							<div className="h-6 w-1 rounded-full bg-green-500" />
@@ -125,7 +123,7 @@ export function PyusdBalanceCard({ artistAddress }: PyusdBalanceCardProps) {
 									!withdrawAmount ||
 									withdrawMutation.isPending ||
 									balance.isLoading ||
-									parseFloat(withdrawAmount) <= 0
+									Number.parseFloat(withdrawAmount) <= 0
 								}
 								className="w-full bg-green-600 text-white hover:bg-green-700"
 							>
@@ -152,11 +150,9 @@ export function PyusdBalanceCard({ artistAddress }: PyusdBalanceCardProps) {
 				)}
 
 				{/* Empty State */}
-				{parseFloat(formattedBalance) === 0 && !balance.isLoading && (
+				{Number.parseFloat(formattedBalance) === 0 && !balance.isLoading && (
 					<div className="text-center text-gray-500">
-						<p className="text-sm">
-							No PYUSD balance available for withdrawal
-						</p>
+						<p className="text-sm">No PYUSD balance available for withdrawal</p>
 					</div>
 				)}
 			</div>

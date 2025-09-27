@@ -14,12 +14,12 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
+import { PY_USD_CONTRACTS } from "@/lib/pyusd/py-usd-contract";
 import {
 	useGiftToArtist,
 	usePyusdAllowance,
 	usePyusdApprove,
 } from "@/lib/pyusd/pyUsdHooks";
-import { PY_USD_CONTRACTS } from "@/lib/pyusd/py-usd-contract";
 
 interface PyusdGiftPopoverProps {
 	recipientAddress: string;
@@ -173,7 +173,9 @@ export function PyusdGiftPopover({
 				{!userAddress ? (
 					<div className="grid gap-3 text-center">
 						<div>
-							<h4 className="font-medium text-sm leading-none">Connect Wallet</h4>
+							<h4 className="font-medium text-sm leading-none">
+								Connect Wallet
+							</h4>
 							<p className="mt-1 text-muted-foreground text-xs">
 								Connect your wallet to send PYUSD gift to {recipientName}
 							</p>
@@ -183,7 +185,9 @@ export function PyusdGiftPopover({
 				) : (
 					<div className="grid gap-3">
 						<div>
-							<h4 className="font-medium text-sm leading-none">Send PYUSD gift</h4>
+							<h4 className="font-medium text-sm leading-none">
+								Send PYUSD gift
+							</h4>
 							<p className="mt-1 text-muted-foreground text-xs">
 								to {recipientName}
 							</p>
@@ -193,10 +197,10 @@ export function PyusdGiftPopover({
 							<div className="rounded-lg border border-yellow-200 bg-yellow-50 p-3">
 								<div className="flex items-center justify-between">
 									<div>
-										<p className="font-medium text-yellow-800 text-sm">
+										<p className="font-medium text-sm text-yellow-800">
 											Switch to Sepolia
 										</p>
-										<p className="text-yellow-700 text-xs">
+										<p className="text-xs text-yellow-700">
 											PYUSD gifts require Sepolia testnet
 										</p>
 									</div>
@@ -218,7 +222,9 @@ export function PyusdGiftPopover({
 									<Button
 										key={preset.value}
 										variant={
-											amount === preset.value && !isCustom ? "default" : "outline"
+											amount === preset.value && !isCustom
+												? "default"
+												: "outline"
 										}
 										size="sm"
 										onClick={() => handlePresetClick(preset.value)}

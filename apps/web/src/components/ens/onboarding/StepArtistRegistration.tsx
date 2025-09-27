@@ -143,7 +143,7 @@ export function StepArtistRegistration({
 											<p className="font-medium text-yellow-800">
 												Switch to Sepolia Testnet
 											</p>
-											<p className="text-yellow-700 text-sm">
+											<p className="text-sm text-yellow-700">
 												PYUSD registration requires Sepolia testnet
 											</p>
 										</div>

@@ -107,7 +107,9 @@ export function GiftPopover({
 				{!userAddress ? (
 					<div className="grid gap-3 text-center">
 						<div>
-							<h4 className="font-medium text-sm leading-none">Connect Wallet</h4>
+							<h4 className="font-medium text-sm leading-none">
+								Connect Wallet
+							</h4>
 							<p className="mt-1 text-muted-foreground text-xs">
 								Connect your wallet to send a gift to {recipientName}
 							</p>
@@ -129,7 +131,9 @@ export function GiftPopover({
 									<Button
 										key={preset.value}
 										variant={
-											amount === preset.value && !isCustom ? "default" : "outline"
+											amount === preset.value && !isCustom
+												? "default"
+												: "outline"
 										}
 										size="sm"
 										onClick={() => handlePresetClick(preset.value)}

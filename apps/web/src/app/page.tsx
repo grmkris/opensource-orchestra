@@ -3,8 +3,8 @@
 import { useRouter } from "next/navigation";
 import { ENSAvatar } from "@/components/ens/ENSAvatar";
 import { GiftPopover } from "@/components/ens/GiftPopover";
-import { PyusdGiftPopover } from "@/components/ens/PyusdGiftPopover";
 import { GlobalDonationsFeed } from "@/components/ens/GlobalDonationsFeed";
+import { PyusdGiftPopover } from "@/components/ens/PyusdGiftPopover";
 
 export default function Home() {
 	const router = useRouter();

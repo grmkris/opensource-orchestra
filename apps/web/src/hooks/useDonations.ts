@@ -1,7 +1,7 @@
-import { PARENT_DOMAIN } from "@/lib/ens/ens-contracts";
 import { useQuery } from "@tanstack/react-query";
 import type { Address } from "viem";
 import { base, mainnet } from "wagmi/chains";
+import { PARENT_DOMAIN } from "@/lib/ens/ens-contracts";
 
 export interface Donation {
 	from: Address;

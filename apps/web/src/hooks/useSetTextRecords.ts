@@ -1,123 +1,123 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { namehash, encodeFunctionData } from "viem";
+import { encodeFunctionData, namehash } from "viem";
 import { waitForTransactionReceipt } from "viem/actions";
 import { base } from "viem/chains";
 import { usePublicClient, useWriteContract } from "wagmi";
 import {
-  ENS_CHAIN,
-  ENS_CONTRACTS,
-  type TextRecordKey,
+	ENS_CHAIN,
+	ENS_CONTRACTS,
+	type TextRecordKey,
 } from "@/lib/ens/ens-contracts";
 import { L2_REGISTRY_ABI } from "@/lib/ens/l2-registry-abi";
 
 export function useSetTextRecords() {
-  const queryClient = useQueryClient();
+	const queryClient = useQueryClient();
 
-  const { writeContractAsync } = useWriteContract();
-  const basePublicClient = usePublicClient({ chainId: base.id });
+	const { writeContractAsync } = useWriteContract();
+	const basePublicClient = usePublicClient({ chainId: base.id });
 
-  const setTextRecordMutation = useMutation({
-    mutationFn: async ({
-      label,
-      key,
-      value,
-    }: {
-      label: string;
-      key: TextRecordKey;
-      value: string;
-    }) => {
-      if (!basePublicClient) {
-        throw new Error("Base public client not found");
-      }
-      const node = namehash(label);
+	const setTextRecordMutation = useMutation({
+		mutationFn: async ({
+			label,
+			key,
+			value,
+		}: {
+			label: string;
+			key: TextRecordKey;
+			value: string;
+		}) => {
+			if (!basePublicClient) {
+				throw new Error("Base public client not found");
+			}
+			const node = namehash(label);
 
-      const result = await writeContractAsync({
-        address: ENS_CONTRACTS.L2_REGISTRY,
-        abi: L2_REGISTRY_ABI,
-        functionName: "setText",
-        args: [node, key, value],
-        chainId: ENS_CHAIN.id,
-      });
+			const result = await writeContractAsync({
+				address: ENS_CONTRACTS.L2_REGISTRY,
+				abi: L2_REGISTRY_ABI,
+				functionName: "setText",
+				args: [node, key, value],
+				chainId: ENS_CHAIN.id,
+			});
 
-      const mined = await waitForTransactionReceipt(basePublicClient, {
-        hash: result,
-      });
+			const mined = await waitForTransactionReceipt(basePublicClient, {
+				hash: result,
+			});
 
-      queryClient.invalidateQueries();
+			queryClient.invalidateQueries();
 
-      return mined;
-    },
-  });
+			return mined;
+		},
+	});
 
-  return setTextRecordMutation;
+	return setTextRecordMutation;
 }
 
 // Hook for setting multiple text records in a single transaction
 export function useBatchSetTextRecords() {
-  const queryClient = useQueryClient();
-  const { writeContractAsync } = useWriteContract();
-  const basePublicClient = usePublicClient({ chainId: base.id });
+	const queryClient = useQueryClient();
+	const { writeContractAsync } = useWriteContract();
+	const basePublicClient = usePublicClient({ chainId: base.id });
 
-  const batchSetTextRecordsMutation = useMutation({
-    mutationFn: async ({
-      label,
-      records,
-    }: {
-      label: string;
-      records: Array<{ key: TextRecordKey; value: string }>;
-    }) => {
-      if (!basePublicClient) {
-        throw new Error("Base public client not found");
-      }
+	const batchSetTextRecordsMutation = useMutation({
+		mutationFn: async ({
+			label,
+			records,
+		}: {
+			label: string;
+			records: Array<{ key: TextRecordKey; value: string }>;
+		}) => {
+			if (!basePublicClient) {
+				throw new Error("Base public client not found");
+			}
 
-      const node = namehash(label);
+			const node = namehash(label);
 
-      // Encode each setText call
-      const calls = records.map((record) =>
-        encodeFunctionData({
-          abi: L2_REGISTRY_ABI,
-          functionName: "setText",
-          args: [node, record.key, record.value || ""], // Use empty string if value is falsy
-        })
-      );
+			// Encode each setText call
+			const calls = records.map((record) =>
+				encodeFunctionData({
+					abi: L2_REGISTRY_ABI,
+					functionName: "setText",
+					args: [node, record.key, record.value || ""], // Use empty string if value is falsy
+				}),
+			);
 
-      // Execute multicall
-      const result = await writeContractAsync({
-        address: ENS_CONTRACTS.L2_REGISTRY,
-        abi: L2_REGISTRY_ABI,
-        functionName: "multicall",
-        args: [calls],
-        chainId: ENS_CHAIN.id,
-      });
+			// Execute multicall
+			const result = await writeContractAsync({
+				address: ENS_CONTRACTS.L2_REGISTRY,
+				abi: L2_REGISTRY_ABI,
+				functionName: "multicall",
+				args: [calls],
+				chainId: ENS_CHAIN.id,
+			});
 
-      const mined = await waitForTransactionReceipt(basePublicClient, {
-        hash: result,
-      });
+			const mined = await waitForTransactionReceipt(basePublicClient, {
+				hash: result,
+			});
 
-      queryClient.invalidateQueries();
+			queryClient.invalidateQueries();
 
-      return mined;
-    },
-  });
+			return mined;
+		},
+	});
 
-  return batchSetTextRecordsMutation;
+	return batchSetTextRecordsMutation;
 }
 
 // Hook for clearing a text record (setting it to empty string)
 export function useClearTextRecord({
-  label,
-  key,
+	label,
+	key,
 }: {
-  label: string;
-  key: TextRecordKey;
+	label: string;
+	key: TextRecordKey;
 }) {
-  const { mutateAsync } = useSetTextRecords();
+	const { mutateAsync } = useSetTextRecords();
 
-  const clearTextRecord = useMutation({
-    mutationFn: async () => {
-      await mutateAsync({ label, key, value: "" });
-    },
-  });
+	const clearTextRecord = useMutation({
+		mutationFn: async () => {
+			await mutateAsync({ label, key, value: "" });
+		},
+	});
 
-  return clearTextRecord;
+	return clearTextRecord;
 }
