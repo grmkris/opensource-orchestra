@@ -1,24 +1,37 @@
 "use client";
 
-import { CheckIcon, CopyIcon, ExternalLinkIcon, LinkIcon } from "lucide-react";
+import {
+  CheckIcon,
+  CopyIcon,
+  ExternalLinkIcon,
+  LinkIcon,
+  SaveIcon,
+} from "lucide-react";
 import { useState } from "react";
 import { normalize } from "viem/ens";
 import { useAccount, useEnsAddress } from "wagmi";
 import { ProfileHeaderEditable } from "@/components/ens/ProfileHeaderEditable";
 import { ENSTextField } from "@/components/ens/ENSTextField";
 import { ENSGallerySection } from "@/components/ens/ENSGallerySection";
+import {
+  ENSFieldsProvider,
+  useENSFields,
+} from "@/components/ens/ENSFieldsProvider";
+import { Button } from "@/components/ui/button";
 import { Loader } from "@/components/loader";
 
-export function SubdomainProfile({ ensName }: { ensName: string }) {
-  const { address } = useAccount();
+// Internal component that uses the ENS fields context
+function SubdomainProfileContent({
+  ensName,
+  ensAddress,
+  isOwner,
+}: {
+  ensName: string;
+  ensAddress: string;
+  isOwner: boolean;
+}) {
   const [copiedField, setCopiedField] = useState<string | null>(null);
-
-  // Get the ENS name's address to determine ownership
-  const { data: ensAddress, isLoading: addressLoading } = useEnsAddress({
-    name: normalize(ensName || ""),
-    query: { enabled: !!ensName },
-    chainId: 1,
-  });
+  const { saveAllFields, hasChanges, isSaving, saved } = useENSFields();
 
   const handleCopy = async (text: string, field: string) => {
     try {
@@ -40,39 +53,9 @@ export function SubdomainProfile({ ensName }: { ensName: string }) {
     window.open(profileUrl, "_blank");
   };
 
-  if (addressLoading) {
-    return (
-      <div
-        className="rounded-2xl border-2 border-gray-100 bg-white p-8 shadow-sm"
-        style={{ fontFamily: "var(--font-roboto)" }}
-      >
-        <div className="flex items-center justify-center">
-          <Loader className="mr-3 h-6 w-6 text-blue-500" />
-          <span className="font-medium text-gray-700">
-            Loading subdomain...
-          </span>
-        </div>
-      </div>
-    );
-  }
-
-  if (!ensAddress) {
-    return (
-      <div
-        className="rounded-2xl border-2 border-gray-100 bg-white p-8 shadow-sm"
-        style={{ fontFamily: "var(--font-roboto)" }}
-      >
-        <div className="text-center text-gray-600">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
-            <div className="h-6 w-6 rounded bg-gray-300" />
-          </div>
-          <p className="font-medium">Subdomain not found or not yet resolved</p>
-        </div>
-      </div>
-    );
-  }
-
-  const isOwner = ensAddress?.toLowerCase() === address?.toLowerCase();
+  const handleSaveAll = async () => {
+    await saveAllFields();
+  };
 
   return (
     <div
@@ -127,7 +110,6 @@ export function SubdomainProfile({ ensName }: { ensName: string }) {
             </div>
 
             <ENSTextField
-              ensName={ensName}
               recordKey="description"
               label="Description"
               placeholder="Tell us about yourself"
@@ -144,7 +126,6 @@ export function SubdomainProfile({ ensName }: { ensName: string }) {
 
             <div className="space-y-4">
               <ENSTextField
-                ensName={ensName}
                 recordKey="com.twitter"
                 label="Twitter"
                 placeholder="username (without @)"
@@ -152,7 +133,6 @@ export function SubdomainProfile({ ensName }: { ensName: string }) {
               />
 
               <ENSTextField
-                ensName={ensName}
                 recordKey="com.github"
                 label="GitHub"
                 placeholder="username"
@@ -160,7 +140,6 @@ export function SubdomainProfile({ ensName }: { ensName: string }) {
               />
 
               <ENSTextField
-                ensName={ensName}
                 recordKey="com.discord"
                 label="Discord"
                 placeholder="username"
@@ -168,7 +147,6 @@ export function SubdomainProfile({ ensName }: { ensName: string }) {
               />
 
               <ENSTextField
-                ensName={ensName}
                 recordKey="com.telegram"
                 label="Telegram"
                 placeholder="username"
@@ -176,7 +154,6 @@ export function SubdomainProfile({ ensName }: { ensName: string }) {
               />
 
               <ENSTextField
-                ensName={ensName}
                 recordKey="social.farcaster"
                 label="Farcaster"
                 placeholder="username or FID"
@@ -184,7 +161,6 @@ export function SubdomainProfile({ ensName }: { ensName: string }) {
               />
 
               <ENSTextField
-                ensName={ensName}
                 recordKey="social.lens"
                 label="Lens Protocol"
                 placeholder="username.lens"
@@ -201,7 +177,6 @@ export function SubdomainProfile({ ensName }: { ensName: string }) {
             </div>
 
             <ENSTextField
-              ensName={ensName}
               recordKey="url"
               label="Website"
               placeholder="https://yourwebsite.com"
@@ -209,7 +184,6 @@ export function SubdomainProfile({ ensName }: { ensName: string }) {
             />
 
             <ENSTextField
-              ensName={ensName}
               recordKey="email"
               label="Email"
               placeholder="your@email.com"
@@ -218,7 +192,28 @@ export function SubdomainProfile({ ensName }: { ensName: string }) {
           </div>
 
           {/* Media Gallery Section */}
-          <ENSGallerySection ensName={ensName} isOwner={isOwner} />
+          <ENSGallerySection isOwner={isOwner} />
+
+          {/* Save All Button */}
+          {isOwner && (
+            <div className="flex justify-center pt-6">
+              <Button
+                onClick={handleSaveAll}
+                disabled={!hasChanges || isSaving}
+                size="lg"
+                className="min-w-32"
+              >
+                {isSaving ? (
+                  <Loader className="mr-2 h-4 w-4" />
+                ) : saved ? (
+                  <CheckIcon className="mr-2 h-4 w-4" />
+                ) : (
+                  <SaveIcon className="mr-2 h-4 w-4" />
+                )}
+                {isSaving ? "Saving..." : saved ? "Saved!" : "Save All Changes"}
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Secondary Actions */}
@@ -248,5 +243,60 @@ export function SubdomainProfile({ ensName }: { ensName: string }) {
         </div>
       </div>
     </div>
+  );
+}
+
+export function SubdomainProfile({ ensName }: { ensName: string }) {
+  const { address } = useAccount();
+
+  // Get the ENS name's address to determine ownership
+  const { data: ensAddress, isLoading: addressLoading } = useEnsAddress({
+    name: normalize(ensName || ""),
+    query: { enabled: !!ensName },
+    chainId: 1,
+  });
+
+  if (addressLoading) {
+    return (
+      <div
+        className="rounded-2xl border-2 border-gray-100 bg-white p-8 shadow-sm"
+        style={{ fontFamily: "var(--font-roboto)" }}
+      >
+        <div className="flex items-center justify-center">
+          <Loader className="mr-3 h-6 w-6 text-blue-500" />
+          <span className="font-medium text-gray-700">
+            Loading subdomain...
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!ensAddress) {
+    return (
+      <div
+        className="rounded-2xl border-2 border-gray-100 bg-white p-8 shadow-sm"
+        style={{ fontFamily: "var(--font-roboto)" }}
+      >
+        <div className="text-center text-gray-600">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
+            <div className="h-6 w-6 rounded bg-gray-300" />
+          </div>
+          <p className="font-medium">Subdomain not found or not yet resolved</p>
+        </div>
+      </div>
+    );
+  }
+
+  const isOwner = ensAddress?.toLowerCase() === address?.toLowerCase();
+
+  return (
+    <ENSFieldsProvider ensName={ensName} isOwner={isOwner}>
+      <SubdomainProfileContent
+        ensName={ensName}
+        ensAddress={ensAddress}
+        isOwner={isOwner}
+      />
+    </ENSFieldsProvider>
   );
 }
