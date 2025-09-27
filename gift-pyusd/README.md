@@ -45,7 +45,6 @@ GIFT_PYUSD=0x...
 # ARTIST_PRIVATE_KEY=0x...  # Optional if payout wallet differs from deployer
 
 # GiftPYUSDMulti
-# Deployed contract address for the GiftPYUSDMulti
 GIFT_PYUSD_MULTI=0x...
 ```
 
@@ -55,7 +54,6 @@ The repository keeps reusable artist metadata under `config/artists.json`:
 {
   "artists": [
     {
-      "artistId": 1,
       "wallet": "0x...",
       "name": "Alice",
       "image": "https://example.com/alice.png"
@@ -63,12 +61,10 @@ The repository keeps reusable artist metadata under `config/artists.json`:
   ]
 }
 ```
-
-- **`artistId`**: Numeric identifier consumed on-chain.
-- **`wallet`**: Payout address for withdrawals.
+- **`wallet`**: Payout address and the unique key for the artist on-chain.
 - **`name` / `image`**: Metadata stored in the contract.
 
-Add new artists by appending additional objects to the array and bumping `ARTIST_ID` to the matching value before running the registration script.
+Add new artists by appending additional objects to the array. Registration uses the wallet address as the key.
 
 ### Build Contracts
 
@@ -103,13 +99,13 @@ forge test
 
 ### Register Artists
 
-With the contract deployed, register artist metadata for any `artistId` present in `config/artists.json`:
+With the contract deployed, register artist metadata for any wallet present in `config/artists.json`:
 
 1. Confirm the contract owner wallet matches the `PRIVATE_KEY` you configured.
 2. Run the registration script with broadcasting credentials:
 
 ```bash
-ARTIST_ID=1 forge script script/RegisterArtist.s.sol:RegisterArtist \
+ARTIST_WALLET=0x... forge script script/RegisterArtist.s.sol:RegisterArtist \
   --rpc-url $SEPOLIA_RPC_URL \
   --broadcast \
   --private-key $PRIVATE_KEY
@@ -120,19 +116,18 @@ Forge saves each run under `broadcast/RegisterArtist.s.sol/11155111/`. Review th
 4. Validate the on-chain record (optional but recommended):
 
 ```bash
-cast call $GIFT_PYUSD "artists(uint256)(address,string,string,bool)" 1 --rpc-url $SEPOLIA_RPC_URL
+cast call $GIFT_PYUSD "artists(address)(address,string,string,bool)" $ARTIST_WALLET --rpc-url $SEPOLIA_RPC_URL
 ```
 
 If the call returns the configured wallet, metadata, and `true`, the artist is registered.
 
 #### Update an existing artist
 
-If metadata needs to change for an existing `artistId`, use the `updateArtist` function from the owner account. Empty strings keep current values:
+If metadata needs to change for an existing artist (by wallet), use the `updateArtist` function from the owner account. Empty strings keep current values:
 
 ```bash
-cast send $GIFT_PYUSD "updateArtist(uint256,address,string,string)" \
-  1 \
-  0x08D811A358850892029251CcC8a565a32fd2dCB8 \
+cast send $GIFT_PYUSD "updateArtist(address,string,string)" \
+  $ARTIST_WALLET \
   "Alice" \
   "https://example.com/alice.png" \
   --private-key $PRIVATE_KEY \
@@ -153,8 +148,8 @@ cast send $GIFT_PYUSD "updateArtist(uint256,address,string,string)" \
    ```
 3. Mint the SBT for a registered artist by sending the gift value:
    ```bash
-   cast send $GIFT_PYUSD "mint(uint256,uint256)" \
-     1 \
+   cast send $GIFT_PYUSD "mint(address,uint256)" \
+     $ARTIST_WALLET \
      1000000 \
      --private-key $PRIVATE_KEY \
      --rpc-url $SEPOLIA_RPC_URL
@@ -163,7 +158,7 @@ cast send $GIFT_PYUSD "updateArtist(uint256,address,string,string)" \
 
 ### GiftPYUSDMulti (allocate gifts to multiple artists + mint one SBT)
 
-Allocate a total PYUSD amount across multiple registered artists in one transaction and mint a single receipt SBT. The script now accepts CLI arguments directly (no JSON config needed).
+Allocate a total PYUSD amount across multiple registered artists in one transaction and mint a single receipt SBT. The script accepts CLI arguments directly (no JSON config needed).
 
 Prerequisites:
 - `GIFT_PYUSD` is deployed and artists are registered.
@@ -202,48 +197,48 @@ cast send $PYUSD "approve(address,uint256)" \
 3) Run the multi-gift script with CLI args:
 ```bash
 forge script script/MintGiftPYUSDMulti.s.sol:MintGiftPYUSDMulti \
-  --sig "run(uint256[],uint256,string)" \
-  "[1,2]" 1000000 "Alice & Bob Gift" \
+  --sig "run(address[],uint256,string)" \
+  "[$ARTIST_WALLET,$ANOTHER_ARTIST_WALLET]" 1000000 "Alice & Bob Gift" \
   --rpc-url $SEPOLIA_RPC_URL \
   --private-key $PRIVATE_KEY \
   --broadcast
 ```
 This will:
-- Compute equal split amounts from `TOTAL` across `artistIds` (remainder distributed from the first artist).
-- Call `GiftPYUSD.allocateGift(artistIds, amounts)` once to allocate balances.
+- Compute equal split amounts from `TOTAL` across `wallets` (remainder distributed from the first artist).
+- Call `GiftPYUSD.allocateGift(wallets, amounts)` once to allocate balances.
 - Mint one `GiftPYUSDMulti` to the caller with the full split.
 
 5) Verify on-chain state:
 ```bash
 # Check per-artist balances on GiftPYUSD
-cast call $GIFT_PYUSD "artistBalance(uint256)(uint256)" 1 --rpc-url $SEPOLIA_RPC_URL
-cast call $GIFT_PYUSD "artistBalance(uint256)(uint256)" 2 --rpc-url $SEPOLIA_RPC_URL
+cast call $GIFT_PYUSD "artistBalance(address)(uint256)" $ARTIST_WALLET --rpc-url $SEPOLIA_RPC_URL
+cast call $GIFT_PYUSD "artistBalance(address)(uint256)" $ANOTHER_ARTIST_WALLET --rpc-url $SEPOLIA_RPC_URL
 
 # Inspect the receipt NFT data (tokenId = 1)
-cast call $GIFT_PYUSD_MULTI "getGift(uint256)(uint256[],uint256[],uint256,string)" 1 --rpc-url $SEPOLIA_RPC_URL
+cast call $GIFT_PYUSD_MULTI "getGift(uint256)(address[],uint256[],uint256,string)" 1 --rpc-url $SEPOLIA_RPC_URL
 ```
 
 Notes:
 - PYUSD uses 6 decimals. Make sure `TOTAL` matches your intent (e.g., `1_000_000` = 1.0 PYUSD).
-- The default `run()` entrypoint now reverts; always use `--sig` with the typed `run(uint256[],uint256,string)`.
+- The default `run()` entrypoint now reverts; always use `--sig` with the typed `run(address[],uint256,string)`.
 
 ### Withdraw Artist Balance
 
 1. Check the pending balance for the artist:
 ```bash
-cast call $GIFT_PYUSD "artistBalance(uint256)(uint256)" 1 --rpc-url $SEPOLIA_RPC_URL
+cast call $GIFT_PYUSD "artistBalance(address)(uint256)" $ARTIST_WALLET --rpc-url $SEPOLIA_RPC_URL
 ```
 2. From the registered payout wallet, withdraw the desired PYUSD amount. If the payout wallet is different from the deployer, export `ARTIST_PRIVATE_KEY` first.
 ```bash
-cast send $GIFT_PYUSD "withdrawForArtist(uint256,uint256)" \
-  1 \
+cast send $GIFT_PYUSD "withdrawForArtist(address,uint256)" \
+  $ARTIST_WALLET \
   2000000 \
   --private-key ${ARTIST_PRIVATE_KEY:-$PRIVATE_KEY} \
   --rpc-url $SEPOLIA_RPC_URL
 ```
 3. Optionally confirm balances after withdrawal:
 ```bash
-cast call $GIFT_PYUSD "artistBalance(uint256)(uint256)" 1 --rpc-url $SEPOLIA_RPC_URL
+cast call $GIFT_PYUSD "artistBalance(address)(uint256)" $ARTIST_WALLET --rpc-url $SEPOLIA_RPC_URL
 cast call $GIFT_PYUSD "contractPYUSDBalance()(uint256)" --rpc-url $SEPOLIA_RPC_URL
 ```
 
@@ -259,14 +254,14 @@ constructor(address _mintToken, uint256 _minGiftAmount)
 ### Functions
 
 #### Public Functions
-- `mint(uint256 artistId, uint256 amount)`: Mint a new SBT by gifting `amount` PYUSD to `artistId` (reverts if `amount < minGiftAmount`)
+- `mint(address wallet, uint256 amount)`: Mint a new SBT by gifting `amount` PYUSD to `wallet` (reverts if `amount < minGiftAmount`)
 - `totalIssued()`: Returns the total number of SBTs issued
 - `contractPYUSDBalance()`: Returns current PYUSD balance of the contract
  - `tokenAmounts(uint256 tokenId)`: Returns the gift amount associated with a minted token
-- `artistBalance(uint256 artistId)`: Returns the accumulated PYUSD balance available for an artist to withdraw
+- `artistBalance(address wallet)`: Returns the accumulated PYUSD balance available for an artist to withdraw
 
 #### Withdrawal
-- `withdrawForArtist(uint256 artistId, uint256 amount)`: Withdraw PYUSD to the registered payout wallet for the specified artist. Only callable by that artist's payout wallet.
+- `withdrawForArtist(address wallet, uint256 amount)`: Withdraw PYUSD to the registered payout wallet for the specified artist. Only callable by that artist's payout wallet.
 
 #### ERC-721 Functions (Disabled for SBT)
 All transfer and approval functions revert with `TRANSFERS_DISABLED()`:

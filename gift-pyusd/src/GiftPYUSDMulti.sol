@@ -14,7 +14,7 @@ contract GiftPYUSDMulti is ERC721 {
 
     struct GiftSplit {
         uint256 totalAmount;          // Sum of amounts (e.g., 6 decimals for PYUSD)
-        uint256[] artistIds;          // Target artist IDs (as used by GiftPYUSD)
+        address[] wallets;            // Target artist wallets (as used by GiftPYUSD)
         uint256[] amounts;            // Amount per artist (same decimals as PYUSD)
         string title;                 // Optional title/note for the gift
     }
@@ -32,7 +32,7 @@ contract GiftPYUSDMulti is ERC721 {
     event ReceiptMinted(
         uint256 indexed tokenId,
         address indexed giver,
-        uint256[] artistIds,
+        address[] wallets,
         uint256[] amounts,
         uint256 totalAmount,
         string title
@@ -51,15 +51,15 @@ contract GiftPYUSDMulti is ERC721 {
 
     // --- External ---
     /// @notice Mint a soulbound receipt NFT representing a single multi-artist gift action.
-    /// @param artistIds The list of artist IDs
-    /// @param totalAmount The total gift amount (will be split equally across artistIds)
+    /// @param wallets The list of artist payout wallets
+    /// @param totalAmount The total gift amount (will be split equally across wallets)
     /// @param title Optional title/label (empty string allowed)
     function mint(
-        uint256[] calldata artistIds,
+        address[] calldata wallets,
         uint256 totalAmount,
         string calldata title
     ) external {
-        uint256 n = artistIds.length;
+        uint256 n = wallets.length;
         if (n == 0) revert LENGTH_MISMATCH();
         if (totalAmount < minTotalAmount) revert TOTAL_TOO_LOW();
 
@@ -77,22 +77,22 @@ contract GiftPYUSDMulti is ERC721 {
         GiftSplit storage g = _gifts[tokenId];
         g.totalAmount = totalAmount;
         g.title = title;
-        g.artistIds = artistIds;
+        g.wallets = wallets;
         g.amounts = amounts;
 
         _mint(msg.sender, tokenId);
 
-        emit ReceiptMinted(tokenId, msg.sender, artistIds, amounts, totalAmount, title);
+        emit ReceiptMinted(tokenId, msg.sender, wallets, amounts, totalAmount, title);
     }
 
     /// @notice View gift details by token ID.
     function getGift(uint256 tokenId)
         external
         view
-        returns (uint256[] memory artistIds, uint256[] memory amounts, uint256 totalAmount, string memory title)
+        returns (address[] memory wallets, uint256[] memory amounts, uint256 totalAmount, string memory title)
     {
         GiftSplit storage g = _gifts[tokenId];
-        return (g.artistIds, g.amounts, g.totalAmount, g.title);
+        return (g.wallets, g.amounts, g.totalAmount, g.title);
     }
 
     // --- ERC721 (SBT behavior) ---
@@ -128,7 +128,7 @@ contract GiftPYUSDMulti is ERC721 {
         string memory totalStr = _u2s(g.totalAmount);
         string memory totalIssuedStr = _u2s(totalIssued);
 
-        string memory idsJson = _uintArrayToJson(g.artistIds);
+        string memory idsJson = _addrArrayToJson(g.wallets);
         string memory amtsJson = _uintArrayToJson(g.amounts);
 
         return string(abi.encodePacked(
@@ -140,11 +140,23 @@ contract GiftPYUSDMulti is ERC721 {
                 '{"trait_type":"Total Issued","value":"', totalIssuedStr, '"}'
             '],',
             '"properties":{',
-                '"artistIds":', idsJson, ',',
+                '"wallets":', idsJson, ',',
                 '"amounts":', amtsJson, ',',
                 '"title":"', g.title, '"',
             '}'
         ));
+    }
+
+    function _addrArrayToJson(address[] storage arr) internal view returns (string memory) {
+        // e.g., ["0x...","0x..."]
+        if (arr.length == 0) return "[]";
+        bytes memory out = "[";
+        for (uint256 i = 0; i < arr.length; i++) {
+            out = abi.encodePacked(out, '"', _addrToHex(arr[i]), '"');
+            if (i + 1 < arr.length) out = abi.encodePacked(out, ",");
+        }
+        out = abi.encodePacked(out, "]");
+        return string(out);
     }
 
     function _uintArrayToJson(uint256[] storage arr) internal view returns (string memory) {
@@ -156,6 +168,19 @@ contract GiftPYUSDMulti is ERC721 {
             if (i + 1 < arr.length) out = abi.encodePacked(out, ",");
         }
         out = abi.encodePacked(out, "]");
+        return string(out);
+    }
+
+    function _addrToHex(address a) internal pure returns (string memory) {
+        bytes20 data = bytes20(a);
+        bytes memory out = new bytes(42);
+        out[0] = '0'; out[1] = 'x';
+        bytes16 hexSymbols = 0x30313233343536373839616263646566; // 0-9a-f
+        for (uint256 i = 0; i < 20; i++) {
+            uint8 b = uint8(data[i]);
+            out[2 + i * 2] = bytes1(hexSymbols[b >> 4]);
+            out[3 + i * 2] = bytes1(hexSymbols[b & 0x0f]);
+        }
         return string(out);
     }
 

@@ -6,7 +6,6 @@ import {GiftPYUSD} from "../src/GiftPYUSD.sol";
 
 contract RegisterArtist is Script {
     struct ArtistConfig {
-        uint256 artistId;
         address wallet;
         string name;
         string image;
@@ -16,7 +15,7 @@ contract RegisterArtist is Script {
 
     function run() public {
         address giftAddress = vm.envAddress("GIFT_PYUSD");
-        uint256 targetArtistId = vm.envUint("ARTIST_ID");
+        address targetWallet = vm.envAddress("ARTIST_WALLET");
 
         string memory artistsJson = vm.readFile(ARTISTS_CONFIG_PATH);
         ArtistConfig memory selectedArtist;
@@ -24,19 +23,18 @@ contract RegisterArtist is Script {
 
         for (uint256 i = 0; ; i++) {
             string memory basePath = string.concat(".artists[", vm.toString(i), "]");
-            string memory artistIdKey = string.concat(basePath, ".artistId");
+            string memory walletKey = string.concat(basePath, ".wallet");
 
-            uint256 currentArtistId;
-            try vm.parseJsonUint(artistsJson, artistIdKey) returns (uint256 parsedId) {
-                currentArtistId = parsedId;
+            address currentWallet;
+            try vm.parseJsonAddress(artistsJson, walletKey) returns (address parsedWallet) {
+                currentWallet = parsedWallet;
             } catch {
                 break;
             }
 
-            if (currentArtistId == targetArtistId) {
+            if (currentWallet == targetWallet) {
                 selectedArtist = ArtistConfig({
-                    artistId: currentArtistId,
-                    wallet: vm.parseJsonAddress(artistsJson, string.concat(basePath, ".wallet")),
+                    wallet: currentWallet,
                     name: vm.parseJsonString(artistsJson, string.concat(basePath, ".name")),
                     image: vm.parseJsonString(artistsJson, string.concat(basePath, ".image"))
                 });
@@ -45,13 +43,11 @@ contract RegisterArtist is Script {
             }
         }
 
-        if (!found) {
-            revert("Artist ID not found");
-        }
+        if (!found) revert("Artist wallet not found");
 
         GiftPYUSD gift = GiftPYUSD(giftAddress);
 
         vm.broadcast();
-        gift.registerArtist(selectedArtist.artistId, selectedArtist.wallet, selectedArtist.name, selectedArtist.image);
+        gift.registerArtist(selectedArtist.wallet, selectedArtist.name, selectedArtist.image);
     }
 }

@@ -9,11 +9,9 @@ contract GiftPYUSDTest is Test {
     MockPYUSD public pyusd;
     GiftPYUSD public giftPYUSD;
     uint256 constant MIN_GIFT_AMOUNT = 100e6; // PYUSD has 6 decimals
-    uint256 constant ARTIST_ID = 1;
     address constant ARTIST_WALLET = address(0xA11CE);
     string constant ARTIST_NAME = "Alice";
     string constant ARTIST_IMAGE = "https://example.com/alice.png";
-    uint256 constant ANOTHER_ARTIST_ID = 2;
     address constant ANOTHER_ARTIST_WALLET = address(0xB0B1);
     string constant ANOTHER_ARTIST_NAME = "Bob";
     string constant ANOTHER_ARTIST_IMAGE = "https://example.com/bob.png";
@@ -22,7 +20,7 @@ contract GiftPYUSDTest is Test {
         pyusd = new MockPYUSD();
         giftPYUSD = new GiftPYUSD(address(pyusd), MIN_GIFT_AMOUNT);
 
-        giftPYUSD.registerArtist(ARTIST_ID, ARTIST_WALLET, ARTIST_NAME, ARTIST_IMAGE);
+        giftPYUSD.registerArtist(ARTIST_WALLET, ARTIST_NAME, ARTIST_IMAGE);
     }
 
     function testCreate() public {
@@ -30,9 +28,9 @@ contract GiftPYUSDTest is Test {
     }
 
     function testRegisterArtist_Succeeds() public {
-        giftPYUSD.registerArtist(ANOTHER_ARTIST_ID, ANOTHER_ARTIST_WALLET, ANOTHER_ARTIST_NAME, ANOTHER_ARTIST_IMAGE);
+        giftPYUSD.registerArtist(ANOTHER_ARTIST_WALLET, ANOTHER_ARTIST_NAME, ANOTHER_ARTIST_IMAGE);
 
-        (address payoutWallet, string memory name, string memory imageURI, bool exists) = giftPYUSD.artists(ANOTHER_ARTIST_ID);
+        (address payoutWallet, string memory name, string memory imageURI, bool exists) = giftPYUSD.artists(ANOTHER_ARTIST_WALLET);
 
         assertEq(payoutWallet, ANOTHER_ARTIST_WALLET);
         assertEq(name, ANOTHER_ARTIST_NAME);
@@ -42,30 +40,29 @@ contract GiftPYUSDTest is Test {
 
     function testRegisterArtist_RevertIfDuplicate() public {
         vm.expectRevert(GiftPYUSD.ARTIST_EXISTS.selector);
-        giftPYUSD.registerArtist(ARTIST_ID, ARTIST_WALLET, ARTIST_NAME, ARTIST_IMAGE);
+        giftPYUSD.registerArtist(ARTIST_WALLET, ARTIST_NAME, ARTIST_IMAGE);
     }
 
     function testRegisterArtist_RevertIfInvalidWallet() public {
         vm.expectRevert(GiftPYUSD.INVALID_WALLET.selector);
-        giftPYUSD.registerArtist(ANOTHER_ARTIST_ID, address(0), ANOTHER_ARTIST_NAME, ANOTHER_ARTIST_IMAGE);
+        giftPYUSD.registerArtist(address(0), ANOTHER_ARTIST_NAME, ANOTHER_ARTIST_IMAGE);
     }
 
     function testRegisterArtist_RevertIfNotOwner() public {
         vm.prank(address(0xBEEF));
         vm.expectRevert(GiftPYUSD.NOT_OWNER.selector);
-        giftPYUSD.registerArtist(ANOTHER_ARTIST_ID, ANOTHER_ARTIST_WALLET, ANOTHER_ARTIST_NAME, ANOTHER_ARTIST_IMAGE);
+        giftPYUSD.registerArtist(ANOTHER_ARTIST_WALLET, ANOTHER_ARTIST_NAME, ANOTHER_ARTIST_IMAGE);
     }
 
     function testUpdateArtist_Succeeds() public {
-        address newWallet = address(0xA11CF);
         string memory newName = "Alice Deluxe";
         string memory newImage = "https://example.com/alice-deluxe.png";
 
-        giftPYUSD.updateArtist(ARTIST_ID, newWallet, newName, newImage);
+        giftPYUSD.updateArtist(ARTIST_WALLET, newName, newImage);
 
-        (address payoutWallet, string memory name, string memory imageURI, bool exists) = giftPYUSD.artists(ARTIST_ID);
+        (address payoutWallet, string memory name, string memory imageURI, bool exists) = giftPYUSD.artists(ARTIST_WALLET);
 
-        assertEq(payoutWallet, newWallet);
+        assertEq(payoutWallet, ARTIST_WALLET); // wallet key unchanged
         assertEq(name, newName);
         assertEq(imageURI, newImage);
         assertTrue(exists);
@@ -73,13 +70,13 @@ contract GiftPYUSDTest is Test {
 
     function testUpdateArtist_RevertIfNotFound() public {
         vm.expectRevert(GiftPYUSD.ARTIST_NOT_FOUND.selector);
-        giftPYUSD.updateArtist(999, ARTIST_WALLET, ARTIST_NAME, ARTIST_IMAGE);
+        giftPYUSD.updateArtist(address(0xDEAD), ARTIST_NAME, ARTIST_IMAGE);
     }
 
     function testUpdateArtist_RevertIfNotOwner() public {
         vm.prank(address(0xBEEF));
         vm.expectRevert(GiftPYUSD.NOT_OWNER.selector);
-        giftPYUSD.updateArtist(ARTIST_ID, ARTIST_WALLET, ARTIST_NAME, ARTIST_IMAGE);
+        giftPYUSD.updateArtist(ARTIST_WALLET, ARTIST_NAME, ARTIST_IMAGE);
     }
 
     function testMintWithMinimumGift() public {
@@ -88,7 +85,7 @@ contract GiftPYUSDTest is Test {
         pyusd.approve(address(giftPYUSD), MIN_GIFT_AMOUNT);
 
         // Mint NFT paying the minimum donation with PYUSD
-        giftPYUSD.mint(ARTIST_ID, MIN_GIFT_AMOUNT);
+        giftPYUSD.mint(ARTIST_WALLET, MIN_GIFT_AMOUNT);
 
         // PYUSD transferred to the NFT contract
         assertEq(pyusd.balanceOf(address(this)), 0);
@@ -97,8 +94,8 @@ contract GiftPYUSDTest is Test {
         // NFT and artist state assertions
         assertEq(giftPYUSD.balanceOf(address(this)), 1);
         assertEq(giftPYUSD.totalIssued(), 1);
-        assertEq(giftPYUSD.tokenArtist(1), ARTIST_ID);
-        assertEq(giftPYUSD.artistBalance(ARTIST_ID), MIN_GIFT_AMOUNT);
+        assertEq(giftPYUSD.tokenArtist(1), ARTIST_WALLET);
+        assertEq(giftPYUSD.artistBalance(ARTIST_WALLET), MIN_GIFT_AMOUNT);
     }
 
     function testMintWithHigherGift() public {
@@ -107,12 +104,12 @@ contract GiftPYUSDTest is Test {
         pyusd.mint(address(this), higherDonation);
         pyusd.approve(address(giftPYUSD), higherDonation);
 
-        giftPYUSD.mint(ARTIST_ID, higherDonation);
+        giftPYUSD.mint(ARTIST_WALLET, higherDonation);
 
         assertEq(pyusd.balanceOf(address(this)), 0);
         assertEq(pyusd.balanceOf(address(giftPYUSD)), higherDonation);
-        assertEq(giftPYUSD.tokenArtist(1), ARTIST_ID);
-        assertEq(giftPYUSD.artistBalance(ARTIST_ID), higherDonation);
+        assertEq(giftPYUSD.tokenArtist(1), ARTIST_WALLET);
+        assertEq(giftPYUSD.artistBalance(ARTIST_WALLET), higherDonation);
         assertEq(giftPYUSD.balanceOf(address(this)), 1);
     }
 
@@ -123,7 +120,7 @@ contract GiftPYUSDTest is Test {
         pyusd.approve(address(giftPYUSD), MIN_GIFT_AMOUNT);
 
         vm.expectRevert(GiftPYUSD.GIFT_TOO_LOW.selector);
-        giftPYUSD.mint(ARTIST_ID, insufficientDonation);
+        giftPYUSD.mint(ARTIST_WALLET, insufficientDonation);
     }
 
     function testMint_RevertIfArtistMissing() public {
@@ -131,15 +128,15 @@ contract GiftPYUSDTest is Test {
         pyusd.approve(address(giftPYUSD), MIN_GIFT_AMOUNT);
 
         vm.expectRevert(GiftPYUSD.ARTIST_NOT_FOUND.selector);
-        giftPYUSD.mint(999, MIN_GIFT_AMOUNT);
+        giftPYUSD.mint(address(0xDEAD), MIN_GIFT_AMOUNT);
     }
 
     function testAllocateGift_Succeeds() public {
-        giftPYUSD.registerArtist(ANOTHER_ARTIST_ID, ANOTHER_ARTIST_WALLET, ANOTHER_ARTIST_NAME, ANOTHER_ARTIST_IMAGE);
+        giftPYUSD.registerArtist(ANOTHER_ARTIST_WALLET, ANOTHER_ARTIST_NAME, ANOTHER_ARTIST_IMAGE);
 
-        uint256[] memory artistIds = new uint256[](2);
-        artistIds[0] = ARTIST_ID;
-        artistIds[1] = ANOTHER_ARTIST_ID;
+        address[] memory wallets = new address[](2);
+        wallets[0] = ARTIST_WALLET;
+        wallets[1] = ANOTHER_ARTIST_WALLET;
         uint256[] memory amounts = new uint256[](2);
         amounts[0] = MIN_GIFT_AMOUNT;
         amounts[1] = MIN_GIFT_AMOUNT * 2;
@@ -149,48 +146,48 @@ contract GiftPYUSDTest is Test {
         pyusd.approve(address(giftPYUSD), total);
 
         vm.expectEmit(true, false, false, true, address(giftPYUSD));
-        emit GiftPYUSD.GiftAllocated(address(this), total, artistIds, amounts);
-        giftPYUSD.allocateGift(artistIds, amounts);
+        emit GiftPYUSD.GiftAllocated(address(this), total, wallets, amounts);
+        giftPYUSD.allocateGift(wallets, amounts);
 
         assertEq(pyusd.balanceOf(address(giftPYUSD)), total);
-        assertEq(giftPYUSD.artistBalance(ARTIST_ID), amounts[0]);
-        assertEq(giftPYUSD.artistBalance(ANOTHER_ARTIST_ID), amounts[1]);
+        assertEq(giftPYUSD.artistBalance(ARTIST_WALLET), amounts[0]);
+        assertEq(giftPYUSD.artistBalance(ANOTHER_ARTIST_WALLET), amounts[1]);
     }
 
     function testAllocateGift_RevertIfLengthMismatch() public {
-        giftPYUSD.registerArtist(ANOTHER_ARTIST_ID, ANOTHER_ARTIST_WALLET, ANOTHER_ARTIST_NAME, ANOTHER_ARTIST_IMAGE);
+        giftPYUSD.registerArtist(ANOTHER_ARTIST_WALLET, ANOTHER_ARTIST_NAME, ANOTHER_ARTIST_IMAGE);
 
-        uint256[] memory artistIds = new uint256[](1);
-        artistIds[0] = ARTIST_ID;
+        address[] memory wallets = new address[](1);
+        wallets[0] = ARTIST_WALLET;
         uint256[] memory amounts = new uint256[](2);
         amounts[0] = MIN_GIFT_AMOUNT;
         amounts[1] = MIN_GIFT_AMOUNT;
 
         vm.expectRevert(GiftPYUSD.LENGTH_MISMATCH.selector);
-        giftPYUSD.allocateGift(artistIds, amounts);
+        giftPYUSD.allocateGift(wallets, amounts);
     }
 
     function testAllocateGift_RevertIfEmpty() public {
-        uint256[] memory artistIds = new uint256[](0);
+        address[] memory wallets = new address[](0);
         uint256[] memory amounts = new uint256[](0);
 
         vm.expectRevert(GiftPYUSD.EMPTY_GIFT.selector);
-        giftPYUSD.allocateGift(artistIds, amounts);
+        giftPYUSD.allocateGift(wallets, amounts);
     }
 
     function testAllocateGift_RevertIfArtistMissing() public {
-        uint256[] memory artistIds = new uint256[](1);
-        artistIds[0] = 999;
+        address[] memory wallets = new address[](1);
+        wallets[0] = address(0xDEAD);
         uint256[] memory amounts = new uint256[](1);
         amounts[0] = MIN_GIFT_AMOUNT;
 
         vm.expectRevert(GiftPYUSD.ARTIST_NOT_FOUND.selector);
-        giftPYUSD.allocateGift(artistIds, amounts);
+        giftPYUSD.allocateGift(wallets, amounts);
     }
 
     function testAllocateGift_AllowsGiftBelowMinGiftAmount() public {
-        uint256[] memory artistIds = new uint256[](1);
-        artistIds[0] = ARTIST_ID;
+        address[] memory wallets = new address[](1);
+        wallets[0] = ARTIST_WALLET;
         uint256[] memory amounts = new uint256[](1);
         amounts[0] = MIN_GIFT_AMOUNT - 1;
 
@@ -198,17 +195,17 @@ contract GiftPYUSDTest is Test {
         pyusd.mint(address(this), total);
         pyusd.approve(address(giftPYUSD), total);
 
-        giftPYUSD.allocateGift(artistIds, amounts);
+        giftPYUSD.allocateGift(wallets, amounts);
 
         assertEq(pyusd.balanceOf(address(giftPYUSD)), total);
-        assertEq(giftPYUSD.artistBalance(ARTIST_ID), total);
+        assertEq(giftPYUSD.artistBalance(ARTIST_WALLET), total);
     }
 
     function testSBT_ApproveReverts() public {
         // Mint one to self first
         pyusd.mint(address(this), MIN_GIFT_AMOUNT);
         pyusd.approve(address(giftPYUSD), MIN_GIFT_AMOUNT);
-        giftPYUSD.mint(ARTIST_ID, MIN_GIFT_AMOUNT);
+        giftPYUSD.mint(ARTIST_WALLET, MIN_GIFT_AMOUNT);
 
         // Expect reverts for approvals
         vm.expectRevert(GiftPYUSD.TRANSFERS_DISABLED.selector);
@@ -222,7 +219,7 @@ contract GiftPYUSDTest is Test {
         // Mint one to self first
         pyusd.mint(address(this), MIN_GIFT_AMOUNT);
         pyusd.approve(address(giftPYUSD), MIN_GIFT_AMOUNT);
-        giftPYUSD.mint(ARTIST_ID, MIN_GIFT_AMOUNT);
+        giftPYUSD.mint(ARTIST_WALLET, MIN_GIFT_AMOUNT);
 
         address to = address(0xB0B);
 
@@ -243,38 +240,38 @@ contract GiftPYUSDTest is Test {
         // Prepare: mint once to move PYUSD into the contract and credit the artist
         pyusd.mint(address(this), MIN_GIFT_AMOUNT);
         pyusd.approve(address(giftPYUSD), MIN_GIFT_AMOUNT);
-        giftPYUSD.mint(ARTIST_ID, MIN_GIFT_AMOUNT);
+        giftPYUSD.mint(ARTIST_WALLET, MIN_GIFT_AMOUNT);
 
         // pre-assert: funds are in the contract and artist balance tracked
         assertEq(pyusd.balanceOf(address(giftPYUSD)), MIN_GIFT_AMOUNT);
-        assertEq(giftPYUSD.artistBalance(ARTIST_ID), MIN_GIFT_AMOUNT);
+        assertEq(giftPYUSD.artistBalance(ARTIST_WALLET), MIN_GIFT_AMOUNT);
 
         // withdraw by the artist payout wallet
         vm.prank(ARTIST_WALLET);
-        giftPYUSD.withdrawForArtist(ARTIST_ID, MIN_GIFT_AMOUNT);
+        giftPYUSD.withdrawForArtist(ARTIST_WALLET, MIN_GIFT_AMOUNT);
 
         // post-assert: funds moved to artist wallet, balances updated
         assertEq(pyusd.balanceOf(address(giftPYUSD)), 0);
         assertEq(pyusd.balanceOf(ARTIST_WALLET), MIN_GIFT_AMOUNT);
-        assertEq(giftPYUSD.artistBalance(ARTIST_ID), 0);
+        assertEq(giftPYUSD.artistBalance(ARTIST_WALLET), 0);
     }
 
     function testWithdrawForArtist_RevertIfUnauthorized() public {
         pyusd.mint(address(this), MIN_GIFT_AMOUNT);
         pyusd.approve(address(giftPYUSD), MIN_GIFT_AMOUNT);
-        giftPYUSD.mint(ARTIST_ID, MIN_GIFT_AMOUNT);
+        giftPYUSD.mint(ARTIST_WALLET, MIN_GIFT_AMOUNT);
 
         vm.expectRevert(GiftPYUSD.UNAUTHORIZED.selector);
-        giftPYUSD.withdrawForArtist(ARTIST_ID, MIN_GIFT_AMOUNT);
+        giftPYUSD.withdrawForArtist(ARTIST_WALLET, MIN_GIFT_AMOUNT);
     }
 
     function testWithdrawForArtist_RevertIfInsufficientBalance() public {
         pyusd.mint(address(this), MIN_GIFT_AMOUNT);
         pyusd.approve(address(giftPYUSD), MIN_GIFT_AMOUNT);
-        giftPYUSD.mint(ARTIST_ID, MIN_GIFT_AMOUNT);
+        giftPYUSD.mint(ARTIST_WALLET, MIN_GIFT_AMOUNT);
 
         vm.prank(ARTIST_WALLET);
         vm.expectRevert(GiftPYUSD.INSUFFICIENT_BALANCE.selector);
-        giftPYUSD.withdrawForArtist(ARTIST_ID, MIN_GIFT_AMOUNT + 1);
+        giftPYUSD.withdrawForArtist(ARTIST_WALLET, MIN_GIFT_AMOUNT + 1);
     }
 }
