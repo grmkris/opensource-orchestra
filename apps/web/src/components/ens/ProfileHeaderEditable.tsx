@@ -1,13 +1,13 @@
 "use client";
 
-import { CheckIcon, CopyIcon, SaveIcon } from "lucide-react";
+import { CheckIcon, SaveIcon } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useId, useState } from "react";
 import { useEnsAvatar, useEnsText } from "wagmi";
+import { Loader } from "@/components/loader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader } from "@/components/loader";
 import { useSetTextRecords } from "@/hooks/useSetTextRecords";
 import type { TextRecordKey } from "@/lib/ens/ens-contracts";
 
@@ -46,7 +46,7 @@ export function ProfileHeaderEditable({
 	// Local state for images
 	const [headerValue, setHeaderValue] = useState("");
 	const [avatarValue, setAvatarValue] = useState("");
-	
+
 	// Upload and save states
 	const [headerUploading, setHeaderUploading] = useState(false);
 	const [avatarUploading, setAvatarUploading] = useState(false);
@@ -75,7 +75,7 @@ export function ProfileHeaderEditable({
 	const handleFileUpload = async (
 		file: File,
 		setUploading: (loading: boolean) => void,
-		setValue: (value: string) => void
+		setValue: (value: string) => void,
 	) => {
 		setUploading(true);
 		try {
@@ -100,19 +100,28 @@ export function ProfileHeaderEditable({
 		}
 	};
 
-	const handleHeaderFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+	const handleHeaderFileSelect = async (
+		e: React.ChangeEvent<HTMLInputElement>,
+	) => {
 		const file = e.target.files?.[0];
 		if (!file) return;
 		await handleFileUpload(file, setHeaderUploading, setHeaderValue);
 	};
 
-	const handleAvatarFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+	const handleAvatarFileSelect = async (
+		e: React.ChangeEvent<HTMLInputElement>,
+	) => {
 		const file = e.target.files?.[0];
 		if (!file) return;
 		await handleFileUpload(file, setAvatarUploading, setAvatarValue);
 	};
 
-	const handleSave = async (key: TextRecordKey, value: string, setSaving: (saving: boolean) => void, setSaved: (saved: boolean) => void) => {
+	const handleSave = async (
+		key: TextRecordKey,
+		value: string,
+		setSaving: (saving: boolean) => void,
+		setSaved: (saved: boolean) => void,
+	) => {
 		setSaving(true);
 		setSaved(false);
 
@@ -131,8 +140,10 @@ export function ProfileHeaderEditable({
 		}
 	};
 
-	const handleHeaderSave = () => handleSave("header", headerValue, setHeaderSaving, setHeaderSaved);
-	const handleAvatarSave = () => handleSave("avatar", avatarValue, setAvatarSaving, setAvatarSaved);
+	const handleHeaderSave = () =>
+		handleSave("header", headerValue, setHeaderSaving, setHeaderSaved);
+	const handleAvatarSave = () =>
+		handleSave("avatar", avatarValue, setAvatarSaving, setAvatarSaved);
 
 	const handleCoverLoad = () => {
 		setCoverLoading(false);

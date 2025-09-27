@@ -4,8 +4,8 @@ import { CheckIcon, CopyIcon, ExternalLinkIcon, LinkIcon } from "lucide-react";
 import { useState } from "react";
 import { normalize } from "viem/ens";
 import { useAccount, useEnsAddress } from "wagmi";
-import { ProfileHeaderEditable } from "@/components/ens/ProfileHeaderEditable";
 import { ENSTextField } from "@/components/ens/ENSTextField";
+import { ProfileHeaderEditable } from "@/components/ens/ProfileHeaderEditable";
 import { Loader } from "@/components/loader";
 
 export function SubdomainProfile({ ensName }: { ensName: string }) {
@@ -90,7 +90,6 @@ export function SubdomainProfile({ ensName }: { ensName: string }) {
 			<div className="space-y-8 p-8">
 				{/* Header Info */}
 				<div className="space-y-6">
-
 					{/* Profile Actions */}
 					<div className="flex flex-wrap items-center gap-3">
 						<button
@@ -216,7 +215,6 @@ export function SubdomainProfile({ ensName }: { ensName: string }) {
 							isOwner={isOwner}
 						/>
 					</div>
-
 
 					{/* Media gallery secgtion */}
 					<div className="space-y-4">

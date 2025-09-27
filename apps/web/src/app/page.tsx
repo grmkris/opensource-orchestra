@@ -1,9 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { ENSAvatar } from "@/components/ens/ENSAvatar";
 import { GiftPopover } from "@/components/ens/GiftPopover";
 import { GlobalDonationsFeed } from "@/components/ens/GlobalDonationsFeed";
-import { ENSAvatar } from "@/components/ens/ENSAvatar";
 
 export default function Home() {
 	const router = useRouter();
@@ -106,7 +106,7 @@ export default function Home() {
 						onClick={() => handleArtistClick(artist.id)}
 					>
 						{/* Artist avatar */}
-						<div className="flex h-full w-full items-center justify-center rounded-full border-2 border-amber-300 bg-amber-500/10 shadow-lg transition-all duration-300 group-hover:scale-125 overflow-hidden">
+						<div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full border-2 border-amber-300 bg-amber-500/10 shadow-lg transition-all duration-300 group-hover:scale-125">
 							<ENSAvatar
 								src={artist.avatar}
 								alt={`${artist.id} profile picture`}

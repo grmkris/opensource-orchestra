@@ -3,7 +3,7 @@
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { getAddress } from "viem";
 import { useAccount } from "wagmi";
 import { OnboardingProgress } from "@/components/ens/OnboardingProgress";
@@ -152,9 +152,7 @@ export default function OnboardingPage() {
 						<p className="mx-auto max-w-2xl text-gray-600 text-lg">
 							Create your decentralized identity
 						</p>
-						<p className="text-gray-600 text-lg">
-							{address}
-						</p>
+						<p className="text-gray-600 text-lg">{address}</p>
 					</div>
 
 					{/* Progress Indicator */}

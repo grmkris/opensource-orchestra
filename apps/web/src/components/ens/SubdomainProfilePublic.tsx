@@ -193,7 +193,6 @@ export function SubdomainProfilePublic({ ensName }: { ensName: string }) {
 				/>
 
 				<div className="space-y-6 p-6">
-
 					{/* Profile Fields */}
 					<div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
 						{ENS_FIELDS.map((field) => (

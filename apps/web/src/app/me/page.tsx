@@ -84,7 +84,9 @@ export default function MePage() {
 						<div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-100">
 							<div className="h-8 w-8 rounded-lg bg-blue-500" />
 						</div>
-						<h1 className="font-bold text-4xl text-gray-900">{userSubdomain.data}</h1>
+						<h1 className="font-bold text-4xl text-gray-900">
+							{userSubdomain.data}
+						</h1>
 					</div>
 
 					{/* Profile */}
