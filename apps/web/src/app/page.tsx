@@ -73,7 +73,12 @@ export default function Home() {
 					style={{ backgroundImage: "url('/iterate-two.png')" }}
 				/>
 				<div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/70 pointer-events-none z-0" />
-
+				<button
+  onClick={() => setCurtainsOpen(!curtainsOpen)}
+  className="absolute top-4 left-8 bg-black/50 text-white px-4 py-2 rounded-full z-30 hover:bg-amber-500/70 transition-colors"
+>
+Curtains {curtainsOpen ? "Close" : "Open "}
+</button>
 				<nav className="absolute top-4 right-8 flex space-x-6 bg-black/50 px-4 py-2 rounded-full z-30">
 					<a href="#" className="text-white hover:text-amber-300 transition-colors">Home</a>
 					<a href="#global" className="text-white hover:text-amber-300 transition-colors">Global</a>
@@ -82,7 +87,7 @@ export default function Home() {
 
 				{/* Stage with curtains + video */}
 				<div className="absolute inset-0 flex items-center justify-center">
-					<div className="-translate-x-[3%] relative h-[52%] w-[62%] transform">
+					<div className="-translate-x-[3%] relative h-[58%] w-[62%] transform">
 						
 						<div className="relative h-full w-full overflow-hidden rounded-lg shadow-2xl border-0">
 							{/* Curtains */}
