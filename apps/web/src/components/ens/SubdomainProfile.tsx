@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckIcon, CopyIcon, ExternalLinkIcon } from "lucide-react";
+import { CheckIcon, CopyIcon, ExternalLinkIcon, SaveIcon } from "lucide-react";
 import Image from "next/image";
 import { useId, useState } from "react";
 import { useAccount } from "wagmi";
@@ -12,15 +12,15 @@ import { Label } from "@/components/ui/label";
 import { useSubdomainData } from "@/hooks/useENSSubdomain";
 import { useSetPrimaryName } from "@/hooks/useSetPrimaryName";
 import { useSetTextRecords } from "@/hooks/useSetTextRecords";
+import type { TextRecordKey } from "@/lib/ens/ens-contracts";
 
 export function SubdomainProfile({ ensName }: { ensName: string }) {
 	const { address } = useAccount();
 	const subdomainData = useSubdomainData(ensName);
-	const [isEditing, setIsEditing] = useState(false);
 	const [copiedField, setCopiedField] = useState<string | null>(null);
 	const setPrimaryName = useSetPrimaryName();
 
-	const isCurrentlyPrimary = subdomainData?.subdomain;
+	const isCurrentlyPrimary = false;
 
 	// Form state for editing
 	const [formData, setFormData] = useState({
@@ -34,6 +34,10 @@ export function SubdomainProfile({ ensName }: { ensName: string }) {
 		url: subdomainData?.subdomain?.url || "",
 		email: subdomainData?.subdomain?.email || "",
 	});
+
+	// Individual field save states
+	const [savingField, setSavingField] = useState<TextRecordKey | null>(null);
+	const [savedField, setSavedField] = useState<TextRecordKey | null>(null);
 
 	const setTextRecords = useSetTextRecords();
 
@@ -57,66 +61,23 @@ export function SubdomainProfile({ ensName }: { ensName: string }) {
 		}
 	};
 
-	const handleSave = () => {
-		setTextRecords.mutate({
-			label: ensName,
-			key: "avatar",
-			value: formData.avatar,
-		});
-		setTextRecords.mutate({
-			label: ensName,
-			key: "description",
-			value: formData.description,
-		});
-		setTextRecords.mutate({
-			label: ensName,
-			key: "display",
-			value: formData.display,
-		});
-		setTextRecords.mutate({
-			label: ensName,
-			key: "com.twitter",
-			value: formData.twitter,
-		});
-		setTextRecords.mutate({
-			label: ensName,
-			key: "com.github",
-			value: formData.github,
-		});
-		setTextRecords.mutate({
-			label: ensName,
-			key: "com.discord",
-			value: formData.discord,
-		});
-		setTextRecords.mutate({
-			label: ensName,
-			key: "com.telegram",
-			value: formData.telegram,
-		});
-		setTextRecords.mutate({ label: ensName, key: "url", value: formData.url });
-		setTextRecords.mutate({
-			label: ensName,
-			key: "email",
-			value: formData.email,
-		});
-	};
+	const handleSaveField = async (key: TextRecordKey, value: string) => {
+		setSavingField(key);
+		setSavedField(null);
 
-	const handleCancel = () => {
-		// Reset form data
-		if (subdomainData?.subdomain) {
-			setFormData({
-				avatar: subdomainData.subdomain.avatar || "",
-				description: subdomainData.subdomain.description || "",
-				display: subdomainData.subdomain.display || "",
-				twitter: subdomainData.subdomain.twitter || "",
-				github: subdomainData.subdomain.github || "",
-				discord: subdomainData.subdomain.discord || "",
-				telegram: subdomainData.subdomain.telegram || "",
-				url: subdomainData.subdomain.url || "",
-				email: subdomainData.subdomain.email || "",
+		try {
+			await setTextRecords.mutateAsync({
+				label: ensName,
+				key,
+				value,
 			});
+			setSavedField(key);
+			setTimeout(() => setSavedField(null), 3000);
+		} catch (error) {
+			console.error(`Error saving ${key}:`, error);
+		} finally {
+			setSavingField(null);
 		}
-		setIsEditing(false);
 	};
 
 	const handleSetPrimaryName = () => {
@@ -184,7 +145,7 @@ export function SubdomainProfile({ ensName }: { ensName: string }) {
 					</div>
 
 					<div className="flex space-x-2">
-						{isOwner && !isEditing && !isCurrentlyPrimary && (
+						{isOwner && !isCurrentlyPrimary && (
 							<Button
 								variant="outline"
 								size="sm"
@@ -200,9 +161,6 @@ export function SubdomainProfile({ ensName }: { ensName: string }) {
 									"Set as Primary"
 								)}
 							</Button>
-						)}
-						{isOwner && !isEditing && (
-							<Button onClick={() => setIsEditing(true)}>Edit Profile</Button>
 						)}
 					</div>
 				</div>
@@ -221,8 +179,8 @@ export function SubdomainProfile({ ensName }: { ensName: string }) {
 				)}
 
 				{/* Avatar */}
-				{subdomainData.subdomain.avatar && (
-					<div className="flex justify-center">
+				<div className="flex justify-center">
+					{subdomainData.subdomain.avatar ? (
 						<Image
 							src={subdomainData.subdomain.avatar}
 							alt={`${subdomainData.subdomain.name} avatar`}
@@ -230,240 +188,459 @@ export function SubdomainProfile({ ensName }: { ensName: string }) {
 							height={96}
 							className="h-24 w-24 rounded-full object-cover"
 						/>
-					</div>
-				)}
+					) : (
+						<div className="flex h-24 w-24 items-center justify-center rounded-full bg-muted text-muted-foreground text-sm">
+							No Avatar
+						</div>
+					)}
+				</div>
 
 				{/* Profile Content */}
-				{isEditing && isOwner ? (
-					<div className="space-y-4">
-						<div>
-							<Label htmlFor="avatar">Avatar URL</Label>
-							<Input
-								id={avatarId}
-								placeholder="https://example.com/avatar.jpg or ipfs://..."
-								value={formData.avatar}
-								onChange={(e) =>
-									setFormData((prev) => ({ ...prev, avatar: e.target.value }))
-								}
-							/>
-						</div>
+				<div className="space-y-6">
+					{isOwner ? (
+						<>
+							{/* Identity Section - Editable */}
+							<div className="space-y-4">
+								<h4 className="font-medium text-sm">Identity</h4>
 
-						<div>
-							<Label htmlFor="display">Display Name</Label>
-							<Input
-								id={displayId}
-								placeholder="Your display name"
-								value={formData.display}
-								onChange={(e) =>
-									setFormData((prev) => ({ ...prev, display: e.target.value }))
-								}
-							/>
-						</div>
-
-						<div>
-							<Label htmlFor="description">Bio</Label>
-							<Input
-								id={descriptionId}
-								placeholder="Tell us about yourself"
-								value={formData.description}
-								onChange={(e) =>
-									setFormData((prev) => ({
-										...prev,
-										description: e.target.value,
-									}))
-								}
-							/>
-						</div>
-
-						<div className="grid grid-cols-2 gap-4">
-							<div>
-								<Label htmlFor="twitter">Twitter</Label>
-								<Input
-									id={twitterId}
-									placeholder="username (without @)"
-									value={formData.twitter}
-									onChange={(e) =>
-										setFormData((prev) => ({
-											...prev,
-											twitter: e.target.value,
-										}))
-									}
-								/>
-							</div>
-
-							<div>
-								<Label htmlFor="github">GitHub</Label>
-								<Input
-									id={githubId}
-									placeholder="username"
-									value={formData.github}
-									onChange={(e) =>
-										setFormData((prev) => ({ ...prev, github: e.target.value }))
-									}
-								/>
-							</div>
-
-							<div>
-								<Label htmlFor="discord">Discord</Label>
-								<Input
-									id={discordId}
-									placeholder="username"
-									value={formData.discord}
-									onChange={(e) =>
-										setFormData((prev) => ({
-											...prev,
-											discord: e.target.value,
-										}))
-									}
-								/>
-							</div>
-
-							<div>
-								<Label htmlFor="telegram">Telegram</Label>
-								<Input
-									id={telegramId}
-									placeholder="username"
-									value={formData.telegram}
-									onChange={(e) =>
-										setFormData((prev) => ({
-											...prev,
-											telegram: e.target.value,
-										}))
-									}
-								/>
-							</div>
-						</div>
-
-						<div>
-							<Label htmlFor="url">Website</Label>
-							<Input
-								id={urlId}
-								placeholder="https://yourwebsite.com"
-								value={formData.url}
-								onChange={(e) =>
-									setFormData((prev) => ({ ...prev, url: e.target.value }))
-								}
-							/>
-						</div>
-
-						<div>
-							<Label htmlFor="email">Email</Label>
-							<Input
-								id={emailId}
-								placeholder="your@email.com"
-								value={formData.email}
-								onChange={(e) =>
-									setFormData((prev) => ({ ...prev, email: e.target.value }))
-								}
-							/>
-						</div>
-
-						<div className="flex space-x-2">
-							<Button onClick={handleSave} disabled={setTextRecords.isPending}>
-								{setTextRecords.isPending ? (
-									<div className="flex items-center space-x-2">
-										<Loader className="h-4 w-4" />
-										<span>Saving...</span>
+								<div className="flex items-end space-x-2">
+									<div className="flex-1">
+										<Label htmlFor="avatar">Avatar URL</Label>
+										<Input
+											id={avatarId}
+											placeholder="https://example.com/avatar.jpg or ipfs://..."
+											value={formData.avatar}
+											onChange={(e) =>
+												setFormData((prev) => ({
+													...prev,
+													avatar: e.target.value,
+												}))
+											}
+										/>
 									</div>
-								) : (
-									"Save Profile"
-								)}
-							</Button>
-							<Button
-								variant="outline"
-								onClick={handleCancel}
-								disabled={setTextRecords.isPending}
-							>
-								Cancel
-							</Button>
-						</div>
+									<Button
+										size="sm"
+										onClick={() => handleSaveField("avatar", formData.avatar)}
+										disabled={savingField === "avatar"}
+									>
+										{savingField === "avatar" ? (
+											<Loader className="h-4 w-4" />
+										) : savedField === "avatar" ? (
+											<CheckIcon className="h-4 w-4" />
+										) : (
+											<SaveIcon className="h-4 w-4" />
+										)}
+									</Button>
+								</div>
 
-						{setTextRecords.isSuccess && (
-							<div className="text-green-600 text-sm">
-								Profile updated successfully!
+								<div className="flex items-end space-x-2">
+									<div className="flex-1">
+										<Label htmlFor="display">Display Name</Label>
+										<Input
+											id={displayId}
+											placeholder="Your display name"
+											value={formData.display}
+											onChange={(e) =>
+												setFormData((prev) => ({
+													...prev,
+													display: e.target.value,
+												}))
+											}
+										/>
+									</div>
+									<Button
+										size="sm"
+										onClick={() => handleSaveField("display", formData.display)}
+										disabled={savingField === "display"}
+									>
+										{savingField === "display" ? (
+											<Loader className="h-4 w-4" />
+										) : savedField === "display" ? (
+											<CheckIcon className="h-4 w-4" />
+										) : (
+											<SaveIcon className="h-4 w-4" />
+										)}
+									</Button>
+								</div>
+
+								<div className="flex items-end space-x-2">
+									<div className="flex-1">
+										<Label htmlFor="description">Bio</Label>
+										<Input
+											id={descriptionId}
+											placeholder="Tell us about yourself"
+											value={formData.description}
+											onChange={(e) =>
+												setFormData((prev) => ({
+													...prev,
+													description: e.target.value,
+												}))
+											}
+										/>
+									</div>
+									<Button
+										size="sm"
+										onClick={() =>
+											handleSaveField("description", formData.description)
+										}
+										disabled={savingField === "description"}
+									>
+										{savingField === "description" ? (
+											<Loader className="h-4 w-4" />
+										) : savedField === "description" ? (
+											<CheckIcon className="h-4 w-4" />
+										) : (
+											<SaveIcon className="h-4 w-4" />
+										)}
+									</Button>
+								</div>
 							</div>
-						)}
-					</div>
-				) : (
-					<div className="space-y-4">
-						{/* Display Mode */}
-						{subdomainData.subdomain.display && (
-							<div>
-								<h3 className="font-medium">
-									{subdomainData.subdomain.display}
-								</h3>
+
+							{/* Social Links Section - Editable */}
+							<div className="space-y-4">
+								<h4 className="font-medium text-sm">Social Links</h4>
+
+								<div className="space-y-4">
+									<div className="flex items-end space-x-2">
+										<div className="flex-1">
+											<Label htmlFor="twitter">Twitter</Label>
+											<Input
+												id={twitterId}
+												placeholder="username (without @)"
+												value={formData.twitter}
+												onChange={(e) =>
+													setFormData((prev) => ({
+														...prev,
+														twitter: e.target.value,
+													}))
+												}
+											/>
+										</div>
+										<Button
+											size="sm"
+											onClick={() =>
+												handleSaveField("com.twitter", formData.twitter)
+											}
+											disabled={savingField === "com.twitter"}
+										>
+											{savingField === "com.twitter" ? (
+												<Loader className="h-4 w-4" />
+											) : savedField === "com.twitter" ? (
+												<CheckIcon className="h-4 w-4" />
+											) : (
+												<SaveIcon className="h-4 w-4" />
+											)}
+										</Button>
+									</div>
+
+									<div className="flex items-end space-x-2">
+										<div className="flex-1">
+											<Label htmlFor="github">GitHub</Label>
+											<Input
+												id={githubId}
+												placeholder="username"
+												value={formData.github}
+												onChange={(e) =>
+													setFormData((prev) => ({
+														...prev,
+														github: e.target.value,
+													}))
+												}
+											/>
+										</div>
+										<Button
+											size="sm"
+											onClick={() =>
+												handleSaveField("com.github", formData.github)
+											}
+											disabled={savingField === "com.github"}
+										>
+											{savingField === "com.github" ? (
+												<Loader className="h-4 w-4" />
+											) : savedField === "com.github" ? (
+												<CheckIcon className="h-4 w-4" />
+											) : (
+												<SaveIcon className="h-4 w-4" />
+											)}
+										</Button>
+									</div>
+
+									<div className="flex items-end space-x-2">
+										<div className="flex-1">
+											<Label htmlFor="discord">Discord</Label>
+											<Input
+												id={discordId}
+												placeholder="username"
+												value={formData.discord}
+												onChange={(e) =>
+													setFormData((prev) => ({
+														...prev,
+														discord: e.target.value,
+													}))
+												}
+											/>
+										</div>
+										<Button
+											size="sm"
+											onClick={() =>
+												handleSaveField("com.discord", formData.discord)
+											}
+											disabled={savingField === "com.discord"}
+										>
+											{savingField === "com.discord" ? (
+												<Loader className="h-4 w-4" />
+											) : savedField === "com.discord" ? (
+												<CheckIcon className="h-4 w-4" />
+											) : (
+												<SaveIcon className="h-4 w-4" />
+											)}
+										</Button>
+									</div>
+
+									<div className="flex items-end space-x-2">
+										<div className="flex-1">
+											<Label htmlFor="telegram">Telegram</Label>
+											<Input
+												id={telegramId}
+												placeholder="username"
+												value={formData.telegram}
+												onChange={(e) =>
+													setFormData((prev) => ({
+														...prev,
+														telegram: e.target.value,
+													}))
+												}
+											/>
+										</div>
+										<Button
+											size="sm"
+											onClick={() =>
+												handleSaveField("com.telegram", formData.telegram)
+											}
+											disabled={savingField === "com.telegram"}
+										>
+											{savingField === "com.telegram" ? (
+												<Loader className="h-4 w-4" />
+											) : savedField === "com.telegram" ? (
+												<CheckIcon className="h-4 w-4" />
+											) : (
+												<SaveIcon className="h-4 w-4" />
+											)}
+										</Button>
+									</div>
+								</div>
 							</div>
-						)}
 
-						{subdomainData.subdomain.description && (
-							<div>
-								<p className="text-muted-foreground">
-									{subdomainData.subdomain.description}
-								</p>
+							{/* Contact Section - Editable */}
+							<div className="space-y-4">
+								<h4 className="font-medium text-sm">Contact</h4>
+
+								<div className="flex items-end space-x-2">
+									<div className="flex-1">
+										<Label htmlFor="url">Website</Label>
+										<Input
+											id={urlId}
+											placeholder="https://yourwebsite.com"
+											value={formData.url}
+											onChange={(e) =>
+												setFormData((prev) => ({
+													...prev,
+													url: e.target.value,
+												}))
+											}
+										/>
+									</div>
+									<Button
+										size="sm"
+										onClick={() => handleSaveField("url", formData.url)}
+										disabled={savingField === "url"}
+									>
+										{savingField === "url" ? (
+											<Loader className="h-4 w-4" />
+										) : savedField === "url" ? (
+											<CheckIcon className="h-4 w-4" />
+										) : (
+											<SaveIcon className="h-4 w-4" />
+										)}
+									</Button>
+								</div>
+
+								<div className="flex items-end space-x-2">
+									<div className="flex-1">
+										<Label htmlFor="email">Email</Label>
+										<Input
+											id={emailId}
+											placeholder="your@email.com"
+											value={formData.email}
+											onChange={(e) =>
+												setFormData((prev) => ({
+													...prev,
+													email: e.target.value,
+												}))
+											}
+										/>
+									</div>
+									<Button
+										size="sm"
+										onClick={() => handleSaveField("email", formData.email)}
+										disabled={savingField === "email"}
+									>
+										{savingField === "email" ? (
+											<Loader className="h-4 w-4" />
+										) : savedField === "email" ? (
+											<CheckIcon className="h-4 w-4" />
+										) : (
+											<SaveIcon className="h-4 w-4" />
+										)}
+									</Button>
+								</div>
 							</div>
-						)}
+						</>
+					) : (
+						<>
+							{/* Read-only view for non-owners */}
+							<div className="space-y-4">
+								{/* Identity Section */}
+								<div className="space-y-2">
+									<div>
+										<span className="font-medium text-muted-foreground text-sm">
+											Display Name:
+										</span>
+										{subdomainData.subdomain.display ? (
+											<h3 className="font-medium">
+												{subdomainData.subdomain.display}
+											</h3>
+										) : (
+											<p className="text-muted-foreground italic">Not set</p>
+										)}
+									</div>
 
-						{/* Social Links */}
-						<div className="grid grid-cols-2 gap-2 text-sm">
-							{subdomainData.subdomain.twitter && (
-								<div className="flex items-center space-x-2">
-									<span className="text-muted-foreground">Twitter:</span>
-									<a
-										href={`https://twitter.com/${subdomainData.subdomain.twitter}`}
-										target="_blank"
-										rel="noopener noreferrer"
-										className="flex items-center space-x-1 text-blue-600 hover:underline"
-									>
-										<span>@{subdomainData.subdomain.twitter}</span>
-										<ExternalLinkIcon className="h-3 w-3" />
-									</a>
+									<div>
+										<span className="font-medium text-muted-foreground text-sm">
+											Bio:
+										</span>
+										{subdomainData.subdomain.description ? (
+											<p className="text-muted-foreground">
+												{subdomainData.subdomain.description}
+											</p>
+										) : (
+											<p className="text-muted-foreground italic">
+												No bio added yet
+											</p>
+										)}
+									</div>
 								</div>
-							)}
 
-							{subdomainData.subdomain.github && (
-								<div className="flex items-center space-x-2">
-									<span className="text-muted-foreground">GitHub:</span>
-									<a
-										href={`https://github.com/${subdomainData.subdomain.github}`}
-										target="_blank"
-										rel="noopener noreferrer"
-										className="flex items-center space-x-1 text-blue-600 hover:underline"
-									>
-										<span>{subdomainData.subdomain.github}</span>
-										<ExternalLinkIcon className="h-3 w-3" />
-									</a>
-								</div>
-							)}
+								{/* Social Links Section */}
+								<div className="space-y-2">
+									<h4 className="font-medium text-sm">Social Links</h4>
+									<div className="grid grid-cols-2 gap-2 text-sm">
+										<div className="flex items-center space-x-2">
+											<span className="text-muted-foreground">Twitter:</span>
+											{subdomainData.subdomain.twitter ? (
+												<a
+													href={`https://twitter.com/${subdomainData.subdomain.twitter}`}
+													target="_blank"
+													rel="noopener noreferrer"
+													className="flex items-center space-x-1 text-blue-600 hover:underline"
+												>
+													<span>@{subdomainData.subdomain.twitter}</span>
+													<ExternalLinkIcon className="h-3 w-3" />
+												</a>
+											) : (
+												<span className="text-muted-foreground italic">
+													Not set
+												</span>
+											)}
+										</div>
 
-							{subdomainData.subdomain.url && (
-								<div className="flex items-center space-x-2">
-									<span className="text-muted-foreground">Website:</span>
-									<a
-										href={subdomainData.subdomain.url}
-										target="_blank"
-										rel="noopener noreferrer"
-										className="flex items-center space-x-1 text-blue-600 hover:underline"
-									>
-										<span>Visit</span>
-										<ExternalLinkIcon className="h-3 w-3" />
-									</a>
-								</div>
-							)}
+										<div className="flex items-center space-x-2">
+											<span className="text-muted-foreground">GitHub:</span>
+											{subdomainData.subdomain.github ? (
+												<a
+													href={`https://github.com/${subdomainData.subdomain.github}`}
+													target="_blank"
+													rel="noopener noreferrer"
+													className="flex items-center space-x-1 text-blue-600 hover:underline"
+												>
+													<span>{subdomainData.subdomain.github}</span>
+													<ExternalLinkIcon className="h-3 w-3" />
+												</a>
+											) : (
+												<span className="text-muted-foreground italic">
+													Not set
+												</span>
+											)}
+										</div>
 
-							{subdomainData.subdomain.email && (
-								<div className="flex items-center space-x-2">
-									<span className="text-muted-foreground">Email:</span>
-									<a
-										href={`mailto:${subdomainData.subdomain.email}`}
-										className="text-blue-600 hover:underline"
-									>
-										{subdomainData.subdomain.email}
-									</a>
+										<div className="flex items-center space-x-2">
+											<span className="text-muted-foreground">Discord:</span>
+											{subdomainData.subdomain.discord ? (
+												<span>{subdomainData.subdomain.discord}</span>
+											) : (
+												<span className="text-muted-foreground italic">
+													Not set
+												</span>
+											)}
+										</div>
+
+										<div className="flex items-center space-x-2">
+											<span className="text-muted-foreground">Telegram:</span>
+											{subdomainData.subdomain.telegram ? (
+												<span>{subdomainData.subdomain.telegram}</span>
+											) : (
+												<span className="text-muted-foreground italic">
+													Not set
+												</span>
+											)}
+										</div>
+									</div>
 								</div>
-							)}
-						</div>
-					</div>
-				)}
+
+								{/* Contact Section */}
+								<div className="space-y-2">
+									<h4 className="font-medium text-sm">Contact</h4>
+									<div className="grid grid-cols-2 gap-2 text-sm">
+										<div className="flex items-center space-x-2">
+											<span className="text-muted-foreground">Website:</span>
+											{subdomainData.subdomain.url ? (
+												<a
+													href={subdomainData.subdomain.url}
+													target="_blank"
+													rel="noopener noreferrer"
+													className="flex items-center space-x-1 text-blue-600 hover:underline"
+												>
+													<span>Visit</span>
+													<ExternalLinkIcon className="h-3 w-3" />
+												</a>
+											) : (
+												<span className="text-muted-foreground italic">
+													Not set
+												</span>
+											)}
+										</div>
+
+										<div className="flex items-center space-x-2">
+											<span className="text-muted-foreground">Email:</span>
+											{subdomainData.subdomain.email ? (
+												<a
+													href={`mailto:${subdomainData.subdomain.email}`}
+													className="text-blue-600 hover:underline"
+												>
+													{subdomainData.subdomain.email}
+												</a>
+											) : (
+												<span className="text-muted-foreground italic">
+													Not set
+												</span>
+											)}
+										</div>
+									</div>
+								</div>
+							</div>
+						</>
+					)}
+				</div>
 
 				{/* Actions */}
 				<div className="flex items-center space-x-4 text-muted-foreground text-sm">

@@ -1,6 +1,7 @@
 import type { Address } from "viem";
+import { normalize } from "viem/ens";
 import { useEnsAddress, useEnsAvatar, useEnsText } from "wagmi";
-import { ENS_CHAIN, TEXT_RECORD_KEYS } from "@/lib/ens/ens-contracts";
+import { TEXT_RECORD_KEYS } from "@/lib/ens/ens-contracts";
 
 interface SubdomainData {
 	name: string;
@@ -19,71 +20,70 @@ interface SubdomainData {
 // Hook to get subdomain data by label
 export function useSubdomainData(ensName: string | undefined) {
 	const { data: address, isLoading: addressLoading } = useEnsAddress({
-		name: ensName,
+		name: normalize(ensName || ""),
 		query: { enabled: !!ensName },
-		chainId: ENS_CHAIN.id,
+		chainId: 1,
 	});
 
 	const { data: avatar, isLoading: avatarLoading } = useEnsAvatar({
 		name: ensName,
 		query: { enabled: !!ensName },
-		chainId: ENS_CHAIN.id,
+		chainId: 1,
 	});
 
 	const { data: description, isLoading: descriptionLoading } = useEnsText({
 		name: ensName,
 		key: TEXT_RECORD_KEYS.DESCRIPTION,
 		query: { enabled: !!ensName },
-		chainId: ENS_CHAIN.id,
+		chainId: 1,
 	});
 
 	const { data: display, isLoading: displayLoading } = useEnsText({
 		name: ensName,
 		key: TEXT_RECORD_KEYS.DISPLAY,
 		query: { enabled: !!ensName },
-		chainId: ENS_CHAIN.id,
+		chainId: 1,
 	});
 
 	const { data: twitter, isLoading: twitterLoading } = useEnsText({
 		name: ensName,
 		key: TEXT_RECORD_KEYS.TWITTER,
 		query: { enabled: !!ensName },
-		chainId: ENS_CHAIN.id,
 	});
 
 	const { data: github, isLoading: githubLoading } = useEnsText({
 		name: ensName,
 		key: TEXT_RECORD_KEYS.GITHUB,
 		query: { enabled: !!ensName },
-		chainId: ENS_CHAIN.id,
+		chainId: 1,
 	});
 
 	const { data: discord, isLoading: discordLoading } = useEnsText({
 		name: ensName,
 		key: TEXT_RECORD_KEYS.DISCORD,
 		query: { enabled: !!ensName },
-		chainId: ENS_CHAIN.id,
+		chainId: 1,
 	});
 
 	const { data: telegram, isLoading: telegramLoading } = useEnsText({
 		name: ensName,
 		key: TEXT_RECORD_KEYS.TELEGRAM,
 		query: { enabled: !!ensName },
-		chainId: ENS_CHAIN.id,
+		chainId: 1,
 	});
 
 	const { data: url, isLoading: urlLoading } = useEnsText({
 		name: ensName,
 		key: TEXT_RECORD_KEYS.URL,
 		query: { enabled: !!ensName },
-		chainId: ENS_CHAIN.id,
+		chainId: 1,
 	});
 
 	const { data: email, isLoading: emailLoading } = useEnsText({
 		name: ensName,
 		key: TEXT_RECORD_KEYS.EMAIL,
 		query: { enabled: !!ensName },
-		chainId: ENS_CHAIN.id,
+		chainId: 1,
 	});
 
 	const isLoading =
