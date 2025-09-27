@@ -3,8 +3,8 @@
 import { useParams } from "next/navigation";
 import { isAddress } from "viem";
 import { normalize } from "viem/ens";
-import { useAccount, useEnsAddress, useEnsName } from "wagmi";
-import { SubdomainProfile } from "@/components/ens/SubdomainProfile";
+import { useEnsAddress, useEnsName } from "wagmi";
+import { SubdomainProfilePublic } from "@/components/ens/SubdomainProfilePublic";
 import { Loader } from "@/components/loader";
 import { Card } from "@/components/ui/card";
 
@@ -15,8 +15,6 @@ function isEnsName(identifier: string): boolean {
 export default function PublicENSProfilePage() {
 	const params = useParams();
 	const identifier = params.identifier as string;
-	const { address: connectedAddress } = useAccount();
-
 	// Determine if identifier is ENS name or address
 	const isEns = isEnsName(identifier);
 
@@ -46,11 +44,6 @@ export default function PublicENSProfilePage() {
 	});
 
 	// Determine final values
-	const finalAddress = isEns
-		? resolvedAddress
-		: isAddress(identifier)
-			? identifier
-			: null;
 	const finalEnsName = isEns ? identifier : resolvedEnsName;
 
 	// Loading state
@@ -59,12 +52,6 @@ export default function PublicENSProfilePage() {
 	// Error state
 	const hasError =
 		addressError || ensError || (!isEns && !isAddress(identifier));
-
-	// Ownership check
-	const isOwner =
-		connectedAddress && finalAddress
-			? connectedAddress.toLowerCase() === finalAddress.toLowerCase()
-			: false;
 
 	if (isLoading) {
 		return (
@@ -103,17 +90,13 @@ export default function PublicENSProfilePage() {
 			<div className="space-y-6">
 				{/* Header */}
 				<div className="text-center">
-					<h1 className="mb-4 font-bold text-3xl">
-						{isOwner ? "Your ENS Profile" : "ENS Profile"}
-					</h1>
+					<h1 className="mb-4 font-bold text-3xl">ENS Profile</h1>
 					<p className="text-muted-foreground">
-						{isOwner
-							? "Manage your decentralized identity"
-							: "Viewing public ENS profile"}
+						Viewing public ENS profile
 					</p>
 				</div>
 
-				<SubdomainProfile ensName={finalEnsName} />
+				<SubdomainProfilePublic ensName={finalEnsName} />
 			</div>
 		</div>
 	);
