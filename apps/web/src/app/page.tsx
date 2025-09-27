@@ -37,7 +37,7 @@ export default function Home() {
         <div className="absolute inset-0 flex items-center justify-center">
           <div>
             <iframe
-              src="https://player.twitch.tv/?channel=shakalei&parent=opensource-orchestra-web.vercel.app/"
+              src="https://player.twitch.tv/?channel=shakalei&parent=opensource-orchestra-web.vercel.app"
               height="480"
               width="720"
             ></iframe>
