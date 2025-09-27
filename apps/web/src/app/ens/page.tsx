@@ -1,14 +1,19 @@
 "use client";
 
 import { useAccount } from "wagmi";
+import { SubdomainProfile } from "@/components/ens/SubdomainProfile";
 import { SubdomainRegistration } from "@/components/ens/SubdomainRegistration";
 import { Loader } from "@/components/loader";
-import { Card } from "@/components/ui/card";
-import { useUserSubdomain } from "@/hooks/useENSSubdomain";
+import { useEnsName } from "@/hooks/useEnsName";
+import { ENS_CHAIN } from "@/lib/ens/ens-contracts";
 
 export default function ENSPage() {
 	const { address } = useAccount();
-	const userSubdomain = useUserSubdomain(address);
+	const userSubdomain = useEnsName({
+		address,
+		l1ChainId: 1,
+		l2ChainId: ENS_CHAIN.id,
+	});
 
 	if (userSubdomain.isLoading) {
 		return (
@@ -35,46 +40,11 @@ export default function ENSPage() {
 					</p>
 				</div>
 
-				<SubdomainRegistration />
+				{userSubdomain.data && (
+					<SubdomainProfile ensName={userSubdomain.data} />
+				)}
 
-				{/* Info Section */}
-				<Card className="bg-muted/50 p-6">
-					<div className="space-y-4">
-						<h3 className="font-medium">About ENS Subdomains</h3>
-						<div className="grid gap-4 text-muted-foreground text-sm md:grid-cols-2">
-							<div className="space-y-2">
-								<p>
-									<strong>🔗 Universal Resolution:</strong> Your subdomain works
-									across all ENS-compatible apps
-								</p>
-								<p>
-									<strong>⚡ Layer 2 Benefits:</strong> Fast and cheap
-									transactions on Base
-								</p>
-							</div>
-							<div className="space-y-2">
-								<p>
-									<strong>🎭 Your Identity:</strong> Set avatar, bio, and social
-									links
-								</p>
-								<p>
-									<strong>🎵 Community:</strong> Part of the Open Source
-									Orchestra ecosystem
-								</p>
-							</div>
-						</div>
-					</div>
-				</Card>
-
-				{/* Technical Details */}
-				<div className="space-y-1 text-center text-muted-foreground text-xs">
-					<p>Powered by Durin L2 ENS infrastructure</p>
-					<p>Smart contracts deployed on Base • L1 resolution via CCIP Read</p>
-					<p className="text-xs">
-						Connected: {userSubdomain.subdomain?.address?.slice(0, 6)}...
-						{userSubdomain.subdomain?.address?.slice(-4)}
-					</p>
-				</div>
+				{!userSubdomain.data && <SubdomainRegistration />}
 			</div>
 		</div>
 	);

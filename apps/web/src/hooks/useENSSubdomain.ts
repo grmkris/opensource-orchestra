@@ -1,7 +1,6 @@
 import type { Address } from "viem";
 import { useEnsAddress, useEnsAvatar, useEnsText } from "wagmi";
 import { ENS_CHAIN, TEXT_RECORD_KEYS } from "@/lib/ens/ens-contracts";
-import { useEnsName } from "./useEnsName";
 
 interface SubdomainData {
 	name: string;
@@ -122,17 +121,4 @@ export function useSubdomainData(ensName: string | undefined) {
 		exists,
 		isLoading,
 	};
-}
-
-// Hook to check if a user owns any subdomain under catmisha.eth
-export function useUserSubdomain(userAddress: Address | undefined) {
-	const ensData = useEnsName({
-		address: userAddress,
-		l1ChainId: 1,
-		l2ChainId: ENS_CHAIN.id,
-	});
-
-	const subdomainData = useSubdomainData(ensData.data ?? undefined);
-
-	return subdomainData;
 }
