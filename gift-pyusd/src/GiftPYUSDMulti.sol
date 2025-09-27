@@ -3,10 +3,10 @@ pragma solidity 0.8.23;
 
 import {ERC721} from "solmate/tokens/ERC721.sol";
 
-/// @title MultiGiftSBT - Soulbound receipt for gifting multiple artists in one NFT
+/// @title GiftPYUSDMulti - Soulbound receipt for gifting multiple artists in one NFT
 /// @notice No token transfer or approvals are allowed (SBT). This contract is a receipt layer only;
 ///         actual PYUSD transfers and artist accounting live in GiftPYUSD.
-contract MultiGiftSBT is ERC721 {
+contract GiftPYUSDMulti is ERC721 {
     // --- State ---
     uint256 public immutable minTotalAmount;
     uint256 public totalIssued;
@@ -44,7 +44,7 @@ contract MultiGiftSBT is ERC721 {
         _;
     }
 
-    constructor(uint256 _minTotalAmount) ERC721("MultiGiftReceipt", "MGFT") {
+    constructor(uint256 _minTotalAmount) ERC721("GiftPYUSDMulti", "GPM") {
         owner = msg.sender;
         minTotalAmount = _minTotalAmount;
     }
@@ -128,23 +128,21 @@ contract MultiGiftSBT is ERC721 {
         string memory totalStr = _u2s(g.totalAmount);
         string memory totalIssuedStr = _u2s(totalIssued);
 
-        // Build arrays as JSON strings
         string memory idsJson = _uintArrayToJson(g.artistIds);
         string memory amtsJson = _uintArrayToJson(g.amounts);
 
         return string(abi.encodePacked(
             'data:application/json,',
-            '{"name":"Multi Gift #', tokenIdStr,
+            '{"name":"GiftPYUSDMulti #', tokenIdStr,
             '","description":"A soulbound receipt representing a gift split across multiple artists.",',
             '"attributes":[',
                 '{"trait_type":"Total Amount","value":"', totalStr, '"},',
-                '{"trait_type":"Total Issued","value":"', totalIssuedStr, '"}',
+                '{"trait_type":"Total Issued","value":"', totalIssuedStr, '"}'
             '],',
             '"properties":{',
                 '"artistIds":', idsJson, ',',
                 '"amounts":', amtsJson, ',',
                 '"title":"', g.title, '"',
-            '}',
             '}'
         ));
     }

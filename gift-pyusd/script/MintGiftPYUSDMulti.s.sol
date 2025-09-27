@@ -4,18 +4,18 @@ pragma solidity 0.8.23;
 import {Script} from "forge-std/Script.sol";
 import {ERC20} from "solmate/tokens/ERC20.sol";
 import {GiftPYUSD} from "../src/GiftPYUSD.sol";
-import {MultiGiftSBT} from "../src/MultiGiftSBT.sol";
+import {GiftPYUSDMulti} from "../src/GiftPYUSDMulti.sol";
 
 /// @notice Splits a total PYUSD donation across multiple artists via GiftPYUSD
-///         and mints a single MultiGiftSBT receipt NFT summarizing the gift.
+///         and mints a single GiftPYUSDMulti receipt NFT summarizing the gift.
 /// @dev    This script uses CLI arguments (no JSON required). Call with:
-///         forge script script/MintMulti.s.sol:MintMulti \
+///         forge script script/MintGiftPYUSDMulti.s.sol:MintGiftPYUSDMulti \
 ///           --sig "run(uint256[],uint256,string)" \
 ///           "[1,2]" 1000000 "Alice & Bob Gift" \
 ///           --rpc-url $SEPOLIA_RPC_URL \
 ///           --private-key $PRIVATE_KEY \
 ///           --broadcast
-contract MintMulti is Script {
+contract MintGiftPYUSDMulti is Script {
     
     function run() external pure {
         revert("Use run(uint256[],uint256,string) with --sig and CLI args");
@@ -23,13 +23,13 @@ contract MintMulti is Script {
 
     function run(uint256[] calldata artistIds, uint256 total, string calldata title) external {
         address giftAddr = vm.envAddress("GIFT_PYUSD");
-        address receiptAddr = vm.envAddress("MULTI_GIFT_SBT");
+        address receiptAddr = vm.envAddress("GIFT_PYUSD_MULTI");
         address pyusdAddr = vm.envAddress("PYUSD");
 
         require(artistIds.length > 0, "length mismatch or empty");
 
         GiftPYUSD gift = GiftPYUSD(giftAddr);
-        MultiGiftSBT receipt = MultiGiftSBT(receiptAddr);
+        GiftPYUSDMulti receipt = GiftPYUSDMulti(receiptAddr);
 
         // Pre-validate against GiftPYUSD constraints and artist existence
         for (uint256 i = 0; i < artistIds.length; i++) {
@@ -51,7 +51,7 @@ contract MintMulti is Script {
         vm.startBroadcast();
         ERC20(pyusdAddr).approve(giftAddr, total);
         gift.allocateGift(artistIds, amounts);
-        MultiGiftSBT(receiptAddr).mint(artistIds, total, title);
+        GiftPYUSDMulti(receiptAddr).mint(artistIds, total, title);
         vm.stopBroadcast();
     }
 }

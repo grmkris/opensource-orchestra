@@ -2,15 +2,15 @@
 pragma solidity 0.8.23;
 
 import {Test} from "forge-std/Test.sol";
-import {MultiGiftSBT} from "../src/MultiGiftSBT.sol";
+import {GiftPYUSDMulti} from "../src/GiftPYUSDMulti.sol";
 
 contract MultiGiftSBTTest is Test {
     uint256 internal constant MIN_TOTAL_AMOUNT = 1e6;
 
-    MultiGiftSBT public receipt;
+    GiftPYUSDMulti public receipt;
 
     function setUp() public {
-        receipt = new MultiGiftSBT(MIN_TOTAL_AMOUNT);
+        receipt = new GiftPYUSDMulti(MIN_TOTAL_AMOUNT);
     }
 
     function testMint_Succeeds_EqualSplitWithRemainder() public {
@@ -36,14 +36,14 @@ contract MultiGiftSBTTest is Test {
 
     function testMint_RevertIfEmptyArtistIds() public {
         uint256[] memory ids = new uint256[](0);
-        vm.expectRevert(MultiGiftSBT.LENGTH_MISMATCH.selector);
+        vm.expectRevert(GiftPYUSDMulti.LENGTH_MISMATCH.selector);
         receipt.mint(ids, MIN_TOTAL_AMOUNT, "Empty");
     }
 
     function testMint_RevertIfTotalTooLow() public {
         uint256[] memory ids = new uint256[](2);
         ids[0] = 1; ids[1] = 2;
-        vm.expectRevert(MultiGiftSBT.TOTAL_TOO_LOW.selector);
+        vm.expectRevert(GiftPYUSDMulti.TOTAL_TOO_LOW.selector);
         receipt.mint(ids, MIN_TOTAL_AMOUNT - 1, "Too low");
     }
 
@@ -52,19 +52,19 @@ contract MultiGiftSBTTest is Test {
         ids[0] = 1;
         receipt.mint(ids, MIN_TOTAL_AMOUNT, "One");
 
-        vm.expectRevert(MultiGiftSBT.TRANSFERS_DISABLED.selector);
+        vm.expectRevert(GiftPYUSDMulti.TRANSFERS_DISABLED.selector);
         receipt.approve(address(0xBEEF), 1);
 
-        vm.expectRevert(MultiGiftSBT.TRANSFERS_DISABLED.selector);
+        vm.expectRevert(GiftPYUSDMulti.TRANSFERS_DISABLED.selector);
         receipt.setApprovalForAll(address(0xBEEF), true);
 
-        vm.expectRevert(MultiGiftSBT.TRANSFERS_DISABLED.selector);
+        vm.expectRevert(GiftPYUSDMulti.TRANSFERS_DISABLED.selector);
         receipt.transferFrom(address(this), address(0xCAFE), 1);
 
-        vm.expectRevert(MultiGiftSBT.TRANSFERS_DISABLED.selector);
+        vm.expectRevert(GiftPYUSDMulti.TRANSFERS_DISABLED.selector);
         receipt.safeTransferFrom(address(this), address(0xCAFE), 1);
 
-        vm.expectRevert(MultiGiftSBT.TRANSFERS_DISABLED.selector);
+        vm.expectRevert(GiftPYUSDMulti.TRANSFERS_DISABLED.selector);
         receipt.safeTransferFrom(address(this), address(0xCAFE), 1, "");
     }
 }

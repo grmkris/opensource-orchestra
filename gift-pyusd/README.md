@@ -44,9 +44,9 @@ GIFT_PYUSD=0x...
 
 # ARTIST_PRIVATE_KEY=0x...  # Optional if payout wallet differs from deployer
 
-# MultiGiftSBT
-# Deployed contract address for the MULTI_GIFT_SBT
-MULTI_GIFT_SBT=0x...
+# GiftPYUSDMulti
+# Deployed contract address for the GiftPYUSDMulti
+GIFT_PYUSD_MULTI=0x...
 ```
 
 The repository keeps reusable artist metadata under `config/artists.json`:
@@ -161,18 +161,18 @@ cast send $GIFT_PYUSD "updateArtist(uint256,address,string,string)" \
    ```
 4. Verify the mint and gift were recorded (see the "On-chain verification" section below for sample commands).
 
-### MultiGift (allocate gifts to multiple artists + mint one SBT)
+### GiftPYUSDMulti (allocate gifts to multiple artists + mint one SBT)
 
 Allocate a total PYUSD amount across multiple registered artists in one transaction and mint a single receipt SBT. The script now accepts CLI arguments directly (no JSON config needed).
 
 Prerequisites:
 - `GIFT_PYUSD` is deployed and artists are registered.
-- `MULTI_GIFT_SBT` is deployed (see below) and exported in your `.env`.
+- `GIFT_PYUSD_MULTI` is deployed (see below) and exported in your `.env`.
 - Use 6 decimals for PYUSD values.
 
-1) Deploy the MultiGiftSBT contract (minTotalAmount is passed via CLI; 1.0 PYUSD = 1_000_000):
+1) Deploy the GiftPYUSDMulti contract (minTotalAmount is passed via CLI; 1.0 PYUSD = 1_000_000):
 ```bash
-forge script script/DeployMultiGift.s.sol:DeployMultiGift \
+forge script script/DeployGiftPYUSDMulti.s.sol:DeployGiftPYUSDMulti \
   --sig "run(uint256)" \
   1000000 \
   --rpc-url $SEPOLIA_RPC_URL \
@@ -182,7 +182,7 @@ forge script script/DeployMultiGift.s.sol:DeployMultiGift \
 ```
 Set the address in `.env`:
 ```bash
-MULTI_GIFT_SBT=0x...
+GIFT_PYUSD_MULTI=0x...
 ```
 Set the environment variables in the `.env` file.
 ```bash
@@ -201,7 +201,7 @@ cast send $PYUSD "approve(address,uint256)" \
 
 3) Run the multi-gift script with CLI args:
 ```bash
-forge script script/MintMulti.s.sol:MintMulti \
+forge script script/MintGiftPYUSDMulti.s.sol:MintGiftPYUSDMulti \
   --sig "run(uint256[],uint256,string)" \
   "[1,2]" 1000000 "Alice & Bob Gift" \
   --rpc-url $SEPOLIA_RPC_URL \
@@ -211,7 +211,7 @@ forge script script/MintMulti.s.sol:MintMulti \
 This will:
 - Compute equal split amounts from `TOTAL` across `artistIds` (remainder distributed from the first artist).
 - Call `GiftPYUSD.allocateGift(artistIds, amounts)` once to allocate balances.
-- Mint one `MultiGiftSBT` to the caller with the full split.
+- Mint one `GiftPYUSDMulti` to the caller with the full split.
 
 5) Verify on-chain state:
 ```bash
@@ -220,7 +220,7 @@ cast call $GIFT_PYUSD "artistBalance(uint256)(uint256)" 1 --rpc-url $SEPOLIA_RPC
 cast call $GIFT_PYUSD "artistBalance(uint256)(uint256)" 2 --rpc-url $SEPOLIA_RPC_URL
 
 # Inspect the receipt NFT data (tokenId = 1)
-cast call $MULTI_GIFT_SBT "getGift(uint256)(uint256[],uint256[],uint256,string)" 1 --rpc-url $SEPOLIA_RPC_URL
+cast call $GIFT_PYUSD_MULTI "getGift(uint256)(uint256[],uint256[],uint256,string)" 1 --rpc-url $SEPOLIA_RPC_URL
 ```
 
 Notes:
