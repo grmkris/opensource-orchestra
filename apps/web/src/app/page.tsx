@@ -1,45 +1,138 @@
 "use client";
 
-import { ConnectButton } from "@rainbow-me/rainbowkit";
-
-const TITLE_TEXT = `
- ██████╗ ██████╗ ███████╗███╗   ██╗
-██╔═══██╗██╔══██╗██╔════╝████╗  ██║
-██║   ██║██████╔╝█████╗  ██╔██╗ ██║
-██║   ██║██╔═══╝ ██╔══╝  ██║╚██╗██║
-╚██████╔╝██║     ███████╗██║ ╚████║
- ╚═════╝ ╚═╝     ╚══════╝╚═╝  ╚═══╝
-
-███████╗ ██████╗ ██╗   ██╗██████╗  ██████╗███████╗
-██╔════╝██╔═══██╗██║   ██║██╔══██╗██╔════╝██╔════╝
-███████╗██║   ██║██║   ██║██████╔╝██║     █████╗
-╚════██║██║   ██║██║   ██║██╔══██╗██║     ██╔══╝
-███████║╚██████╔╝╚██████╔╝██║  ██║╚██████╗███████╗
-╚══════╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═╝ ╚═════╝╚══════╝
-
- ██████╗ ██████╗  ██████╗██╗  ██╗███████╗███████╗████████╗██████╗  █████╗
-██╔═══██╗██╔══██╗██╔════╝██║  ██║██╔════╝██╔════╝╚══██╔══╝██╔══██╗██╔══██╗
-██║   ██║██████╔╝██║     ███████║█████╗  ███████╗   ██║   ██████╔╝███████║
-██║   ██║██╔══██╗██║     ██╔══██║██╔══╝  ╚════██║   ██║   ██╔══██╗██╔══██║
-╚██████╔╝██║  ██║╚██████╗██║  ██║███████╗███████║   ██║   ██║  ██║██║  ██║
- ╚═════╝ ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝
- `;
+import { useRouter } from "next/navigation";
+import { GlobalDonationsFeed } from "@/components/ens/GlobalDonationsFeed";
 
 export default function Home() {
+	const router = useRouter();
+
+	// Hardcoded artist data - positioned to align with music stands in pit.png
+	const pendingArtists = [
+		{ id: "artist1.eth", name: "DJ Crypto", x: 25, y: 60 },
+		{ id: "artist2.eth", name: "The Degens", x: 40, y: 70 },
+		{ id: "artist3.eth", name: "NFT Beats", x: 50, y: 75 },
+		{ id: "artist4.eth", name: "Web3 Symphony", x: 60, y: 70 },
+		{ id: "artist5.eth", name: "Blockchain Band", x: 75, y: 60 },
+	];
+
+	const handleArtistClick = (artistId: string) => {
+		// Navigate to ENS profile page
+		router.push(`/ens/${artistId}`);
+	};
+
 	return (
-		<div className="container mx-auto max-w-3xl px-4 py-2">
-			<pre className="overflow-x-auto font-mono text-sm">{TITLE_TEXT}</pre>
-			<div className="grid gap-6">
-				<section className="rounded-lg border p-4">
-					<h2 className="mb-4 font-medium text-xl">Connect to the Orchestra</h2>
-					<p className="mb-4 text-muted-foreground">
-						Join the decentralized community focused on giving and receiving
-						with zero fees. Music has been a shared language since the beginning
-						of civilization.
-					</p>
-					<ConnectButton />
-				</section>
+		<div className="w-full bg-black">
+			{/* Stage Section - Main performance area */}
+			<div className="relative h-screen w-full">
+				{/* Stage background image */}
+				<div
+					className="absolute inset-0 bg-center bg-cover bg-no-repeat"
+					style={{
+						backgroundImage: "url('/stage.png')",
+					}}
+				/>
+
+				{/* YouTube video iframe positioned in the center black area of the stage */}
+				<div className="absolute inset-0 flex items-center justify-center">
+					<div className="-translate-x-[3%] relative h-[32%] w-[42%] transform">
+						<iframe
+							className="h-full w-full rounded-lg border-0 shadow-2xl"
+							src="https://www.youtube.com/embed/o_N5JQYHJXk?si=x-C2UzriyIlbyxSX&amp;controls=0&autoplay=1&loop=1&playlist=o_N5JQYHJXk&modestbranding=1&rel=0&showinfo=0&disablekb=1&fs=0&iv_load_policy=3&playsinline=1&enablejsapi=0&autohide=1"
+							title="YouTube video player"
+							frameBorder="0"
+							allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+							referrerPolicy="strict-origin-when-cross-origin"
+							allowFullScreen
+						/>
+					</div>
+				</div>
+
+				{/* Currently Playing Artist Info */}
+				<div className="absolute bottom-8 left-8 z-10">
+					<div className="rounded-lg border border-amber-300/30 bg-black/70 p-4 text-white backdrop-blur-sm">
+						<div className="flex items-center justify-between">
+							<div className="flex items-center space-x-3">
+								<div className="h-3 w-3 animate-pulse rounded-full bg-red-500" />
+								<div>
+									<p className="font-medium text-amber-300 text-sm">
+										Now Playing
+									</p>
+									<button
+										type="button"
+										onClick={() => router.push("/ens/plswork.catmisha.eth")}
+										className="cursor-pointer text-left font-bold text-lg transition-colors duration-200 hover:text-amber-300"
+									>
+										plswork.catmisha.eth
+									</button>
+									<p className="text-gray-300 text-sm">
+										Green Room Set (Maka's Birthday, Rome)
+									</p>
+								</div>
+							</div>
+							<button
+								type="button"
+								onClick={() => {
+									// Gift functionality would go here
+									console.log("Gift clicked for plswork.catmisha.eth");
+								}}
+								className="ml-4 flex items-center space-x-1 rounded-lg border border-amber-400/50 bg-amber-500/20 px-3 py-2 transition-all duration-200 hover:scale-105 hover:bg-amber-500/30"
+							>
+								<span className="text-lg">🎁</span>
+								<span className="font-medium text-amber-300 text-sm">Gift</span>
+							</button>
+						</div>
+					</div>
+				</div>
 			</div>
+
+			{/* PIT Section - Pending artists area */}
+			<div
+				className="relative h-screen w-full bg-center bg-cover bg-no-repeat"
+				style={{
+					backgroundImage: "url('/pit.png')",
+				}}
+			>
+				{/* Clickable artist positions - positioned on music stands */}
+				{pendingArtists.map((artist) => (
+					<button
+						type="button"
+						tabIndex={0}
+						onKeyDown={(e) => {
+							if (e.key === "Enter" || e.key === " ") {
+								handleArtistClick(artist.id);
+							}
+						}}
+						key={artist.id}
+						className="group absolute h-16 w-16 cursor-pointer"
+						style={{
+							left: `${artist.x}%`,
+							top: `${artist.y}%`,
+							transform: "translate(-50%, -50%)",
+						}}
+						onClick={() => handleArtistClick(artist.id)}
+					>
+						{/* Artist avatar/circle */}
+						<div className="flex h-full w-full items-center justify-center rounded-full border-2 border-amber-300 bg-amber-500 bg-opacity-80 shadow-lg transition-all duration-300 group-hover:scale-125 group-hover:bg-amber-400">
+							<div className="text-center">
+								<div className="font-bold text-white text-xs">
+									{artist.name}
+								</div>
+							</div>
+						</div>
+
+						{/* Pulse animation for pending status */}
+						<div className="absolute inset-0 animate-ping rounded-full bg-amber-400 opacity-15" />
+
+						{/* Tooltip on hover */}
+						<div className="-top-8 -translate-x-1/2 absolute left-1/2 transform whitespace-nowrap rounded bg-black bg-opacity-90 px-2 py-1 text-white text-xs opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+							{artist.id}
+						</div>
+					</button>
+				))}
+			</div>
+
+			{/* Global Donations Feed Section */}
+			<GlobalDonationsFeed />
 		</div>
 	);
 }

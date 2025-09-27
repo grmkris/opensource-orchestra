@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Roboto } from "next/font/google";
-import "../index.css";
+import { Geist, Geist_Mono } from "next/font/google";
+import "../../../index.css";
 import Providers from "@/components/providers/providers";
 
 const geistSans = Geist({
@@ -13,19 +13,12 @@ const geistMono = Geist_Mono({
 	subsets: ["latin"],
 });
 
-const roboto = Roboto({
-	variable: "--font-roboto",
-	weight: ["300", "400", "500", "700"],
-	subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-	title: "Open Source Orchestra",
-	description:
-		"The Open Source Orchestra Portal - A giving economy centered around strengthening the Ethereum community through music and collaboration",
+	title: "ENS Profile - Open Source Orchestra",
+	description: "View public ENS profile on the Open Source Orchestra Portal",
 };
 
-export default function RootLayout({
+export default function PublicProfileLayout({
 	children,
 }: Readonly<{
 	children: React.ReactNode;
@@ -33,7 +26,7 @@ export default function RootLayout({
 	return (
 		<html lang="en" suppressHydrationWarning>
 			<body
-				className={`${geistSans.variable} ${geistMono.variable} ${roboto.variable} antialiased`}
+				className={`${geistSans.variable} ${geistMono.variable} antialiased`}
 			>
 				<Providers>
 					<div className="min-h-screen">{children}</div>

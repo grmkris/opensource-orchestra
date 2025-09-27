@@ -1,11 +1,23 @@
 "use client";
 
-import { CheckIcon, CopyIcon, ExternalLinkIcon, Gift, LinkIcon } from "lucide-react";
+import {
+	CheckIcon,
+	CopyIcon,
+	ExternalLinkIcon,
+	LinkIcon,
+	Music,
+} from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
-import { useAccount, useEnsAddress, useEnsText, useSendTransaction } from "wagmi";
-import { parseEther } from "viem";
 import { normalize } from "viem/ens";
+import {
+	useEnsAddress,
+	useEnsAvatar,
+	useEnsText,
+} from "wagmi";
+import { GiftsSection } from "@/components/ens/DonationsSection";
 import { ENSAvatar } from "@/components/ens/ENSAvatar";
+import { GiftPopover } from "@/components/ens/GiftPopover";
 import { Loader } from "@/components/loader";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -28,7 +40,13 @@ const ENS_FIELDS: ENSField[] = [
 	{ key: "com.telegram", label: "Telegram", prefix: "https://t.me/" },
 ];
 
-function ENSFieldDisplay({ ensName, field }: { ensName: string; field: ENSField }) {
+function ENSFieldDisplay({
+	ensName,
+	field,
+}: {
+	ensName: string;
+	field: ENSField;
+}) {
 	const { data, isLoading } = useEnsText({
 		name: ensName,
 		key: field.key,
@@ -82,7 +100,9 @@ function ENSFieldDisplay({ ensName, field }: { ensName: string; field: ENSField 
 
 	return (
 		<div>
-			<span className="font-medium text-muted-foreground text-sm">{field.label}:</span>
+			<span className="font-medium text-muted-foreground text-sm">
+				{field.label}:
+			</span>
 			<div className="mt-1">{renderValue()}</div>
 		</div>
 	);
@@ -90,8 +110,6 @@ function ENSFieldDisplay({ ensName, field }: { ensName: string; field: ENSField 
 
 export function SubdomainProfilePublic({ ensName }: { ensName: string }) {
 	const [copiedField, setCopiedField] = useState<string | null>(null);
-	const { address: userAddress } = useAccount();
-	const { sendTransaction, isPending: isSending } = useSendTransaction();
 
 	// Get the ENS name's address
 	const { data: ensAddress, isLoading: addressLoading } = useEnsAddress({
@@ -118,20 +136,17 @@ export function SubdomainProfilePublic({ ensName }: { ensName: string }) {
 		}
 	};
 
-	const handleGift = () => {
-		if (!ensAddress) return;
-		
-		if (!userAddress) {
-			// Trigger wallet connection if not connected
-			alert("Please connect your wallet to send a gift");
-			return;
-		}
-		
-		sendTransaction({
-			to: ensAddress as `0x${string}`,
-			value: parseEther("0.001"), // Default 0.001 ETH gift
-		});
+	const handleCopyProfileLink = () => {
+		const profileUrl = `${window.location.origin}/ens/${ensName}`;
+		handleCopy(profileUrl, "profile-link");
 	};
+
+	// Fetch avatar data using the built-in wagmi hook
+	const { data: avatarUrl, isLoading } = useEnsAvatar({
+		name: ensName,
+		query: { enabled: !!ensName },
+		chainId: 1,
+	});
 
 	if (addressLoading) {
 		return (
@@ -155,98 +170,133 @@ export function SubdomainProfilePublic({ ensName }: { ensName: string }) {
 	}
 
 	return (
-		<Card className="overflow-hidden">
-			{/* Header Image */}
-			{headerUrl && (
-				<div className="relative h-32 w-full">
-					<ENSAvatar
-						src={headerUrl}
-						alt={`${ensName} header`}
-						size="lg"
-						rounded={false}
-						className="h-32 w-full object-cover"
-					/>
-				</div>
-			)}
+		<>
+			<Card className="overflow-hidden">
+				{/* Header Image */}
+				{headerUrl && (
+					<div className="relative h-32 w-full">
+						<ENSAvatar
+							src={headerUrl}
+							alt={`${ensName} header`}
+							size="lg"
+							rounded={false}
+							className="h-32 w-full object-cover"
+						/>
+					</div>
+				)}
 
-			<div className="space-y-6 p-6">
-				{/* Profile Header */}
-				<div className="flex items-start space-x-4">
-					{/* Avatar */}
-					<div className="flex-shrink-0">
-						<ENSAvatar ensName={ensName} size="lg" />
+				<div className="space-y-6 p-6">
+					{/* Profile Header */}
+					<div className="space-y-4">
+						<div className="flex items-start space-x-4">
+							{/* Avatar */}
+							<div className="flex-shrink-0">
+								{isLoading ? (
+									<div className="h-32 w-full animate-pulse rounded-t-lg bg-muted" />
+								) : (
+									avatarUrl && (
+										<ENSAvatar
+											src={avatarUrl}
+											alt={`${ensName} header`}
+											size="lg"
+											rounded={false}
+											className="h-32 w-full rounded-t-lg"
+										/>
+									)
+								)}
+							</div>
+
+							{/* Profile Info */}
+							<div className="min-w-0 flex-1">
+								<h2 className="font-bold text-2xl text-foreground">
+									{ensName}
+								</h2>
+								<div className="mt-1 flex items-center space-x-2 text-muted-foreground text-sm">
+									<span>Owner: {ensAddress}</span>
+									<Button
+										variant="ghost"
+										size="sm"
+										onClick={() => handleCopy(ensAddress || "", "address")}
+										className="h-6 w-6 p-0"
+									>
+										{copiedField === "address" ? (
+											<CheckIcon className="h-3 w-3" />
+										) : (
+											<CopyIcon className="h-3 w-3" />
+										)}
+									</Button>
+								</div>
+							</div>
+						</div>
+
+						{/* Profile Actions */}
+						<div className="space-y-3">
+							<div className="flex flex-wrap items-center gap-3">
+								<Button
+									variant="outline"
+									size="sm"
+									onClick={handleCopyProfileLink}
+								>
+									{copiedField === "profile-link" ? (
+										<CheckIcon className="mr-2 h-4 w-4" />
+									) : (
+										<LinkIcon className="mr-2 h-4 w-4" />
+									)}
+									Copy Profile Link
+								</Button>
+
+								<GiftPopover
+									recipientAddress={ensAddress}
+									recipientName={ensName}
+								/>
+							</div>
+
+						</div>
 					</div>
 
-					{/* Profile Info */}
-					<div className="min-w-0 flex-1">
-						<div className="flex items-center space-x-3">
-							<h2 className="font-bold text-2xl text-foreground">{ensName}</h2>
-							{userAddress?.toLowerCase() !== ensAddress?.toLowerCase() && (
-								<Button
-									size="sm"
-									variant="outline"
-									onClick={handleGift}
-									disabled={isSending}
-									className="flex items-center space-x-1 border-green-200 text-green-700 hover:bg-green-50"
-								>
-									<Gift className="h-4 w-4" />
-									<span>{isSending ? "Sending..." : "Gift"}</span>
-								</Button>
-							)}
-						</div>
-						<div className="mt-1 flex items-center space-x-2 text-muted-foreground text-sm">
-							<span>Owner: {ensAddress}</span>
+					{/* Profile Fields */}
+					<div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
+						{ENS_FIELDS.map((field) => (
+							<ENSFieldDisplay
+								key={field.key}
+								ensName={ensName}
+								field={field}
+							/>
+						))}
+					</div>
+
+					{/* Actions */}
+					<div className="border-t pt-4">
+						<div className="flex items-center space-x-4 text-muted-foreground text-sm">
 							<Button
 								variant="ghost"
 								size="sm"
-								onClick={() => handleCopy(ensAddress || "", "address")}
-								className="h-6 w-6 p-0"
+								onClick={() => handleCopy(ensName || "", "name")}
 							>
-								{copiedField === "address" ? (
-									<CheckIcon className="h-3 w-3" />
+								{copiedField === "name" ? (
+									<CheckIcon className="mr-1 h-4 w-4" />
 								) : (
-									<CopyIcon className="h-3 w-3" />
+									<CopyIcon className="mr-1 h-4 w-4" />
 								)}
+								Copy Name
 							</Button>
+
+							<a
+								href={`https://basescan.org/address/${ensAddress}`}
+								target="_blank"
+								rel="noopener noreferrer"
+								className="flex items-center space-x-1 hover:underline"
+							>
+								<span>View on Basescan</span>
+								<ExternalLinkIcon className="h-3 w-3" />
+							</a>
 						</div>
 					</div>
 				</div>
+			</Card>
 
-				{/* Profile Fields */}
-				<div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
-					{ENS_FIELDS.map((field) => (
-						<ENSFieldDisplay key={field.key} ensName={ensName} field={field} />
-					))}
-				</div>
-
-				{/* Actions */}
-				<div className="border-t pt-4">
-					<div className="flex items-center space-x-4 text-muted-foreground text-sm">
-						<Button
-							variant="ghost"
-							size="sm"
-							onClick={() => handleCopy(ensName || "", "name")}
-						>
-							{copiedField === "name" ? (
-								<CheckIcon className="mr-1 h-4 w-4" />
-							) : (
-								<CopyIcon className="mr-1 h-4 w-4" />
-							)}
-							Copy Name
-						</Button>
-
-						<a
-							href={`https://basescan.org/address/${ensAddress}`}
-							target="_blank"
-							rel="noopener noreferrer"
-							className="flex items-center space-x-1 hover:underline"
-						>
-							<span>View on Basescan</span>
-							<ExternalLinkIcon className="h-3 w-3" />
-						</a>
-					</div>
-				</div>
-			</div>
-		</Card>
+			{/* Donations Section */}
+			<GiftsSection address={ensAddress} />
+		</>
 	);
 }

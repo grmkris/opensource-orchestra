@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckIcon, CopyIcon, ExternalLinkIcon } from "lucide-react";
+import { CheckIcon, CopyIcon, ExternalLinkIcon, LinkIcon } from "lucide-react";
 import { useState } from "react";
 import { normalize } from "viem/ens";
 import { useAccount, useEnsAddress } from "wagmi";
@@ -8,8 +8,6 @@ import { ENSAvatarField } from "@/components/ens/ENSAvatarField";
 import { ENSHeaderField } from "@/components/ens/ENSHeaderField";
 import { ENSTextField } from "@/components/ens/ENSTextField";
 import { Loader } from "@/components/loader";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { useSetPrimaryName } from "@/hooks/useSetPrimaryName";
 
 export function SubdomainProfile({ ensName }: { ensName: string }) {
@@ -41,80 +39,129 @@ export function SubdomainProfile({ ensName }: { ensName: string }) {
 		setPrimaryName.mutate(ensName);
 	};
 
+	const handleCopyProfileLink = () => {
+		const profileUrl = `${window.location.origin}/ens/${ensName}`;
+		handleCopy(profileUrl, "profile-link");
+	};
+
+	const handleOpenProfile = () => {
+		const profileUrl = `/ens/${ensName}`;
+		window.open(profileUrl, "_blank");
+	};
+
 	if (addressLoading) {
 		return (
-			<Card className="p-6">
+			<div
+				className="rounded-2xl border-2 border-gray-100 bg-white p-8 shadow-sm"
+				style={{ fontFamily: "var(--font-roboto)" }}
+			>
 				<div className="flex items-center justify-center">
-					<Loader className="mr-2 h-6 w-6" />
-					<span>Loading subdomain...</span>
+					<Loader className="mr-3 h-6 w-6 text-blue-500" />
+					<span className="font-medium text-gray-700">
+						Loading subdomain...
+					</span>
 				</div>
-			</Card>
+			</div>
 		);
 	}
 
 	if (!ensAddress) {
 		return (
-			<Card className="p-6">
-				<div className="text-center text-muted-foreground">
-					Subdomain not found or not yet resolved
+			<div
+				className="rounded-2xl border-2 border-gray-100 bg-white p-8 shadow-sm"
+				style={{ fontFamily: "var(--font-roboto)" }}
+			>
+				<div className="text-center text-gray-600">
+					<div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
+						<div className="h-6 w-6 rounded bg-gray-300" />
+					</div>
+					<p className="font-medium">Subdomain not found or not yet resolved</p>
 				</div>
-			</Card>
+			</div>
 		);
 	}
 
 	const isOwner = ensAddress?.toLowerCase() === address?.toLowerCase();
 
 	return (
-		<Card className="overflow-hidden">
+		<div
+			className="overflow-hidden rounded-2xl border-2 border-gray-100 bg-white shadow-sm"
+			style={{ fontFamily: "var(--font-roboto)" }}
+		>
 			{/* Header Image - only shows if owner has set one */}
 			<ENSHeaderField ensName={ensName} isOwner={isOwner} />
 
-			<div className="space-y-6 p-6">
+			<div className="space-y-8 p-8">
 				{/* Header Info */}
-				<div className="flex items-center justify-between">
-					<div>
-						<div className="flex items-center space-x-2">
-							<h2 className="font-semibold text-xl">{ensName}</h2>
-							{isCurrentlyPrimary && (
-								<span className="rounded-full bg-green-100 px-2 py-1 text-green-800 text-xs">
-									Primary Name
-								</span>
-							)}
-						</div>
-						<div className="flex items-center space-x-2 text-muted-foreground text-sm">
-							<span>Owner: {ensAddress}</span>
-							<Button
-								variant="ghost"
-								size="sm"
-								onClick={() => handleCopy(ensAddress || "", "address")}
-								className="h-6 w-6 p-0"
-							>
-								{copiedField === "address" ? (
-									<CheckIcon className="h-3 w-3" />
-								) : (
-									<CopyIcon className="h-3 w-3" />
+				<div className="space-y-6">
+					<div className="flex items-center justify-between">
+						<div>
+							<div className="flex items-center space-x-3">
+								<h2 className="font-bold text-2xl text-gray-900">{ensName}</h2>
+								{isCurrentlyPrimary && (
+									<span className="rounded-full bg-blue-100 px-3 py-1 font-medium text-blue-700 text-sm">
+										Primary Name
+									</span>
 								)}
-							</Button>
+							</div>
+							<div className="mt-2 flex items-center space-x-2 text-gray-600 text-sm">
+								<span className="font-medium">Owner:</span>
+								<span className="font-mono">{ensAddress}</span>
+								<button
+									type="button"
+									onClick={() => handleCopy(ensAddress || "", "address")}
+									className="rounded p-1 transition-colors hover:bg-gray-100"
+								>
+									{copiedField === "address" ? (
+										<CheckIcon className="h-4 w-4 text-green-600" />
+									) : (
+										<CopyIcon className="h-4 w-4 text-gray-500" />
+									)}
+								</button>
+							</div>
 						</div>
 					</div>
 
-					<div className="flex space-x-2">
+					{/* Profile Actions */}
+					<div className="flex flex-wrap items-center gap-3">
+						<button
+							type="button"
+							onClick={handleCopyProfileLink}
+							className="flex items-center space-x-2 rounded-lg border-2 border-gray-200 px-4 py-2 font-medium text-gray-700 transition-all duration-200 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600"
+						>
+							{copiedField === "profile-link" ? (
+								<CheckIcon className="h-4 w-4 text-green-600" />
+							) : (
+								<LinkIcon className="h-4 w-4" />
+							)}
+							<span>Copy Profile Link</span>
+						</button>
+
+						<button
+							type="button"
+							onClick={handleOpenProfile}
+							className="flex items-center space-x-2 rounded-lg border-2 border-gray-200 px-4 py-2 font-medium text-gray-700 transition-all duration-200 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600"
+						>
+							<ExternalLinkIcon className="h-4 w-4" />
+							<span>View Public Profile</span>
+						</button>
+
 						{isOwner && !isCurrentlyPrimary && (
-							<Button
-								variant="outline"
-								size="sm"
+							<button
+								type="button"
 								onClick={handleSetPrimaryName}
 								disabled={setPrimaryName.isPending}
+								className="flex items-center space-x-2 rounded-lg bg-blue-500 px-4 py-2 font-medium text-white transition-all duration-200 hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
 							>
 								{setPrimaryName.isPending ? (
-									<div className="flex items-center space-x-2">
-										<Loader className="h-3 w-3" />
+									<>
+										<Loader className="h-4 w-4" />
 										<span>Setting...</span>
-									</div>
+									</>
 								) : (
-									"Set as Primary"
+									<span>Set as Primary</span>
 								)}
-							</Button>
+							</button>
 						)}
 					</div>
 				</div>
@@ -136,10 +183,13 @@ export function SubdomainProfile({ ensName }: { ensName: string }) {
 				<ENSAvatarField ensName={ensName} isOwner={isOwner} />
 
 				{/* Profile Fields */}
-				<div className="space-y-6">
+				<div className="space-y-8">
 					{/* Identity Section */}
 					<div className="space-y-4">
-						<h4 className="font-medium text-sm">Identity</h4>
+						<div className="flex items-center space-x-2">
+							<div className="h-6 w-1 rounded-full bg-blue-500" />
+							<h4 className="font-bold text-gray-900 text-lg">Identity</h4>
+						</div>
 
 						<ENSTextField
 							ensName={ensName}
@@ -152,7 +202,10 @@ export function SubdomainProfile({ ensName }: { ensName: string }) {
 
 					{/* Social Links Section */}
 					<div className="space-y-4">
-						<h4 className="font-medium text-sm">Social Links</h4>
+						<div className="flex items-center space-x-2">
+							<div className="h-6 w-1 rounded-full bg-blue-500" />
+							<h4 className="font-bold text-gray-900 text-lg">Social Links</h4>
+						</div>
 
 						<div className="space-y-4">
 							<ENSTextField
@@ -191,7 +244,10 @@ export function SubdomainProfile({ ensName }: { ensName: string }) {
 
 					{/* Contact Section */}
 					<div className="space-y-4">
-						<h4 className="font-medium text-sm">Contact</h4>
+						<div className="flex items-center space-x-2">
+							<div className="h-6 w-1 rounded-full bg-blue-500" />
+							<h4 className="font-bold text-gray-900 text-lg">Contact</h4>
+						</div>
 
 						<ENSTextField
 							ensName={ensName}
@@ -211,32 +267,32 @@ export function SubdomainProfile({ ensName }: { ensName: string }) {
 					</div>
 				</div>
 
-				{/* Actions */}
-				<div className="flex items-center space-x-4 text-muted-foreground text-sm">
-					<Button
-						variant="ghost"
-						size="sm"
+				{/* Secondary Actions */}
+				<div className="flex flex-wrap items-center gap-4 border-gray-100 border-t pt-6">
+					<button
+						type="button"
 						onClick={() => handleCopy(ensName || "", "name")}
+						className="flex items-center space-x-2 font-medium text-gray-600 text-sm transition-colors hover:text-blue-600"
 					>
 						{copiedField === "name" ? (
-							<CheckIcon className="mr-1 h-4 w-4" />
+							<CheckIcon className="h-4 w-4 text-green-600" />
 						) : (
-							<CopyIcon className="mr-1 h-4 w-4" />
+							<CopyIcon className="h-4 w-4" />
 						)}
-						Copy Name
-					</Button>
+						<span>Copy Name</span>
+					</button>
 
 					<a
 						href={`https://basescan.org/address/${ensAddress}`}
 						target="_blank"
 						rel="noopener noreferrer"
-						className="flex items-center space-x-1 hover:underline"
+						className="flex items-center space-x-2 font-medium text-gray-600 text-sm transition-colors hover:text-blue-600"
 					>
 						<span>View on Basescan</span>
-						<ExternalLinkIcon className="h-3 w-3" />
+						<ExternalLinkIcon className="h-4 w-4" />
 					</a>
 				</div>
 			</div>
-		</Card>
+		</div>
 	);
 }

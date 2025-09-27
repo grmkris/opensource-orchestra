@@ -10,6 +10,8 @@
 	"dependencies": {
 		"@aws-sdk/client-s3": "^3.896.0",
 		"@aws-sdk/s3-request-presigner": "^3.896.0",
+		"@radix-ui/react-dialog": "^1.1.15",
+		"@radix-ui/react-popover": "^1.1.15",
 		"@rainbow-me/rainbowkit": "^2.2.8",
 		"@t3-oss/env-nextjs": "^0.13.8",
 		"@tanstack/react-form": "^1.12.3",

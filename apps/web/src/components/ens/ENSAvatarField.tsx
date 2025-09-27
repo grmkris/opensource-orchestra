@@ -50,7 +50,7 @@ export function ENSAvatarField({ ensName, isOwner }: ENSAvatarFieldProps) {
 				value,
 			});
 			setSaved(true);
-			setTimeout(() => setSaved(null), 3000);
+			setTimeout(() => setSaved(false), 3000);
 		} catch (error) {
 			console.error("Error saving avatar:", error);
 		} finally {
@@ -64,7 +64,9 @@ export function ENSAvatarField({ ensName, isOwner }: ENSAvatarFieldProps) {
 			{isLoading ? (
 				<div className="h-24 w-24 animate-pulse rounded-full bg-muted" />
 			) : (
-				<ENSAvatar src={avatarUrl} alt={`${ensName} avatar`} size="md" />
+				avatarUrl && (
+					<ENSAvatar src={avatarUrl} alt={`${ensName} avatar`} size="md" />
+				)
 			)}
 		</div>
 	);

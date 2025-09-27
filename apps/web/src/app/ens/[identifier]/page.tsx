@@ -91,9 +91,7 @@ export default function PublicENSProfilePage() {
 				{/* Header */}
 				<div className="text-center">
 					<h1 className="mb-4 font-bold text-3xl">ENS Profile</h1>
-					<p className="text-muted-foreground">
-						Viewing public ENS profile
-					</p>
+					<p className="text-muted-foreground">Viewing public ENS profile</p>
 				</div>
 
 				<SubdomainProfilePublic ensName={finalEnsName} />
