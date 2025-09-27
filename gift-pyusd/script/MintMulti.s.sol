@@ -35,7 +35,7 @@ contract MintMulti is Script {
             (,, , bool exists) = gift.artists(artistIds[i]);
             require(exists, "artist not registered");
         }
-        require(total >= gift.mintPrice(), "total below mintPrice");
+        require(total >= gift.minGiftAmount(), "total below minGiftAmount");
 
         // Compute equal split amounts from total and artist count
         uint256 n = artistIds.length;
@@ -49,7 +49,7 @@ contract MintMulti is Script {
         // Approve + Allocate + Mint under a single broadcast session
         vm.startBroadcast();
         ERC20(pyusdAddr).approve(giftAddr, total);
-        gift.allocateDonation(artistIds, amounts);
+        gift.allocateGift(artistIds, amounts);
         MultiGiftSBT(receiptAddr).mint(artistIds, total, title);
         vm.stopBroadcast();
     }

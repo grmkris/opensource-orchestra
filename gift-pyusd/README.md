@@ -12,7 +12,7 @@ This project demonstrates a **Soulbound Token (SBT)** implementation where:
 
 ## Features
 
-- **PYUSD Donation**: Mint SBTs by donating PYUSD tokens (minimum `mintPrice`, no upper bound)
+- **PYUSD Gift**: Mint SBTs by gifting PYUSD tokens (minimum `minGiftAmount`, no upper bound)
 - **Non-Transferable**: All transfer and approval functions are disabled
 - **Owner Withdrawal**: Contract owner can withdraw accumulated PYUSD
 - **Token Metadata**: Basic ERC-721 interface with custom tokenURI support
@@ -85,9 +85,9 @@ forge test
 ### Deploy Contract
 
 1. Populate `.env` with RPC URL, private key, and other required variables.
-2. Deploy to Sepolia (mintPrice is passed via CLI; adjust flags if you do not need verification):
+2. Deploy to Sepolia (minGiftAmount is passed via CLI; adjust flags if you do not need verification):
    ```bash
-   # PYUSD from .env, mintPrice via CLI (1.0 PYUSD = 1_000_000 since PYUSD has 6 decimals)
+   # PYUSD from .env, minGiftAmount via CLI (1.0 PYUSD = 1_000_000 since PYUSD has 6 decimals)
    forge script script/Deploy.s.sol:Deploy \
      --sig "run(uint256)" \
      1000000 \
@@ -142,7 +142,7 @@ cast send $GIFT_PYUSD "updateArtist(uint256,address,string,string)" \
 
 #### Gift PYUSD to artist and Mint SBT
 
-1. Pick a donation amount in PYUSD (must be greater than or equal to the on-chain `mintPrice`). Example: 1.0 PYUSD = `1_000_000` (PYUSD has 6 decimals).
+1. Pick a gift amount in PYUSD (must be greater than or equal to the on-chain `minGiftAmount`). Example: 1.0 PYUSD = `1_000_000` (PYUSD has 6 decimals).
 2. Approve the contract to pull that amount:
    ```bash
    cast send $PYUSD "approve(address,uint256)" \
@@ -151,7 +151,7 @@ cast send $GIFT_PYUSD "updateArtist(uint256,address,string,string)" \
      --private-key $PRIVATE_KEY \
      --rpc-url $SEPOLIA_RPC_URL
    ```
-3. Mint the SBT for a registered artist by sending the donation value:
+3. Mint the SBT for a registered artist by sending the gift value:
    ```bash
    cast send $GIFT_PYUSD "mint(uint256,uint256)" \
      1 \
@@ -159,9 +159,9 @@ cast send $GIFT_PYUSD "updateArtist(uint256,address,string,string)" \
      --private-key $PRIVATE_KEY \
      --rpc-url $SEPOLIA_RPC_URL
    ```
-4. Verify the mint and donation were recorded (see the "On-chain verification" section below for sample commands).
+4. Verify the mint and gift were recorded (see the "On-chain verification" section below for sample commands).
 
-### MultiGift (allocate donations to multiple artists + mint one SBT)
+### MultiGift (allocate gifts to multiple artists + mint one SBT)
 
 Allocate a total PYUSD amount across multiple registered artists in one transaction and mint a single receipt SBT. The script now accepts CLI arguments directly (no JSON config needed).
 
@@ -208,7 +208,7 @@ forge script script/MintMulti.s.sol:MintMulti \
 ```
 This will:
 - Compute equal split amounts from `TOTAL` across `artistIds` (remainder distributed from the first artist).
-- Call `GiftPYUSD.allocateDonation(artistIds, amounts)` once to allocate balances.
+- Call `GiftPYUSD.allocateGift(artistIds, amounts)` once to allocate balances.
 - Mint one `MultiGiftSBT` to the caller with the full split.
 
 5) Verify on-chain state:
@@ -249,18 +249,18 @@ cast call $GIFT_PYUSD "contractPYUSDBalance()(uint256)" --rpc-url $SEPOLIA_RPC_U
 
 ### Constructor
 ```solidity
-constructor(address _mintToken, uint256 _mintPrice)
+constructor(address _mintToken, uint256 _minGiftAmount)
 ```
 - `_mintToken`: Address of the PYUSD token contract
-- `_mintPrice`: Minimum PYUSD donation required to mint one SBT
+- `_minGiftAmount`: Minimum PYUSD gift required to mint one SBT
 
 ### Functions
 
 #### Public Functions
-- `mint(uint256 artistId, uint256 amount)`: Mint a new SBT by donating `amount` PYUSD to `artistId` (reverts if `amount < mintPrice`)
+- `mint(uint256 artistId, uint256 amount)`: Mint a new SBT by gifting `amount` PYUSD to `artistId` (reverts if `amount < minGiftAmount`)
 - `totalIssued()`: Returns the total number of SBTs issued
 - `contractPYUSDBalance()`: Returns current PYUSD balance of the contract
-- `tokenAmounts(uint256 tokenId)`: Returns the donation amount associated with a minted token
+ - `tokenAmounts(uint256 tokenId)`: Returns the gift amount associated with a minted token
 - `artistBalance(uint256 artistId)`: Returns the accumulated PYUSD balance available for an artist to withdraw
 
 #### Withdrawal

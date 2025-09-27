@@ -51,7 +51,7 @@ contract MultiGiftSBT is ERC721 {
     // --- External ---
     /// @notice Mint a soulbound receipt NFT representing a single multi-artist gift action.
     /// @param artistIds The list of artist IDs
-    /// @param totalAmount The total donation amount (will be split equally across artistIds)
+    /// @param totalAmount The total gift amount (will be split equally across artistIds)
     /// @param title Optional title/label (empty string allowed)
     function mint(
         uint256[] calldata artistIds,

@@ -10,19 +10,19 @@ contract Deploy is Script {
     }
 
     // Run with: forge script script/Deploy.s.sol:Deploy --sig "run(uint256)" 1000000 ...
-    function run(uint256 mintPrice) external {
+    function run(uint256 minGiftAmount) external {
         // Read PYUSD token address from env var
         address pyusd = vm.envAddress("PYUSD");
 
         vm.startBroadcast();
-        new GiftPYUSD(pyusd, mintPrice);
+        new GiftPYUSD(pyusd, minGiftAmount);
         vm.stopBroadcast();
     }
 
     // Run with: forge script script/Deploy.s.sol:Deploy --sig "run(address,uint256)" 0xPyUsd... 1000000 ...
-    function run(address pyusd, uint256 mintPrice) external {
+    function run(address pyusd, uint256 minGiftAmount) external {
         vm.startBroadcast();
-        new GiftPYUSD(pyusd, mintPrice);
+        new GiftPYUSD(pyusd, minGiftAmount);
         vm.stopBroadcast();
     }
 }

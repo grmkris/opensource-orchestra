@@ -8,7 +8,7 @@ import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
 contract GiftPYUSD is ERC721 {
     uint256 public totalIssued;
     ERC20 public immutable mintToken;
-    uint256 public immutable mintPrice;
+    uint256 public immutable minGiftAmount;
     address public immutable owner;
 
     struct Artist {
@@ -31,24 +31,24 @@ contract GiftPYUSD is ERC721 {
     error INVALID_WALLET();
     error UNAUTHORIZED();
     error INSUFFICIENT_BALANCE();
-    error DONATION_TOO_LOW();
-    error EMPTY_DONATION();
+    error GIFT_TOO_LOW();
+    error EMPTY_GIFT();
     error LENGTH_MISMATCH();
 
     event ArtistRegistered(uint256 indexed artistId, address payoutWallet, string name, string imageURI);
     event ArtistUpdated(uint256 indexed artistId, address payoutWallet, string name, string imageURI);
     event GiftMinted(uint256 indexed tokenId, address indexed giver, uint256 indexed artistId, uint256 amount);
     event ArtistWithdrawn(uint256 indexed artistId, address indexed payoutWallet, uint256 amount);
-    event DonationAllocated(address indexed donor, uint256 totalAmount, uint256[] artistIds, uint256[] amounts);
+    event GiftAllocated(address indexed donor, uint256 totalAmount, uint256[] artistIds, uint256[] amounts);
 
     modifier onlyOwner() {
         if (msg.sender != owner) revert NOT_OWNER();
         _;
     }
 
-    constructor(address _mintToken, uint256 _mintPrice) ERC721("GiftPYUSD", "GIPY") {
+    constructor(address _mintToken, uint256 _minGiftAmount) ERC721("GiftPYUSD", "GIPY") {
         mintToken = ERC20(_mintToken);
-        mintPrice = _mintPrice;
+        minGiftAmount = _minGiftAmount;
         owner = msg.sender;
     }
 
@@ -87,7 +87,7 @@ contract GiftPYUSD is ERC721 {
         Artist storage artist = artists[artistId];
         if (!artist.exists) revert ARTIST_NOT_FOUND();
 
-        if (amount < mintPrice) revert DONATION_TOO_LOW();
+        if (amount < minGiftAmount) revert GIFT_TOO_LOW();
 
         // Pull PYUSD from caller first, then mint the NFT
         SafeTransferLib.safeTransferFrom(mintToken, msg.sender, address(this), amount);
@@ -102,9 +102,9 @@ contract GiftPYUSD is ERC721 {
         emit GiftMinted(newTokenId, msg.sender, artistId, amount);
     }
 
-    function allocateDonation(uint256[] calldata artistIds, uint256[] calldata amounts) external {
+    function allocateGift(uint256[] calldata artistIds, uint256[] calldata amounts) external {
         uint256 length = artistIds.length;
-        if (length == 0) revert EMPTY_DONATION();
+        if (length == 0) revert EMPTY_GIFT();
         if (length != amounts.length) revert LENGTH_MISMATCH();
 
         uint256 totalAmount;
@@ -123,7 +123,7 @@ contract GiftPYUSD is ERC721 {
             artistBalances[artistIds[i]] += amounts[i];
         }
 
-        emit DonationAllocated(msg.sender, totalAmount, artistIds, amounts);
+        emit GiftAllocated(msg.sender, totalAmount, artistIds, amounts);
     }
 
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
@@ -151,7 +151,7 @@ contract GiftPYUSD is ERC721 {
             artist.imageURI,
             '","attributes":[{"trait_type":"Artist ID","value":"',
             _uint2str(artistId),
-            '"},{"trait_type":"Donation Amount","value":"',
+            '"},{"trait_type":"Gift Amount","value":"',
             mintAmountStr,
             '"},{"trait_type":"Total Issued","value":"',
             totalIssuedStr,
