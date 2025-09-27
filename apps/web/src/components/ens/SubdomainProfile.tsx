@@ -216,6 +216,15 @@ export function SubdomainProfile({ ensName }: { ensName: string }) {
 							isOwner={isOwner}
 						/>
 					</div>
+
+
+					{/* Media gallery secgtion */}
+					<div className="space-y-4">
+						<div className="flex items-center space-x-2">
+							<div className="h-6 w-1 rounded-full bg-blue-500" />
+							<h4 className="font-bold text-gray-900 text-lg">Media Gallery</h4>
+						</div>
+					</div>
 				</div>
 
 				{/* Secondary Actions */}

@@ -149,7 +149,7 @@ export function SubdomainRegistration({
 			// Brief delay then call onSuccess
 			setTimeout(() => {
 				if (onSuccess) onSuccess();
-			}, 2000); // Show success state for 2 seconds
+			}, 5000); // Show success state and allow time for blockchain propagation
 		}
 	}, [primarySuccess, currentPhase, onSuccess]);
 

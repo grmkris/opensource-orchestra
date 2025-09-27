@@ -29,12 +29,12 @@ export default function OnboardingPage() {
 		l2ChainId: ENS_CHAIN.id,
 	});
 
-	// Redirect to /me if user already has a subdomain
-	useEffect(() => {
-		if (userSubdomain.data && !userSubdomain.isLoading) {
-			router.push("/me");
-		}
-	}, [userSubdomain.data, userSubdomain.isLoading, router]);
+	// Redirect to /me if user already has a subdomain and it is primary and they configured everything
+	// useEffect(() => {
+	// 	if (userSubdomain.data && !userSubdomain.isLoading) {
+	// 		router.push("/me");
+	// 	}
+	// }, [userSubdomain.data, userSubdomain.isLoading, router]);
 
 	const steps = [
 		{ id: "wallet", title: "Connect Wallet", required: true },
@@ -89,7 +89,7 @@ export default function OnboardingPage() {
 			case 2:
 				return (
 					<StepBasicInfo
-						ensName={userSubdomain.data || ""}
+						ensName={userSubdomain.data}
 						onNext={handleNext}
 						onSkip={handleSkip}
 					/>
@@ -115,10 +115,10 @@ export default function OnboardingPage() {
 		}
 	};
 
-	// Don't render if user already has subdomain (will redirect)
-	if (userSubdomain.data) {
-		return null;
-	}
+	// Allow onboarding flow to continue even after subdomain registration
+	// if (userSubdomain.data) {
+	// 	return null;
+	// }
 
 	// Onboarding flow
 	return (
@@ -151,6 +151,9 @@ export default function OnboardingPage() {
 						</h1>
 						<p className="mx-auto max-w-2xl text-gray-600 text-lg">
 							Create your decentralized identity
+						</p>
+						<p className="text-gray-600 text-lg">
+							{address}
 						</p>
 					</div>
 

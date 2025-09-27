@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { parseAbi } from "viem";
 import { waitForTransactionReceipt } from "viem/actions";
 import { base } from "viem/chains";
@@ -13,6 +13,7 @@ const REVERSE_REGISTRAR_ABI = parseAbi([
 export function useSetPrimaryName() {
 	const { writeContractAsync } = useWriteContract();
 	const basePublicClient = usePublicClient({ chainId: base.id });
+	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: async (name: string) => {
 			if (!basePublicClient) {
@@ -30,6 +31,9 @@ export function useSetPrimaryName() {
 			const _mined = await waitForTransactionReceipt(basePublicClient, {
 				hash,
 			});
+
+			// Invalidate all queries to refresh ENS data
+			queryClient.invalidateQueries();
 
 			// Return the result data
 			return { name, hash };
