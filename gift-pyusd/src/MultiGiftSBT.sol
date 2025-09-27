@@ -8,7 +8,7 @@ import {ERC721} from "solmate/tokens/ERC721.sol";
 ///         actual PYUSD transfers and artist accounting live in GiftPYUSD.
 contract MultiGiftSBT is ERC721 {
     // --- State ---
-    uint256 public constant MIN_TOTAL_AMOUNT = 1e6;
+    uint256 public immutable minTotalAmount;
     uint256 public totalIssued;
     address public immutable owner;
 
@@ -44,8 +44,9 @@ contract MultiGiftSBT is ERC721 {
         _;
     }
 
-    constructor() ERC721("MultiGiftReceipt", "MGFT") {
+    constructor(uint256 _minTotalAmount) ERC721("MultiGiftReceipt", "MGFT") {
         owner = msg.sender;
+        minTotalAmount = _minTotalAmount;
     }
 
     // --- External ---
@@ -60,7 +61,7 @@ contract MultiGiftSBT is ERC721 {
     ) external {
         uint256 n = artistIds.length;
         if (n == 0) revert LENGTH_MISMATCH();
-        if (totalAmount < MIN_TOTAL_AMOUNT) revert TOTAL_TOO_LOW();
+        if (totalAmount < minTotalAmount) revert TOTAL_TOO_LOW();
 
         // Compute equal split with remainder distributed from the beginning
         uint256 share = totalAmount / n;

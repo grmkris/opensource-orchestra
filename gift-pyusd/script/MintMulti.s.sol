@@ -29,13 +29,14 @@ contract MintMulti is Script {
         require(artistIds.length > 0, "length mismatch or empty");
 
         GiftPYUSD gift = GiftPYUSD(giftAddr);
+        MultiGiftSBT receipt = MultiGiftSBT(receiptAddr);
 
         // Pre-validate against GiftPYUSD constraints and artist existence
         for (uint256 i = 0; i < artistIds.length; i++) {
             (,, , bool exists) = gift.artists(artistIds[i]);
             require(exists, "artist not registered");
         }
-        require(total >= gift.minGiftAmount(), "total below minGiftAmount");
+        require(total >= receipt.minTotalAmount(), "total below minTotalAmount");
 
         // Compute equal split amounts from total and artist count
         uint256 n = artistIds.length;

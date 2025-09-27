@@ -170,9 +170,11 @@ Prerequisites:
 - `MULTI_GIFT_SBT` is deployed (see below) and exported in your `.env`.
 - Use 6 decimals for PYUSD values.
 
-1) Deploy the MultiGiftSBT contract:
+1) Deploy the MultiGiftSBT contract (minTotalAmount is passed via CLI; 1.0 PYUSD = 1_000_000):
 ```bash
 forge script script/DeployMultiGift.s.sol:DeployMultiGift \
+  --sig "run(uint256)" \
+  1000000 \
   --rpc-url $SEPOLIA_RPC_URL \
   --private-key $PRIVATE_KEY \
   --broadcast \

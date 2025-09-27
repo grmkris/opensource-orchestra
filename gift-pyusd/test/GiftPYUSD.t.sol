@@ -82,7 +82,7 @@ contract GiftPYUSDTest is Test {
         giftPYUSD.updateArtist(ARTIST_ID, ARTIST_WALLET, ARTIST_NAME, ARTIST_IMAGE);
     }
 
-    function testMintWithMinimumDonation() public {
+    function testMintWithMinimumGift() public {
         // Fund this test contract with PYUSD and approve spender
         pyusd.mint(address(this), MIN_GIFT_AMOUNT);
         pyusd.approve(address(giftPYUSD), MIN_GIFT_AMOUNT);
@@ -101,7 +101,7 @@ contract GiftPYUSDTest is Test {
         assertEq(giftPYUSD.artistBalance(ARTIST_ID), MIN_GIFT_AMOUNT);
     }
 
-    function testMintWithHigherDonation() public {
+    function testMintWithHigherGift() public {
         uint256 higherDonation = MIN_GIFT_AMOUNT * 2;
 
         pyusd.mint(address(this), higherDonation);
@@ -116,7 +116,7 @@ contract GiftPYUSDTest is Test {
         assertEq(giftPYUSD.balanceOf(address(this)), 1);
     }
 
-    function testMint_RevertIfDonationTooLow() public {
+    function testMint_RevertIfGiftTooLow() public {
         uint256 insufficientDonation = MIN_GIFT_AMOUNT - 1;
 
         pyusd.mint(address(this), MIN_GIFT_AMOUNT);
@@ -188,7 +188,7 @@ contract GiftPYUSDTest is Test {
         giftPYUSD.allocateGift(artistIds, amounts);
     }
 
-    function testAllocateGift_AllowsDonationBelowMinGiftAmount() public {
+    function testAllocateGift_AllowsGiftBelowMinGiftAmount() public {
         uint256[] memory artistIds = new uint256[](1);
         artistIds[0] = ARTIST_ID;
         uint256[] memory amounts = new uint256[](1);

@@ -5,12 +5,12 @@ import {Test} from "forge-std/Test.sol";
 import {MultiGiftSBT} from "../src/MultiGiftSBT.sol";
 
 contract MultiGiftSBTTest is Test {
-    uint256 internal constant MIN_TOTAL = 1e6;
+    uint256 internal constant MIN_TOTAL_AMOUNT = 1e6;
 
     MultiGiftSBT public receipt;
 
     function setUp() public {
-        receipt = new MultiGiftSBT();
+        receipt = new MultiGiftSBT(MIN_TOTAL_AMOUNT);
     }
 
     function testMint_Succeeds_EqualSplitWithRemainder() public {
@@ -37,20 +37,20 @@ contract MultiGiftSBTTest is Test {
     function testMint_RevertIfEmptyArtistIds() public {
         uint256[] memory ids = new uint256[](0);
         vm.expectRevert(MultiGiftSBT.LENGTH_MISMATCH.selector);
-        receipt.mint(ids, MIN_TOTAL, "Empty");
+        receipt.mint(ids, MIN_TOTAL_AMOUNT, "Empty");
     }
 
     function testMint_RevertIfTotalTooLow() public {
         uint256[] memory ids = new uint256[](2);
         ids[0] = 1; ids[1] = 2;
         vm.expectRevert(MultiGiftSBT.TOTAL_TOO_LOW.selector);
-        receipt.mint(ids, MIN_TOTAL - 1, "Too low");
+        receipt.mint(ids, MIN_TOTAL_AMOUNT - 1, "Too low");
     }
 
     function testSBT_DisablesTransfersAndApprovals() public {
         uint256[] memory ids = new uint256[](1);
         ids[0] = 1;
-        receipt.mint(ids, MIN_TOTAL, "One");
+        receipt.mint(ids, MIN_TOTAL_AMOUNT, "One");
 
         vm.expectRevert(MultiGiftSBT.TRANSFERS_DISABLED.selector);
         receipt.approve(address(0xBEEF), 1);
