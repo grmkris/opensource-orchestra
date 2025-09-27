@@ -1,5 +1,6 @@
 "use client";
 
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -61,8 +62,9 @@ export default function MePage() {
 		>
 			<div className="container mx-auto max-w-4xl px-4 py-8">
 				<div className="space-y-8">
-					{/* Back to Home Button */}
-					<div className="flex justify-start">
+					{/* Navigation Bar */}
+					<div className="flex items-center justify-between">
+						{/* Back to Home Button */}
 						<Link href="/">
 							<button
 								type="button"
@@ -72,6 +74,9 @@ export default function MePage() {
 								<span className="font-medium">Back to Orchestra</span>
 							</button>
 						</Link>
+
+						{/* Wallet Button */}
+						<ConnectButton />
 					</div>
 
 					{/* Header */}
@@ -79,10 +84,7 @@ export default function MePage() {
 						<div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-100">
 							<div className="h-8 w-8 rounded-lg bg-blue-500" />
 						</div>
-						<h1 className="font-bold text-4xl text-gray-900">My Profile</h1>
-						<p className="mx-auto max-w-2xl text-gray-600 text-lg">
-							Manage your decentralized identity
-						</p>
+						<h1 className="font-bold text-4xl text-gray-900">{userSubdomain.data}</h1>
 					</div>
 
 					{/* Profile */}

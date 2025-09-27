@@ -4,16 +4,13 @@ import { CheckIcon, CopyIcon, ExternalLinkIcon, LinkIcon } from "lucide-react";
 import { useState } from "react";
 import { normalize } from "viem/ens";
 import { useAccount, useEnsAddress } from "wagmi";
-import { ENSAvatarField } from "@/components/ens/ENSAvatarField";
-import { ENSHeaderField } from "@/components/ens/ENSHeaderField";
+import { ProfileHeaderEditable } from "@/components/ens/ProfileHeaderEditable";
 import { ENSTextField } from "@/components/ens/ENSTextField";
 import { Loader } from "@/components/loader";
 
 export function SubdomainProfile({ ensName }: { ensName: string }) {
 	const { address } = useAccount();
 	const [copiedField, setCopiedField] = useState<string | null>(null);
-
-	const isCurrentlyPrimary = false;
 
 	// Get the ENS name's address to determine ownership
 	const { data: ensAddress, isLoading: addressLoading } = useEnsAddress({
@@ -81,39 +78,18 @@ export function SubdomainProfile({ ensName }: { ensName: string }) {
 			className="overflow-hidden rounded-2xl border-2 border-gray-100 bg-white shadow-sm"
 			style={{ fontFamily: "var(--font-roboto)" }}
 		>
-			{/* Header Image - only shows if owner has set one */}
-			<ENSHeaderField ensName={ensName} isOwner={isOwner} />
+			{/* Profile Header with Cover Image and Avatar */}
+			<ProfileHeaderEditable
+				ensName={ensName}
+				ensAddress={ensAddress || ""}
+				onCopy={handleCopy}
+				copiedField={copiedField}
+				isOwner={isOwner}
+			/>
 
 			<div className="space-y-8 p-8">
 				{/* Header Info */}
 				<div className="space-y-6">
-					<div className="flex items-center justify-between">
-						<div>
-							<div className="flex items-center space-x-3">
-								<h2 className="font-bold text-2xl text-gray-900">{ensName}</h2>
-								{isCurrentlyPrimary && (
-									<span className="rounded-full bg-blue-100 px-3 py-1 font-medium text-blue-700 text-sm">
-										Primary Name
-									</span>
-								)}
-							</div>
-							<div className="mt-2 flex items-center space-x-2 text-gray-600 text-sm">
-								<span className="font-medium">Owner:</span>
-								<span className="font-mono">{ensAddress}</span>
-								<button
-									type="button"
-									onClick={() => handleCopy(ensAddress || "", "address")}
-									className="rounded p-1 transition-colors hover:bg-gray-100"
-								>
-									{copiedField === "address" ? (
-										<CheckIcon className="h-4 w-4 text-green-600" />
-									) : (
-										<CopyIcon className="h-4 w-4 text-gray-500" />
-									)}
-								</button>
-							</div>
-						</div>
-					</div>
 
 					{/* Profile Actions */}
 					<div className="flex flex-wrap items-center gap-3">
@@ -140,9 +116,6 @@ export function SubdomainProfile({ ensName }: { ensName: string }) {
 						</button>
 					</div>
 				</div>
-
-				{/* Avatar */}
-				<ENSAvatarField ensName={ensName} isOwner={isOwner} />
 
 				{/* Profile Fields */}
 				<div className="space-y-8">

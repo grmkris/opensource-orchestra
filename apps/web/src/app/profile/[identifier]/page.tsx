@@ -90,8 +90,8 @@ export default function PublicENSProfilePage() {
 			<div className="space-y-6">
 				{/* Header */}
 				<div className="text-center">
-					<h1 className="mb-4 font-bold text-3xl">ENS Profile</h1>
-					<p className="text-muted-foreground">Viewing public ENS profile</p>
+					<h1 className="mb-4 font-bold text-3xl">{finalEnsName}</h1>
+					<p className="text-muted-foreground">Owner {resolvedAddress}</p>
 				</div>
 
 				<SubdomainProfilePublic ensName={finalEnsName} />

@@ -5,8 +5,8 @@ import { useState } from "react";
 import { normalize } from "viem/ens";
 import { useEnsAddress, useEnsAvatar, useEnsText } from "wagmi";
 import { GiftsSection } from "@/components/ens/DonationsSection";
-import { ENSAvatar } from "@/components/ens/ENSAvatar";
 import { GiftPopover } from "@/components/ens/GiftPopover";
+import { ProfileHeader } from "@/components/ens/ProfileHeader";
 import { Loader } from "@/components/loader";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -161,86 +161,38 @@ export function SubdomainProfilePublic({ ensName }: { ensName: string }) {
 	return (
 		<>
 			<Card className="overflow-hidden">
-				{/* Header Image */}
-				{headerUrl && (
-					<div className="h-48 w-full">
-						<ENSAvatar
-							src={headerUrl}
-							alt={`${ensName} header`}
-							size="lg"
-							rounded={false}
-							className="h-48 w-full object-cover"
-						/>
-					</div>
-				)}
+				<ProfileHeader
+					coverImageUrl={headerUrl || undefined}
+					avatarUrl={avatarUrl || undefined}
+					ensName={ensName}
+					ensAddress={ensAddress}
+					onCopy={handleCopy}
+					copiedField={copiedField}
+					avatarLoading={isLoading}
+					actions={
+						<>
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={handleCopyProfileLink}
+							>
+								{copiedField === "profile-link" ? (
+									<CheckIcon className="mr-2 h-4 w-4" />
+								) : (
+									<LinkIcon className="mr-2 h-4 w-4" />
+								)}
+								Copy Profile Link
+							</Button>
+
+							<GiftPopover
+								recipientAddress={ensAddress}
+								recipientName={ensName}
+							/>
+						</>
+					}
+				/>
 
 				<div className="space-y-6 p-6">
-					{/* Profile Header */}
-					<div className="space-y-4">
-						<div className="flex items-start space-x-4">
-							{/* Avatar */}
-							<div className="flex-shrink-0">
-								{isLoading ? (
-									<div className="h-32 w-full animate-pulse rounded-t-lg bg-muted" />
-								) : (
-									avatarUrl && (
-										<ENSAvatar
-											src={avatarUrl}
-											alt={`${ensName} header`}
-											size="lg"
-											rounded={false}
-											className="h-32 w-full rounded-t-lg"
-										/>
-									)
-								)}
-							</div>
-
-							{/* Profile Info */}
-							<div className="min-w-0 flex-1">
-								<h2 className="font-bold text-2xl text-foreground">
-									{ensName}
-								</h2>
-								<div className="mt-1 flex items-center space-x-2 text-muted-foreground text-sm">
-									<span>Owner: {ensAddress}</span>
-									<Button
-										variant="ghost"
-										size="sm"
-										onClick={() => handleCopy(ensAddress || "", "address")}
-										className="h-6 w-6 p-0"
-									>
-										{copiedField === "address" ? (
-											<CheckIcon className="h-3 w-3" />
-										) : (
-											<CopyIcon className="h-3 w-3" />
-										)}
-									</Button>
-								</div>
-							</div>
-						</div>
-
-						{/* Profile Actions */}
-						<div className="space-y-3">
-							<div className="flex flex-wrap items-center gap-3">
-								<Button
-									variant="outline"
-									size="sm"
-									onClick={handleCopyProfileLink}
-								>
-									{copiedField === "profile-link" ? (
-										<CheckIcon className="mr-2 h-4 w-4" />
-									) : (
-										<LinkIcon className="mr-2 h-4 w-4" />
-									)}
-									Copy Profile Link
-								</Button>
-
-								<GiftPopover
-									recipientAddress={ensAddress}
-									recipientName={ensName}
-								/>
-							</div>
-						</div>
-					</div>
 
 					{/* Profile Fields */}
 					<div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">

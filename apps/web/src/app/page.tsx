@@ -3,17 +3,19 @@
 import { useRouter } from "next/navigation";
 import { GiftPopover } from "@/components/ens/GiftPopover";
 import { GlobalDonationsFeed } from "@/components/ens/GlobalDonationsFeed";
+import { ENSAvatar } from "@/components/ens/ENSAvatar";
 
 export default function Home() {
 	const router = useRouter();
 
 	// Artist data positioned precisely on visible music stands in pit.png
 	const pendingArtists = [
-		{ id: "artist1.eth", name: "DJ Crypto", x: 20, y: 62 }, // Left front stand
-		{ id: "artist2.eth", name: "The Degens", x: 50, y: 66 }, // Center front stand
-		{ id: "artist3.eth", name: "NFT Beats", x: 80, y: 62 }, // Right front stand
-		{ id: "artist4.eth", name: "Web3 Symphony", x: 30, y: 54 }, // Left back stand
-		{ id: "artist5.eth", name: "Blockchain Band", x: 70, y: 54 }, // Right back stand
+		{ id: "vitalik.eth", x: 20, y: 62, avatar: "/artist1.png" }, // Left front stand
+		{ id: "sassal.eth", x: 50, y: 66, avatar: "/artist2.png" }, // Center front stand
+		{ id: "cdixon.eth", x: 80, y: 62, avatar: "/artist3.png" }, // Right front stand
+		{ id: "punk6529.eth", x: 30, y: 54, avatar: "/artist4.png" }, // Left back stand
+		{ id: "pranksy.eth", x: 70, y: 54, avatar: "/artist5.png" }, // Right back stand
+		{ id: "coopahtroopa.eth", x: 50, y: 48, avatar: "/artist6.png" }, // Center back stand
 	];
 
 	const handleArtistClick = (artistId: string) => {
@@ -95,7 +97,7 @@ export default function Home() {
 							}
 						}}
 						key={artist.id}
-						className="group absolute h-16 w-16 cursor-pointer"
+						className="group absolute h-24 w-24 cursor-pointer"
 						style={{
 							left: `${artist.x}%`,
 							top: `${artist.y}%`,
@@ -103,13 +105,15 @@ export default function Home() {
 						}}
 						onClick={() => handleArtistClick(artist.id)}
 					>
-						{/* Artist avatar/circle */}
-						<div className="flex h-full w-full items-center justify-center rounded-full border-2 border-amber-300 bg-amber-500 bg-opacity-80 shadow-lg transition-all duration-300 group-hover:scale-125 group-hover:bg-amber-400">
-							<div className="text-center">
-								<div className="font-bold text-white text-xs">
-									{artist.name}
-								</div>
-							</div>
+						{/* Artist avatar */}
+						<div className="flex h-full w-full items-center justify-center rounded-full border-2 border-amber-300 bg-amber-500/10 shadow-lg transition-all duration-300 group-hover:scale-125 overflow-hidden">
+							<ENSAvatar
+								src={artist.avatar}
+								alt={`${artist.id} profile picture`}
+								size="md"
+								className="h-full w-full"
+								rounded={true}
+							/>
 						</div>
 
 						{/* Pulse animation for pending status */}
