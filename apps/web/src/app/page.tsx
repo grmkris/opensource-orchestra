@@ -5,6 +5,7 @@ import { GlobalDonationsFeed } from "@/components/ens/GlobalDonationsFeed";
 import { GiftPopover } from "@/components/ens/GiftPopover";
 import { motion } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
+import { gsap } from "gsap";
 
 export default function Home() {
 	const router = useRouter();
@@ -24,7 +25,14 @@ export default function Home() {
 	};
 
 	const iframeRef = useRef<HTMLIFrameElement>(null);
+	const titleRef = useRef<HTMLHeadingElement>(null);
 	const [curtainsOpen, setCurtainsOpen] = useState(false);
+
+	useEffect(() => {
+		if (titleRef.current) {
+			gsap.from(titleRef.current, { y: -50, opacity: 0, duration: 1.2, ease: "power3.out" });
+		}
+	}, []);
 
 	useEffect(() => {
 		// Load YouTube API
@@ -54,16 +62,28 @@ export default function Home() {
 
 	return (
 		<div className="w-full bg-black">
+			<div className="text-center text-white text-lg font-semibold py-4">
+				Welcome to the Web3 Symphony! Enjoy the performance and support your favorite artists.
+			</div>
+			
 			{/* Stage Section */}
-			<div className="relative h-screen w-full">
+			<div className="relative h-[90vh] w-full">
 				<div
-					className="absolute inset-0 bg-center bg-cover bg-no-repeat"
-					style={{ backgroundImage: "url('/stage.png')" }}
+					className="absolute inset-0 bg-cover bg-fit bg-no-repeat"
+					style={{ backgroundImage: "url('/iterate-two.png')" }}
 				/>
+				<div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/70 pointer-events-none z-0" />
+
+				<nav className="absolute top-4 right-8 flex space-x-6 bg-black/50 px-4 py-2 rounded-full z-30">
+					<a href="#" className="text-white hover:text-amber-300 transition-colors">Home</a>
+					<a href="#global" className="text-white hover:text-amber-300 transition-colors">Global</a>
+					<a href="#live" className="text-white hover:text-amber-300 transition-colors">Live</a>
+				</nav>
 
 				{/* Stage with curtains + video */}
 				<div className="absolute inset-0 flex items-center justify-center">
-					<div className="-translate-x-[3%] relative h-[32%] w-[42%] transform">
+					<div className="-translate-x-[3%] relative h-[52%] w-[62%] transform">
+						
 						<div className="relative h-full w-full overflow-hidden rounded-lg shadow-2xl border-0">
 							{/* Curtains */}
 							<motion.div

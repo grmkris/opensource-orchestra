@@ -16,7 +16,8 @@
 		"dev:server": "turbo -F server dev"
 	},
 	"dependencies": {
-		"framer-motion": "^12.23.22"
+		"framer-motion": "^12.23.22",
+		"gsap": "^3.13.0"
 	},
 	"devDependencies": {
 		"turbo": "^2.5.4",
