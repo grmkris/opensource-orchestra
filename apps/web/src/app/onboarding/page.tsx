@@ -89,7 +89,7 @@ export default function OnboardingPage() {
 			case 2:
 				return (
 					<StepBasicInfo
-						ensName={userSubdomain.data}
+						ensName={userSubdomain.data || ""}
 						onNext={handleNext}
 						onSkip={handleSkip}
 					/>

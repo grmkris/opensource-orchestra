@@ -1,9 +1,9 @@
 "use client";
 
 import { CheckIcon, SaveIcon } from "lucide-react";
-import { useEffect, useId, useState } from "react";
-import { useEnsAvatar } from "wagmi";
+import { useId, useState } from "react";
 import { ENSAvatar } from "@/components/ens/ENSAvatar";
+import { useENSFields } from "@/components/ens/ENSFieldsProvider";
 import { Loader } from "@/components/loader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,34 +11,20 @@ import { Label } from "@/components/ui/label";
 import { useSetTextRecords } from "@/hooks/useSetTextRecords";
 
 interface ENSAvatarFieldProps {
-	ensName: string;
 	isOwner: boolean;
 }
 
-export function ENSAvatarField({ ensName, isOwner }: ENSAvatarFieldProps) {
+export function ENSAvatarField({ isOwner }: ENSAvatarFieldProps) {
 	const fieldId = useId();
+	const { getValue, setValue, isLoading } = useENSFields();
 
-	// Fetch avatar data using the built-in wagmi hook
-	const { data: avatarUrl, isLoading } = useEnsAvatar({
-		name: ensName,
-		query: { enabled: !!ensName },
-		chainId: 1,
-	});
-
-	// Local state for this field
-	const [value, setValue] = useState("");
+	// Local state for uploads only
 	const [isSaving, setIsSaving] = useState(false);
 	const [isUploading, setIsUploading] = useState(false);
 	const [saved, setSaved] = useState(false);
 
 	const setTextRecords = useSetTextRecords();
-
-	// Update local state when data loads
-	useEffect(() => {
-		if (avatarUrl) {
-			setValue(avatarUrl);
-		}
-	}, [avatarUrl]);
+	const value = getValue("avatar");
 
 	const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
@@ -59,7 +45,7 @@ export function ENSAvatarField({ ensName, isOwner }: ENSAvatarFieldProps) {
 			}
 
 			const { url } = await response.json();
-			setValue(url);
+			setValue("avatar", url);
 		} catch (error) {
 			console.error("Error uploading avatar:", error);
 		} finally {
@@ -73,7 +59,7 @@ export function ENSAvatarField({ ensName, isOwner }: ENSAvatarFieldProps) {
 		// alert(value);
 		try {
 			await setTextRecords.mutateAsync({
-				label: ensName,
+				label: "",
 				key: "avatar",
 				value,
 			});
@@ -92,10 +78,10 @@ export function ENSAvatarField({ ensName, isOwner }: ENSAvatarFieldProps) {
 			{isLoading ? (
 				<div className="h-24 w-24 animate-pulse rounded-full bg-muted" />
 			) : (
-				avatarUrl && (
+				value && (
 					<ENSAvatar
-						src={avatarUrl || undefined}
-						alt={`${ensName} avatar`}
+						src={value || undefined}
+						alt="Avatar"
 						size="md"
 					/>
 				)

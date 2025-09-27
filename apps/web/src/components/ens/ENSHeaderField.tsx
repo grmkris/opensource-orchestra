@@ -11,35 +11,20 @@ import { Label } from "@/components/ui/label";
 import { useSetTextRecords } from "@/hooks/useSetTextRecords";
 
 interface ENSHeaderFieldProps {
-	ensName: string;
 	isOwner: boolean;
 }
 
-export function ENSHeaderField({ ensName, isOwner }: ENSHeaderFieldProps) {
+export function ENSHeaderField({ isOwner }: ENSHeaderFieldProps) {
 	const fieldId = useId();
+	const { getValue, setValue, isLoading } = useENSFields();
 
-	// Fetch header data
-	const { data: headerUrl, isLoading } = useEnsText({
-		name: ensName,
-		key: "header",
-		query: { enabled: !!ensName },
-		chainId: 1,
-	});
-
-	// Local state for this field
-	const [value, setValue] = useState("");
+	// Local state for uploads only
 	const [isSaving, setIsSaving] = useState(false);
 	const [isUploading, setIsUploading] = useState(false);
 	const [saved, setSaved] = useState(false);
 
 	const setTextRecords = useSetTextRecords();
-
-	// Update local state when data loads
-	useEffect(() => {
-		if (headerUrl) {
-			setValue(headerUrl);
-		}
-	}, [headerUrl]);
+	const value = getValue("header");
 
 	const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
