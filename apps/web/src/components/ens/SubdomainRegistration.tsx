@@ -9,9 +9,14 @@ import {
 } from "@/hooks/useRegisterSubdomain";
 import { useSetPrimaryName } from "@/hooks/useSetPrimaryName";
 
-export function SubdomainRegistration() {
+interface SubdomainRegistrationProps {
+	onSuccess?: () => void;
+}
+
+export function SubdomainRegistration({ onSuccess }: SubdomainRegistrationProps = {}) {
 	const [label, setLabel] = useState("");
 	const [debouncedLabel, setDebouncedLabel] = useState("");
+	const [currentPhase, setCurrentPhase] = useState<'register' | 'setPrimary' | 'complete'>('register');
 	const { address } = useAccount();
 
 	// Debounce the label input for availability checking
@@ -94,159 +99,227 @@ export function SubdomainRegistration() {
 
 	const availabilityStatus = getAvailabilityStatus();
 
+	// Phase indicator component
+	const PhaseIndicator = ({ phase }: { phase: 'register' | 'setPrimary' | 'complete' }) => (
+		<div className="mb-6">
+			<div className="text-center mb-2">
+				<span className="text-sm font-medium text-gray-600">
+					{phase === 'register' && 'Step 1 of 2: Register Username'}
+					{phase === 'setPrimary' && 'Step 2 of 2: Activate Username'}
+					{phase === 'complete' && 'Username Setup Complete!'}
+				</span>
+			</div>
+			<div className="flex items-center justify-center space-x-2">
+				<div className={`h-2 w-16 rounded-full transition-all duration-300 ${
+					phase !== 'register' ? 'bg-green-500' : 'bg-blue-500'
+				}`} />
+				<div className={`h-2 w-16 rounded-full transition-all duration-300 ${
+					phase === 'complete' ? 'bg-green-500' : 
+					phase === 'setPrimary' ? 'bg-blue-500' : 'bg-gray-300'
+				}`} />
+			</div>
+		</div>
+	);
+
+	// Auto-transition phases
+	useEffect(() => {
+		if (registerSuccess && registeredData && currentPhase === 'register') {
+			setCurrentPhase('setPrimary');
+		}
+	}, [registerSuccess, registeredData, currentPhase]);
+
+	useEffect(() => {
+		if (primarySuccess && currentPhase === 'setPrimary') {
+			setCurrentPhase('complete');
+			// Brief delay then call onSuccess
+			setTimeout(() => {
+				if (onSuccess) onSuccess();
+			}, 2000); // Show success state for 2 seconds
+		}
+	}, [primarySuccess, currentPhase, onSuccess]);
+
 	return (
 		<div
 			className="rounded-2xl border-2 border-gray-100 bg-white p-8 shadow-sm"
 			style={{ fontFamily: "var(--font-roboto)" }}
 		>
 			<div className="space-y-6">
-				<div className="text-center">
-					<div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-100">
-						<div className="h-8 w-8 rounded-lg bg-blue-500" />
-					</div>
-					<h2 className="mb-2 font-bold text-2xl text-gray-900">
-						Register Your Subdomain
-					</h2>
-					<p className="text-gray-600">
-						Get your own .catmisha.eth subdomain on Base L2
-					</p>
-				</div>
+				{/* Phase indicator */}
+				<PhaseIndicator phase={currentPhase} />
 
-				<div className="space-y-3">
-					<label
-						htmlFor={subdomainId}
-						className="block font-bold text-gray-900 text-sm"
-					>
-						Choose your subdomain
-					</label>
-					<div className="flex items-center">
-						<input
-							id={subdomainId}
-							placeholder="yourname"
-							value={label}
-							onChange={handleLabelChange}
-							disabled={isRegistering}
-							className="flex-1 rounded-l-lg border-2 border-gray-200 px-4 py-3 font-medium text-gray-900 transition-colors focus:border-blue-400 focus:outline-none"
-						/>
-						<div className="whitespace-nowrap rounded-r-lg border-2 border-gray-200 border-l-0 bg-gray-50 px-4 py-3 font-medium text-gray-600">
-							.catmisha.eth
-						</div>
-					</div>
-
-					{/* Availability Status */}
-					{availabilityStatus && (
-						<div className="flex items-center space-x-2">
-							{availabilityStatus.status === "loading" && (
-								<Loader className="h-4 w-4 text-blue-500" />
-							)}
-							<span
-								className={`font-medium text-sm ${
-									availabilityStatus.status === "success"
-										? "text-green-600"
-										: availabilityStatus.status === "error"
-											? "text-red-600"
-											: "text-gray-600"
-								}`}
-							>
-								{availabilityStatus.message}
-							</span>
-						</div>
-					)}
-
-					{/* Preview */}
-					{label && domainAvailability.data && (
-						<div className="text-gray-600 text-sm">
-							Your subdomain:{" "}
-							<span className="font-bold font-mono">
-								{debouncedLabel}.catmisha.eth
-							</span>
-						</div>
-					)}
-				</div>
-
-				{/* Registration Button */}
-				<button
-					type="button"
-					onClick={handleRegister}
-					disabled={!canRegister}
-					className="flex w-full items-center justify-center rounded-lg bg-blue-500 px-6 py-4 font-bold text-white transition-all duration-200 hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-gray-300"
-				>
-					{isRegistering ? (
-						<div className="flex items-center space-x-2">
-							<Loader className="h-5 w-5" />
-							<span>Registering...</span>
-						</div>
-					) : (
-						"Register Subdomain"
-					)}
-				</button>
-
-				{/* Primary Name Button - Shows after successful registration */}
-				{registerSuccess && registeredData && (
-					<button
-						type="button"
-						onClick={handleSetPrimary}
-						disabled={isSettingPrimary}
-						className="flex w-full items-center justify-center rounded-lg border-2 border-blue-500 px-6 py-4 font-bold text-blue-600 transition-all duration-200 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
-					>
-						{isSettingPrimary ? (
-							<div className="flex items-center space-x-2">
-								<Loader className="h-5 w-5" />
-								<span>Setting as primary name...</span>
+				{/* Phase-specific content */}
+				{currentPhase === 'register' && (
+					<>
+						<div className="text-center">
+							<div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-100">
+								<div className="h-8 w-8 rounded-lg bg-blue-500" />
 							</div>
-						) : (
-							`Set ${debouncedLabel} as Primary Name on Base`
+							<h2 className="mb-2 font-bold text-2xl text-gray-900">
+								Choose Your Username
+							</h2>
+							<p className="text-gray-600">
+								Get your own .catmisha.eth subdomain on Base L2
+							</p>
+						</div>
+
+						<div className="space-y-3">
+							<label
+								htmlFor={subdomainId}
+								className="block font-bold text-gray-900 text-sm"
+							>
+								Choose your subdomain
+							</label>
+							<div className="flex items-center">
+								<input
+									id={subdomainId}
+									placeholder="yourname"
+									value={label}
+									onChange={handleLabelChange}
+									disabled={isRegistering}
+									className="flex-1 rounded-l-lg border-2 border-gray-200 px-4 py-3 font-medium text-gray-900 transition-colors focus:border-blue-400 focus:outline-none"
+								/>
+								<div className="whitespace-nowrap rounded-r-lg border-2 border-gray-200 border-l-0 bg-gray-50 px-4 py-3 font-medium text-gray-600">
+									.catmisha.eth
+								</div>
+							</div>
+
+							{/* Availability Status */}
+							{availabilityStatus && (
+								<div className="flex items-center space-x-2">
+									{availabilityStatus.status === "loading" && (
+										<Loader className="h-4 w-4 text-blue-500" />
+									)}
+									<span
+										className={`font-medium text-sm ${
+											availabilityStatus.status === "success"
+												? "text-green-600"
+												: availabilityStatus.status === "error"
+													? "text-red-600"
+													: "text-gray-600"
+										}`}
+									>
+										{availabilityStatus.message}
+									</span>
+								</div>
+							)}
+
+							{/* Preview */}
+							{label && domainAvailability.data && (
+								<div className="text-gray-600 text-sm">
+									Your subdomain:{" "}
+									<span className="font-bold font-mono">
+										{debouncedLabel}.catmisha.eth
+									</span>
+								</div>
+							)}
+						</div>
+
+						{/* Registration Button */}
+						<button
+							type="button"
+							onClick={handleRegister}
+							disabled={!canRegister}
+							className="flex w-full items-center justify-center rounded-lg bg-blue-500 px-6 py-4 font-bold text-white transition-all duration-200 hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-gray-300"
+						>
+							{isRegistering ? (
+								<div className="flex items-center space-x-2">
+									<Loader className="h-5 w-5" />
+									<span>Registering...</span>
+								</div>
+							) : (
+								"Register Subdomain"
+							)}
+						</button>
+
+						{/* Registration Error */}
+						{registerError && (
+							<div className="rounded-lg border-2 border-red-200 bg-red-50 p-4">
+								<div className="font-medium text-red-700 text-sm">
+									Registration Error: {registerError.message}
+								</div>
+							</div>
 						)}
-					</button>
+
+						{/* Requirements */}
+						{!address && (
+							<div className="rounded-lg border-2 border-gray-200 bg-gray-50 p-4 text-center">
+								<div className="font-medium text-gray-600 text-sm">
+									Connect your wallet to register a subdomain
+								</div>
+							</div>
+						)}
+					</>
 				)}
 
-				{/* Status Messages - Direct from mutations */}
-				{registerError && (
-					<div className="rounded-lg border-2 border-red-200 bg-red-50 p-4">
-						<div className="font-medium text-red-700 text-sm">
-							Registration Error: {registerError.message}
+				{/* Phase 2: Set Primary Name */}
+				{currentPhase === 'setPrimary' && (
+					<>
+						<div className="text-center space-y-4">
+							<div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-green-100">
+								<div className="h-8 w-8 rounded-lg bg-green-500" />
+							</div>
+							<div>
+								<div className="text-2xl font-bold text-gray-900 mb-2">
+									{registeredData?.label}.catmisha.eth
+								</div>
+								<div className="text-green-600 font-medium text-sm mb-4">
+									✅ Successfully registered!
+								</div>
+								<p className="text-gray-600 max-w-md mx-auto">
+									Almost done! Set this as your primary name to activate your identity on the Base network.
+								</p>
+							</div>
+						</div>
+
+						<button
+							type="button"
+							onClick={handleSetPrimary}
+							disabled={isSettingPrimary}
+							className="flex w-full items-center justify-center rounded-lg bg-blue-500 px-6 py-4 font-bold text-white transition-all duration-200 hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
+						>
+							{isSettingPrimary ? (
+								<div className="flex items-center space-x-2">
+									<Loader className="h-5 w-5" />
+									<span>Activating Username...</span>
+								</div>
+							) : (
+								"Activate as Primary Name"
+							)}
+						</button>
+
+						{primaryError && (
+							<div className="rounded-lg border-2 border-red-200 bg-red-50 p-4">
+								<div className="font-medium text-red-700 text-sm">
+									Activation Error: {primaryError.message}
+								</div>
+							</div>
+						)}
+					</>
+				)}
+
+				{/* Phase 3: Complete */}
+				{currentPhase === 'complete' && (
+					<div className="text-center space-y-4">
+						<div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-green-100">
+							<div className="h-8 w-8 rounded-lg bg-green-500" />
+						</div>
+						<div>
+							<h2 className="mb-2 font-bold text-2xl text-gray-900">
+								Username Setup Complete! 🎉
+							</h2>
+							<div className="text-xl font-bold text-green-600 mb-2">
+								{registeredData?.label}.catmisha.eth
+							</div>
+							<p className="text-gray-600">
+								Is now your primary name on Base!
+							</p>
+						</div>
+						<div className="text-sm text-gray-500">
+							Continuing to profile setup...
 						</div>
 					</div>
 				)}
 
-				{primaryError && (
-					<div className="rounded-lg border-2 border-red-200 bg-red-50 p-4">
-						<div className="font-medium text-red-700 text-sm">
-							Primary Name Error: {primaryError.message}
-						</div>
-					</div>
-				)}
-
-				{/* Registration Success */}
-				{registerSuccess && registeredData && (
-					<div className="rounded-lg border-2 border-green-200 bg-green-50 p-4">
-						<div className="font-medium text-green-700 text-sm">
-							✅ Successfully registered {debouncedLabel}!
-						</div>
-						<div className="mt-1 text-green-600 text-xs">
-							Click the button above to set it as your primary name on Base.
-						</div>
-					</div>
-				)}
-
-				{/* Primary Name Success */}
-				{primarySuccess && (
-					<div className="rounded-lg border-2 border-green-200 bg-green-50 p-4">
-						<div className="font-medium text-green-700 text-sm">
-							✅ Primary name set successfully! It may take a few moments to
-							update.
-						</div>
-					</div>
-				)}
-
-				{/* Requirements */}
-				{!address && (
-					<div className="rounded-lg border-2 border-gray-200 bg-gray-50 p-4 text-center">
-						<div className="font-medium text-gray-600 text-sm">
-							Connect your wallet to register a subdomain
-						</div>
-					</div>
-				)}
 			</div>
 		</div>
 	);

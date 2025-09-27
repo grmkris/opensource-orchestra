@@ -7,13 +7,13 @@ import { GiftPopover } from "@/components/ens/GiftPopover";
 export default function Home() {
 	const router = useRouter();
 
-	// Artist data positioned precisely on music stands in pit.png
+	// Artist data positioned precisely on visible music stands in pit.png
 	const pendingArtists = [
-		{ id: "artist1.eth", name: "DJ Crypto", x: 20, y: 48 },        // Front left stand
-		{ id: "artist2.eth", name: "The Degens", x: 50, y: 52 },       // Front center stand
-		{ id: "artist3.eth", name: "NFT Beats", x: 80, y: 48 },        // Front right stand
-		{ id: "artist4.eth", name: "Web3 Symphony", x: 35, y: 38 },    // Back left stand
-		{ id: "artist5.eth", name: "Blockchain Band", x: 65, y: 38 },  // Back right stand
+		{ id: "artist1.eth", name: "DJ Crypto", x: 35, y: 68 },        // Left-center front stand
+		{ id: "artist2.eth", name: "The Degens", x: 50, y: 70 },       // Center front stand
+		{ id: "artist3.eth", name: "NFT Beats", x: 65, y: 68 },        // Right-center front stand
+		{ id: "artist4.eth", name: "Web3 Symphony", x: 45, y: 57 },    // Back center-left stand
+		{ id: "artist5.eth", name: "Blockchain Band", x: 55, y: 57 },  // Back center-right stand
 	];
 
 	const handleArtistClick = (artistId: string) => {
@@ -38,7 +38,7 @@ export default function Home() {
 					<div className="-translate-x-[3%] relative h-[32%] w-[42%] transform">
 						<iframe
 							className="h-full w-full rounded-lg border-0 shadow-2xl"
-							src="https://www.youtube.com/embed/o_N5JQYHJXk?si=x-C2UzriyIlbyxSX&amp;controls=0&autoplay=1&loop=1&playlist=o_N5JQYHJXk&modestbranding=1&rel=0&showinfo=0&disablekb=1&fs=0&iv_load_policy=3&playsinline=1&enablejsapi=0&autohide=1"
+							src="https://www.youtube.com/embed/o_N5JQYHJXk?si=x-C2UzriyIlbyxSX&amp;controls=0&autoplay=0&loop=1&playlist=o_N5JQYHJXk&modestbranding=1&rel=0&showinfo=0&disablekb=1&fs=0&iv_load_policy=3&playsinline=1&enablejsapi=0&autohide=1"
 							title="YouTube video player"
 							frameBorder="0"
 							allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"

@@ -2,16 +2,25 @@
 
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 import { getAddress } from "viem";
 import { useAccount } from "wagmi";
 import { SubdomainProfile } from "@/components/ens/SubdomainProfile";
 import { SubdomainRegistration } from "@/components/ens/SubdomainRegistration";
+import { OnboardingProgress } from "@/components/ens/OnboardingProgress";
+import { StepWallet } from "@/components/ens/onboarding/StepWallet";
+import { StepBasicInfo } from "@/components/ens/onboarding/StepBasicInfo";
+import { StepVisuals } from "@/components/ens/onboarding/StepVisuals";
+import { StepSocials } from "@/components/ens/onboarding/StepSocials";
 import { Loader } from "@/components/loader";
 import { useEnsName } from "@/hooks/useEnsName";
 import { ENS_CHAIN } from "@/lib/ens/ens-contracts";
 
 export default function ENSPage() {
 	const { address } = useAccount();
+	const [currentStep, setCurrentStep] = useState(0);
+	const [isOnboarding, setIsOnboarding] = useState(true);
+	
 	const userSubdomain = useEnsName({
 		address: getAddress(
 			address || "0x0000000000000000000000000000000000000000",
@@ -19,6 +28,40 @@ export default function ENSPage() {
 		l1ChainId: 1,
 		l2ChainId: ENS_CHAIN.id,
 	});
+
+	const steps = [
+		{ id: "wallet", title: "Connect Wallet", required: true },
+		{ id: "username", title: "Choose Username", required: true },
+		{ id: "basic", title: "Basic Info", required: false },
+		{ id: "visuals", title: "Profile Images", required: false },
+		{ id: "socials", title: "Social Links", required: false },
+	];
+
+	const handleNext = () => {
+		if (currentStep < steps.length - 1) {
+			setCurrentStep(prev => prev + 1);
+		} else {
+			// Onboarding complete
+			setIsOnboarding(false);
+		}
+	};
+
+	const handleSkip = () => {
+		if (steps[currentStep]?.required) {
+			return; // Cannot skip required steps
+		}
+		handleNext();
+	};
+
+	// Auto-advance from wallet step when connected
+	const handleWalletConnected = () => {
+		setCurrentStep(1);
+	};
+
+	// Check if user already has a subdomain and should skip onboarding
+	if (userSubdomain.data && isOnboarding) {
+		setIsOnboarding(false);
+	}
 
 	if (userSubdomain.isLoading) {
 		return (
@@ -34,6 +77,72 @@ export default function ENSPage() {
 		);
 	}
 
+	// Show existing profile if user has subdomain and not in onboarding mode
+	if (userSubdomain.data && !isOnboarding) {
+		return (
+			<div
+				className="min-h-screen bg-white"
+				style={{ fontFamily: "var(--font-roboto)" }}
+			>
+				<div className="container mx-auto max-w-4xl px-4 py-8">
+					<div className="space-y-8">
+						{/* Back to Home Button */}
+						<div className="flex justify-start">
+							<Link href="/">
+								<button
+									type="button"
+									className="flex items-center space-x-2 rounded-lg border-2 border-gray-200 px-4 py-2 text-gray-600 transition-all duration-200 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600"
+								>
+									<ArrowLeft className="h-4 w-4" />
+									<span className="font-medium">Back to Orchestra</span>
+								</button>
+							</Link>
+						</div>
+
+						<SubdomainProfile ensName={userSubdomain.data} />
+					</div>
+				</div>
+			</div>
+		);
+	}
+
+	// Render current onboarding step
+	const renderCurrentStep = () => {
+		switch (currentStep) {
+			case 0:
+				return <StepWallet onNext={handleWalletConnected} />;
+			case 1:
+				return <SubdomainRegistration onSuccess={handleNext} />;
+			case 2:
+				return (
+					<StepBasicInfo
+						ensName={userSubdomain.data || ""}
+						onNext={handleNext}
+						onSkip={handleSkip}
+					/>
+				);
+			case 3:
+				return (
+					<StepVisuals
+						ensName={userSubdomain.data || ""}
+						onNext={handleNext}
+						onSkip={handleSkip}
+					/>
+				);
+			case 4:
+				return (
+					<StepSocials
+						ensName={userSubdomain.data || ""}
+						onNext={handleNext}
+						onSkip={handleSkip}
+					/>
+				);
+			default:
+				return null;
+		}
+	};
+
+	// Onboarding flow
 	return (
 		<div
 			className="min-h-screen bg-white"
@@ -59,17 +168,17 @@ export default function ENSPage() {
 						<div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-100">
 							<div className="h-8 w-8 rounded-lg bg-blue-500" />
 						</div>
-						<h1 className="font-bold text-4xl text-gray-900">ENS Subdomains</h1>
+						<h1 className="font-bold text-4xl text-gray-900">Opensource Orchestra PIT</h1>
 						<p className="mx-auto max-w-2xl text-gray-600 text-lg">
-							Your decentralized identity on the Open Source Orchestra platform
+							Create your decentralized identity
 						</p>
 					</div>
 
-					{userSubdomain.data && (
-						<SubdomainProfile ensName={userSubdomain.data} />
-					)}
+					{/* Progress Indicator */}
+					<OnboardingProgress steps={steps} currentStep={currentStep} />
 
-					{!userSubdomain.data && <SubdomainRegistration />}
+					{/* Current Step */}
+					{renderCurrentStep()}
 				</div>
 			</div>
 		</div>

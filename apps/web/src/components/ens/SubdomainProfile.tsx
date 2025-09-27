@@ -239,6 +239,22 @@ export function SubdomainProfile({ ensName }: { ensName: string }) {
                 placeholder="username"
                 isOwner={isOwner}
               />
+
+              <ENSTextField
+                ensName={ensName}
+                recordKey="social.farcaster"
+                label="Farcaster"
+                placeholder="username or FID"
+                isOwner={isOwner}
+              />
+
+              <ENSTextField
+                ensName={ensName}
+                recordKey="social.lens"
+                label="Lens Protocol"
+                placeholder="username.lens"
+                isOwner={isOwner}
+              />
             </div>
           </div>
 

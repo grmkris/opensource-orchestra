@@ -31,6 +31,16 @@ export const TEXT_RECORD_KEYS = {
 	GITHUB: "com.github",
 	DISCORD: "com.discord",
 	TELEGRAM: "com.telegram",
+	FARCASTER: "social.farcaster",
+	LENS: "social.lens",
+	ART1: "art1",
+	ART2: "art2",
+	ART3: "art3",
+	ART4: "art4",
+	ART5: "art5",
+	ART6: "art6",
+	ART7: "art7",
+	ART8: "art8",
 } as const;
 
 export type TextRecordKey =
