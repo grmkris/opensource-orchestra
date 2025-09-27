@@ -1,4 +1,3 @@
-import { encodePacked, keccak256, namehash } from "viem";
 import { base } from "viem/chains";
 
 // Contract addresses on Base
@@ -20,23 +19,6 @@ export const PARENT_DOMAIN = "catmisha.eth" as const;
 
 // Chain configuration
 export const ENS_CHAIN = base;
-
-// Base coinType for ENSIP-11 (0x80000000 | 8453)
-export const BASE_COIN_TYPE = 2147492101;
-
-// Helper functions
-export function getFullSubdomainName(label: string): string {
-	return `${label}.${PARENT_DOMAIN}`;
-}
-
-export function getSubdomainNamehash(label: string): `0x${string}` {
-	const fullName = getFullSubdomainName(label);
-	return namehash(fullName);
-}
-
-export function getLabelHash(label: string): `0x${string}` {
-	return keccak256(encodePacked(["string"], [label]));
-}
 
 // Common text record keys
 export const TEXT_RECORD_KEYS = {

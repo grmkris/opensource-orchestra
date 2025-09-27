@@ -12,15 +12,8 @@ import {
 	useSubdomainAvailability,
 } from "@/hooks/useRegisterSubdomain";
 import { useSetPrimaryName } from "@/hooks/useSetPrimaryName";
-import { getFullSubdomainName } from "@/lib/contracts/ens-contracts";
 
-interface SubdomainRegistrationProps {
-	onSuccess?: (label: string, fullName: string) => void;
-}
-
-export function SubdomainRegistration({
-	onSuccess,
-}: SubdomainRegistrationProps) {
+export function SubdomainRegistration() {
 	const [label, setLabel] = useState("");
 	const [debouncedLabel, setDebouncedLabel] = useState("");
 	const { address } = useAccount();
@@ -35,12 +28,9 @@ export function SubdomainRegistration({
 	}, [label]);
 
 	// Check availability
-	const {
-		isAvailable,
-		isLoading: availabilityLoading,
-		fullName,
-		isValidLength,
-	} = useSubdomainAvailability(debouncedLabel);
+	const domainAvailability = useSubdomainAvailability({
+		label: debouncedLabel,
+	});
 
 	// Mutations - clean and simple!
 	const registerMutation = useRegisterSubdomain();
@@ -60,32 +50,22 @@ export function SubdomainRegistration({
 		return (
 			address &&
 			label.length >= 3 &&
-			isValidLength &&
-			isAvailable &&
-			!availabilityLoading &&
+			domainAvailability.data &&
+			!domainAvailability.isLoading &&
 			!isRegistering
 		);
 	}, [
 		address,
 		label,
-		isValidLength,
-		isAvailable,
-		availabilityLoading,
 		isRegistering,
+		domainAvailability.data,
+		domainAvailability.isLoading,
 	]);
 
 	const handleRegister = () => {
 		if (!address || !canRegister) return;
 
-		registerMutation.mutate(
-			{ label, owner: address },
-			{
-				onSuccess: (data) => {
-					onSuccess?.(data.label, getFullSubdomainName(data.label));
-					setLabel(""); // Clear input
-				},
-			},
-		);
+		registerMutation.mutate({ label, owner: address });
 	};
 
 	const handleSetPrimary = () => {
@@ -105,11 +85,11 @@ export function SubdomainRegistration({
 		if (!label) return null;
 		if (label.length < 3)
 			return { status: "error", message: "Minimum 3 characters" };
-		if (availabilityLoading)
+		if (domainAvailability.isLoading)
 			return { status: "loading", message: "Checking..." };
-		if (!isAvailable && debouncedLabel === label)
+		if (!domainAvailability.data && debouncedLabel === label)
 			return { status: "error", message: "Already taken" };
-		if (isAvailable && debouncedLabel === label)
+		if (domainAvailability.data && debouncedLabel === label)
 			return { status: "success", message: "Available!" };
 		return null;
 	};
@@ -165,9 +145,10 @@ export function SubdomainRegistration({
 					)}
 
 					{/* Preview */}
-					{label && isValidLength && (
+					{label && domainAvailability.data && (
 						<div className="text-muted-foreground text-sm">
-							Your subdomain: <span className="font-mono">{fullName}</span>
+							Your subdomain:{" "}
+							<span className="font-mono">{debouncedLabel}</span>
 						</div>
 					)}
 				</div>
@@ -202,7 +183,7 @@ export function SubdomainRegistration({
 								<span>Setting as primary name...</span>
 							</div>
 						) : (
-							`Set ${getFullSubdomainName(registeredData.label)} as Primary Name on Base`
+							`Set ${debouncedLabel} as Primary Name on Base`
 						)}
 					</Button>
 				)}
@@ -223,8 +204,7 @@ export function SubdomainRegistration({
 				{/* Registration Success */}
 				{registerSuccess && registeredData && (
 					<div className="text-green-600 text-sm">
-						✅ Successfully registered{" "}
-						{getFullSubdomainName(registeredData.label)}!
+						✅ Successfully registered {debouncedLabel}!
 						<div className="mt-1 text-muted-foreground">
 							Click the button above to set it as your primary name on Base.
 						</div>

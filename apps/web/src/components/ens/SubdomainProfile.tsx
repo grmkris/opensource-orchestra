@@ -9,79 +9,34 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-	useEnhancedPrimaryName,
-	useSubdomainData,
-} from "@/hooks/useENSSubdomain";
+import { useSubdomainData } from "@/hooks/useENSSubdomain";
 import { useSetPrimaryName } from "@/hooks/useSetPrimaryName";
-import { useUpdateProfile } from "@/hooks/useSetTextRecords";
+import { useSetTextRecords } from "@/hooks/useSetTextRecords";
 
-interface SubdomainProfileProps {
-	label: string;
-	onProfileUpdate?: () => void;
-}
-
-export function SubdomainProfile({
-	label,
-	onProfileUpdate,
-}: SubdomainProfileProps) {
+export function SubdomainProfile({ ensName }: { ensName: string }) {
 	const { address } = useAccount();
-	const { subdomain, isLoading } = useSubdomainData(label);
+	const subdomainData = useSubdomainData(ensName);
 	const [isEditing, setIsEditing] = useState(false);
 	const [copiedField, setCopiedField] = useState<string | null>(null);
+	const setPrimaryName = useSetPrimaryName();
 
-	// Primary name management
-	const {
-		baseName,
-		hasBasePrimary,
-		isLoading: primaryLoading,
-	} = useEnhancedPrimaryName(address);
-
-	const {
-		mutateAsync: setPrimaryName,
-		isPending: settingPrimary,
-		isSuccess: primarySet,
-		error: primaryError,
-	} = useSetPrimaryName();
-
-	const isCurrentlyPrimary = hasBasePrimary && baseName === subdomain?.name;
+	const isCurrentlyPrimary = subdomainData?.subdomain;
 
 	// Form state for editing
 	const [formData, setFormData] = useState({
-		avatar: "",
-		description: "",
-		display: "",
-		twitter: "",
-		github: "",
-		discord: "",
-		telegram: "",
-		url: "",
-		email: "",
+		avatar: subdomainData?.subdomain?.avatar || "",
+		description: subdomainData?.subdomain?.description || "",
+		display: subdomainData?.subdomain?.display || "",
+		twitter: subdomainData?.subdomain?.twitter || "",
+		github: subdomainData?.subdomain?.github || "",
+		discord: subdomainData?.subdomain?.discord || "",
+		telegram: subdomainData?.subdomain?.telegram || "",
+		url: subdomainData?.subdomain?.url || "",
+		email: subdomainData?.subdomain?.email || "",
 	});
 
-	const { updateProfile, isPending, isConfirmed } = useUpdateProfile({
-		onSuccess: () => {
-			setIsEditing(false);
-			onProfileUpdate?.();
-		},
-	});
+	const setTextRecords = useSetTextRecords();
 
-	// Initialize form data when subdomain loads
-	useState(() => {
-		if (subdomain) {
-			setFormData({
-				avatar: subdomain.avatar || "",
-				description: subdomain.description || "",
-				display: subdomain.display || "",
-				twitter: subdomain.twitter || "",
-				github: subdomain.github || "",
-				discord: subdomain.discord || "",
-				telegram: subdomain.telegram || "",
-				url: subdomain.url || "",
-				email: subdomain.email || "",
-			});
-		}
-	});
 	const avatarId = useId();
 	const displayId = useId();
 	const descriptionId = useId();
@@ -103,34 +58,73 @@ export function SubdomainProfile({
 	};
 
 	const handleSave = () => {
-		if (!label) return;
-		updateProfile(label, formData);
+		setTextRecords.mutate({
+			label: ensName,
+			key: "avatar",
+			value: formData.avatar,
+		});
+		setTextRecords.mutate({
+			label: ensName,
+			key: "description",
+			value: formData.description,
+		});
+		setTextRecords.mutate({
+			label: ensName,
+			key: "display",
+			value: formData.display,
+		});
+		setTextRecords.mutate({
+			label: ensName,
+			key: "com.twitter",
+			value: formData.twitter,
+		});
+		setTextRecords.mutate({
+			label: ensName,
+			key: "com.github",
+			value: formData.github,
+		});
+		setTextRecords.mutate({
+			label: ensName,
+			key: "com.discord",
+			value: formData.discord,
+		});
+		setTextRecords.mutate({
+			label: ensName,
+			key: "com.telegram",
+			value: formData.telegram,
+		});
+		setTextRecords.mutate({ label: ensName, key: "url", value: formData.url });
+		setTextRecords.mutate({
+			label: ensName,
+			key: "email",
+			value: formData.email,
+		});
 	};
 
 	const handleCancel = () => {
 		// Reset form data
-		if (subdomain) {
+		if (subdomainData?.subdomain) {
 			setFormData({
-				avatar: subdomain.avatar || "",
-				description: subdomain.description || "",
-				display: subdomain.display || "",
-				twitter: subdomain.twitter || "",
-				github: subdomain.github || "",
-				discord: subdomain.discord || "",
-				telegram: subdomain.telegram || "",
-				url: subdomain.url || "",
-				email: subdomain.email || "",
+				avatar: subdomainData.subdomain.avatar || "",
+				description: subdomainData.subdomain.description || "",
+				display: subdomainData.subdomain.display || "",
+				twitter: subdomainData.subdomain.twitter || "",
+				github: subdomainData.subdomain.github || "",
+				discord: subdomainData.subdomain.discord || "",
+				telegram: subdomainData.subdomain.telegram || "",
+				url: subdomainData.subdomain.url || "",
+				email: subdomainData.subdomain.email || "",
 			});
 		}
 		setIsEditing(false);
 	};
 
 	const handleSetPrimaryName = () => {
-		if (!label) return;
-		setPrimaryName(label);
+		if (!ensName) return;
+		setPrimaryName.mutate(ensName);
 	};
 
-	if (isLoading) {
+	if (subdomainData?.isLoading) {
 		return (
 			<Card className="p-6">
 				<div className="flex items-center justify-center">
@@ -141,7 +135,7 @@ export function SubdomainProfile({
 		);
 	}
 
-	if (!subdomain) {
+	if (!subdomainData?.subdomain) {
 		return (
 			<Card className="p-6">
 				<div className="text-center text-muted-foreground">
@@ -151,7 +145,8 @@ export function SubdomainProfile({
 		);
 	}
 
-	const isOwner = subdomain.address?.toLowerCase() === address?.toLowerCase();
+	const isOwner =
+		subdomainData.subdomain.address?.toLowerCase() === address?.toLowerCase();
 
 	return (
 		<Card className="p-6">
@@ -160,7 +155,9 @@ export function SubdomainProfile({
 				<div className="flex items-center justify-between">
 					<div>
 						<div className="flex items-center space-x-2">
-							<h2 className="font-semibold text-xl">{subdomain.name}</h2>
+							<h2 className="font-semibold text-xl">
+								{subdomainData.subdomain.name}
+							</h2>
 							{isCurrentlyPrimary && (
 								<span className="rounded-full bg-green-100 px-2 py-1 text-green-800 text-xs">
 									Primary Name
@@ -168,11 +165,13 @@ export function SubdomainProfile({
 							)}
 						</div>
 						<div className="flex items-center space-x-2 text-muted-foreground text-sm">
-							<span>Owner: {subdomain.address}</span>
+							<span>Owner: {subdomainData.subdomain.address}</span>
 							<Button
 								variant="ghost"
 								size="sm"
-								onClick={() => handleCopy(subdomain.address!, "address")}
+								onClick={() =>
+									handleCopy(subdomainData.subdomain?.address || "", "address")
+								}
 								className="h-6 w-6 p-0"
 							>
 								{copiedField === "address" ? (
@@ -190,9 +189,9 @@ export function SubdomainProfile({
 								variant="outline"
 								size="sm"
 								onClick={handleSetPrimaryName}
-								disabled={settingPrimary || primaryLoading}
+								disabled={setPrimaryName.isPending || subdomainData?.isLoading}
 							>
-								{settingPrimary ? (
+								{setPrimaryName.isPending ? (
 									<div className="flex items-center space-x-2">
 										<Loader className="h-3 w-3" />
 										<span>Setting...</span>
@@ -209,24 +208,24 @@ export function SubdomainProfile({
 				</div>
 
 				{/* Primary Name Status & Errors */}
-				{primaryError && (
+				{setPrimaryName.error && (
 					<div className="text-red-600 text-sm">
-						Error setting primary name: {primaryError.message}
+						Error setting primary name: {setPrimaryName.error.message}
 					</div>
 				)}
 
-				{primarySet && (
+				{setPrimaryName.isSuccess && (
 					<div className="text-green-600 text-sm">
 						Primary name set successfully! It may take a few moments to update.
 					</div>
 				)}
 
 				{/* Avatar */}
-				{subdomain.avatar && (
+				{subdomainData.subdomain.avatar && (
 					<div className="flex justify-center">
 						<Image
-							src={subdomain.avatar}
-							alt={`${subdomain.name} avatar`}
+							src={subdomainData.subdomain.avatar}
+							alt={`${subdomainData.subdomain.name} avatar`}
 							width={96}
 							height={96}
 							className="h-24 w-24 rounded-full object-cover"
@@ -360,8 +359,8 @@ export function SubdomainProfile({
 						</div>
 
 						<div className="flex space-x-2">
-							<Button onClick={handleSave} disabled={isPending}>
-								{isPending ? (
+							<Button onClick={handleSave} disabled={setTextRecords.isPending}>
+								{setTextRecords.isPending ? (
 									<div className="flex items-center space-x-2">
 										<Loader className="h-4 w-4" />
 										<span>Saving...</span>
@@ -373,13 +372,13 @@ export function SubdomainProfile({
 							<Button
 								variant="outline"
 								onClick={handleCancel}
-								disabled={isPending}
+								disabled={setTextRecords.isPending}
 							>
 								Cancel
 							</Button>
 						</div>
 
-						{isConfirmed && (
+						{setTextRecords.isSuccess && (
 							<div className="text-green-600 text-sm">
 								Profile updated successfully!
 							</div>
@@ -388,55 +387,59 @@ export function SubdomainProfile({
 				) : (
 					<div className="space-y-4">
 						{/* Display Mode */}
-						{subdomain.display && (
+						{subdomainData.subdomain.display && (
 							<div>
-								<h3 className="font-medium">{subdomain.display}</h3>
+								<h3 className="font-medium">
+									{subdomainData.subdomain.display}
+								</h3>
 							</div>
 						)}
 
-						{subdomain.description && (
+						{subdomainData.subdomain.description && (
 							<div>
-								<p className="text-muted-foreground">{subdomain.description}</p>
+								<p className="text-muted-foreground">
+									{subdomainData.subdomain.description}
+								</p>
 							</div>
 						)}
 
 						{/* Social Links */}
 						<div className="grid grid-cols-2 gap-2 text-sm">
-							{subdomain.twitter && (
+							{subdomainData.subdomain.twitter && (
 								<div className="flex items-center space-x-2">
 									<span className="text-muted-foreground">Twitter:</span>
 									<a
-										href={`https://twitter.com/${subdomain.twitter}`}
+										href={`https://twitter.com/${subdomainData.subdomain.twitter}`}
 										target="_blank"
 										rel="noopener noreferrer"
 										className="flex items-center space-x-1 text-blue-600 hover:underline"
 									>
-										<span>@{subdomain.twitter}</span>
+										<span>@{subdomainData.subdomain.twitter}</span>
 										<ExternalLinkIcon className="h-3 w-3" />
 									</a>
 								</div>
 							)}
 
-							{subdomain.github && (
+							{subdomainData.subdomain.github && (
 								<div className="flex items-center space-x-2">
 									<span className="text-muted-foreground">GitHub:</span>
 									<a
-										href={`https://github.com/${subdomain.github}`}
+										href={`https://github.com/${subdomainData.subdomain.github}`}
 										target="_blank"
 										rel="noopener noreferrer"
 										className="flex items-center space-x-1 text-blue-600 hover:underline"
 									>
-										<span>{subdomain.github}</span>
+										<span>{subdomainData.subdomain.github}</span>
 										<ExternalLinkIcon className="h-3 w-3" />
 									</a>
 								</div>
 							)}
 
-							{subdomain.url && (
+							{subdomainData.subdomain.url && (
 								<div className="flex items-center space-x-2">
 									<span className="text-muted-foreground">Website:</span>
 									<a
-										href={subdomain.url}
+										href={subdomainData.subdomain.url}
 										target="_blank"
 										rel="noopener noreferrer"
 										className="flex items-center space-x-1 text-blue-600 hover:underline"
@@ -447,14 +450,14 @@ export function SubdomainProfile({
 								</div>
 							)}
 
-							{subdomain.email && (
+							{subdomainData.subdomain.email && (
 								<div className="flex items-center space-x-2">
 									<span className="text-muted-foreground">Email:</span>
 									<a
-										href={`mailto:${subdomain.email}`}
+										href={`mailto:${subdomainData.subdomain.email}`}
 										className="text-blue-600 hover:underline"
 									>
-										{subdomain.email}
+										{subdomainData.subdomain.email}
 									</a>
 								</div>
 							)}
@@ -467,7 +470,9 @@ export function SubdomainProfile({
 					<Button
 						variant="ghost"
 						size="sm"
-						onClick={() => handleCopy(subdomain.name, "name")}
+						onClick={() =>
+							handleCopy(subdomainData.subdomain?.name || "", "name")
+						}
 					>
 						{copiedField === "name" ? (
 							<CheckIcon className="mr-1 h-4 w-4" />
@@ -478,7 +483,7 @@ export function SubdomainProfile({
 					</Button>
 
 					<a
-						href={`https://basescan.org/address/${subdomain.address}`}
+						href={`https://basescan.org/address/${subdomainData.subdomain?.address}`}
 						target="_blank"
 						rel="noopener noreferrer"
 						className="flex items-center space-x-1 hover:underline"

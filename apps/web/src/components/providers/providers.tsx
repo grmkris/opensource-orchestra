@@ -1,17 +1,12 @@
 "use client";
 
+import { Toaster } from "../ui/sonner";
 import { ThemeProvider } from "./theme-provider";
-import { Toaster } from "./ui/sonner";
-import dynamic from 'next/dynamic';
-
-const WalletConnectProvider = dynamic(
-  () => import('./providers/WalletConnectProvider'),
-  { ssr: false }
-);
+import { Web3Provider } from "./Web3Provider";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
 	return (
-		<WalletConnectProvider>
+		<Web3Provider>
 			<ThemeProvider
 				attribute="class"
 				defaultTheme="system"
@@ -21,6 +16,6 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 				{children}
 				<Toaster richColors />
 			</ThemeProvider>
-		</WalletConnectProvider>
+		</Web3Provider>
 	);
 }

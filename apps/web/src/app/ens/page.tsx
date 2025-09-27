@@ -8,10 +8,9 @@ import { useUserSubdomain } from "@/hooks/useENSSubdomain";
 
 export default function ENSPage() {
 	const { address } = useAccount();
-	const { hasSubdomain, isLoading } = useUserSubdomain(address);
+	const userSubdomain = useUserSubdomain(address);
 
-
-	if (isLoading) {
+	if (userSubdomain.isLoading) {
 		return (
 			<div className="container mx-auto max-w-2xl px-4 py-8">
 				<div className="text-center">
@@ -36,10 +35,7 @@ export default function ENSPage() {
 					</p>
 				</div>
 
-				<SubdomainRegistration onSuccess={() => {
-						// Force refresh of subdomain data
-						console.log("Subdomain registration successful");
-					}} />
+				<SubdomainRegistration />
 
 				{/* Info Section */}
 				<Card className="bg-muted/50 p-6">
@@ -75,7 +71,8 @@ export default function ENSPage() {
 					<p>Powered by Durin L2 ENS infrastructure</p>
 					<p>Smart contracts deployed on Base • L1 resolution via CCIP Read</p>
 					<p className="text-xs">
-						Connected: {address?.slice(0, 6)}...{address?.slice(-4)}
+						Connected: {userSubdomain.subdomain?.address?.slice(0, 6)}...
+						{userSubdomain.subdomain?.address?.slice(-4)}
 					</p>
 				</div>
 			</div>
