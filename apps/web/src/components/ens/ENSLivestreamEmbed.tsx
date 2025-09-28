@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
 import { ExternalLinkIcon, PlayIcon } from "lucide-react";
-import { parseLivestreamUrl, getCurrentDomain } from "@/lib/utils/livestream";
+import { useMemo } from "react";
+import { getCurrentDomain, parseLivestreamUrl } from "@/lib/utils/livestream";
 
 interface ENSLivestreamEmbedProps {
 	url: string;
@@ -18,7 +18,7 @@ export function ENSLivestreamEmbed({
 	showPreview = false,
 }: ENSLivestreamEmbedProps) {
 	const domain = getCurrentDomain();
-	
+
 	const livestreamInfo = useMemo(() => {
 		return parseLivestreamUrl(url, domain);
 	}, [url, domain]);
@@ -33,7 +33,9 @@ export function ENSLivestreamEmbed({
 		return null;
 	}
 
-	const canEmbed = livestreamInfo.platform === "twitch" || livestreamInfo.platform === "youtube";
+	const canEmbed =
+		livestreamInfo.platform === "twitch" ||
+		livestreamInfo.platform === "youtube";
 
 	// If we can embed, show the iframe
 	if (canEmbed && livestreamInfo.embedUrl) {
@@ -56,7 +58,13 @@ export function ENSLivestreamEmbed({
 			>
 				{/* Header */}
 				<div style={{ padding: "28px 32px 16px" }}>
-					<div style={{ display: "flex", alignItems: "center", marginBottom: "14px" }}>
+					<div
+						style={{
+							display: "flex",
+							alignItems: "center",
+							marginBottom: "14px",
+						}}
+					>
 						<span
 							style={{
 								display: "block",
@@ -135,10 +143,20 @@ export function ENSLivestreamEmbed({
 								flexDirection: "column",
 							}}
 						>
-							<PlayIcon size={48} style={{ marginBottom: "12px", opacity: 0.8 }} />
+							<PlayIcon
+								size={48}
+								style={{ marginBottom: "12px", opacity: 0.8 }}
+							/>
 							<div style={{ textAlign: "center" }}>
-								<div style={{ fontSize: "18px", fontWeight: "600", marginBottom: "4px" }}>
-									{livestreamInfo.platform === "twitch" ? "Twitch" : "YouTube"} Stream Ready
+								<div
+									style={{
+										fontSize: "18px",
+										fontWeight: "600",
+										marginBottom: "4px",
+									}}
+								>
+									{livestreamInfo.platform === "twitch" ? "Twitch" : "YouTube"}{" "}
+									Stream Ready
 								</div>
 								<div style={{ fontSize: "14px", opacity: 0.8 }}>
 									Toggle streaming on to go live
@@ -163,16 +181,30 @@ export function ENSLivestreamEmbed({
 
 				{/* Footer */}
 				<div style={{ padding: "16px 32px 28px" }}>
-					<div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
+					<div
+						style={{
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "space-between",
+							flexWrap: "wrap",
+							gap: "12px",
+						}}
+					>
 						<div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-							<span style={{ fontSize: "14px", fontWeight: "500", color: "#2f3044cc" }}>
+							<span
+								style={{
+									fontSize: "14px",
+									fontWeight: "500",
+									color: "#2f3044cc",
+								}}
+							>
 								Platform:
 							</span>
 							<span style={{ fontSize: "14px", fontWeight: "600" }}>
 								{livestreamInfo.platform === "twitch" ? "Twitch" : "YouTube"}
 							</span>
 						</div>
-						
+
 						<a
 							href={url}
 							target="_blank"
@@ -197,7 +229,10 @@ export function ENSLivestreamEmbed({
 								e.currentTarget.style.backgroundColor = "transparent";
 							}}
 						>
-							<span>View on {livestreamInfo.platform === "twitch" ? "Twitch" : "YouTube"}</span>
+							<span>
+								View on{" "}
+								{livestreamInfo.platform === "twitch" ? "Twitch" : "YouTube"}
+							</span>
 							<ExternalLinkIcon size={14} />
 						</a>
 					</div>
@@ -225,7 +260,14 @@ export function ENSLivestreamEmbed({
 					marginBottom: "24px",
 				}}
 			>
-				<div style={{ display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "16px" }}>
+				<div
+					style={{
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "center",
+						marginBottom: "16px",
+					}}
+				>
 					<span
 						style={{
 							display: "block",
@@ -283,11 +325,19 @@ export function ENSLivestreamEmbed({
 				>
 					<PlayIcon size={48} style={{ marginBottom: "12px", opacity: 0.8 }} />
 					<div style={{ textAlign: "center" }}>
-						<div style={{ fontSize: "18px", fontWeight: "600", marginBottom: "4px" }}>
+						<div
+							style={{
+								fontSize: "18px",
+								fontWeight: "600",
+								marginBottom: "4px",
+							}}
+						>
 							External Stream
 						</div>
 						<div style={{ fontSize: "14px", opacity: 0.8 }}>
-							{showPreview ? "Stream will open on external platform" : "Click below to watch"}
+							{showPreview
+								? "Stream will open on external platform"
+								: "Click below to watch"}
 						</div>
 					</div>
 				</div>

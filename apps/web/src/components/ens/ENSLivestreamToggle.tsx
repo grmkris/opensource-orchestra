@@ -66,7 +66,7 @@ export function ENSLivestreamToggle({
 			// Don't allow enabling streaming without a URL
 			return;
 		}
-		
+
 		setIsSaving(true);
 		setValue("livestream.active", isStreaming ? "false" : "true");
 		setIsSaving(false);
@@ -75,7 +75,7 @@ export function ENSLivestreamToggle({
 	// Editable view for owners
 	return (
 		<div className="flex-1">
-			<Label htmlFor={fieldId} className="text-sm font-medium">
+			<Label htmlFor={fieldId} className="font-medium text-sm">
 				Streaming Status
 			</Label>
 			<div className="mt-2 flex items-center space-x-3">
@@ -90,7 +90,7 @@ export function ENSLivestreamToggle({
 							: "border-gray-300 bg-gray-200"
 					} ${
 						isSaving || (!livestreamUrl && !isStreaming)
-							? "opacity-50 cursor-not-allowed"
+							? "cursor-not-allowed opacity-50"
 							: "cursor-pointer"
 					}`}
 				>
@@ -102,7 +102,7 @@ export function ENSLivestreamToggle({
 				</button>
 				<span className="text-sm">
 					{isStreaming ? (
-						<span className="flex items-center text-red-600 font-medium">
+						<span className="flex items-center font-medium text-red-600">
 							<span className="mr-1 h-2 w-2 animate-pulse rounded-full bg-red-500" />
 							LIVE NOW
 						</span>
@@ -114,7 +114,7 @@ export function ENSLivestreamToggle({
 				</span>
 			</div>
 			{!livestreamUrl && (
-				<p className="mt-1 text-xs text-gray-500">
+				<p className="mt-1 text-gray-500 text-xs">
 					You need to add a livestream URL before you can go live
 				</p>
 			)}

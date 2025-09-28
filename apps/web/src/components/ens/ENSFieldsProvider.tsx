@@ -249,6 +249,8 @@ export function ENSFieldsProvider({
 		textQueries.art6.data,
 		textQueries.art7.data,
 		textQueries.art8.data,
+		textQueries[key as keyof typeof textQueries], // Handle other text records
+		textRecordKeys.forEach,
 	]);
 
 	// Check if there are any changes

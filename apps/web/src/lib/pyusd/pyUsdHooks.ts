@@ -118,7 +118,7 @@ export const usePyusdAllowance = (
 export const usePyusdApprove = () => {
 	const { writeContractAsync } = useWriteContract();
 	const publicClient = usePublicClient();
-  const queryClient = useQueryClient();
+	const queryClient = useQueryClient();
 	const approvePyusd = useMutation({
 		mutationFn: async (variables: { spender: Address; amount: bigint }) => {
 			if (!publicClient) {
@@ -138,7 +138,6 @@ export const usePyusdApprove = () => {
 
 			return waited;
 		},
-
 	});
 
 	return approvePyusd;

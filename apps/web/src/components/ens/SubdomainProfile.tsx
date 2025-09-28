@@ -11,9 +11,9 @@ import {
 } from "@/components/ens/ENSFieldsProvider";
 import { ENSGallerySection } from "@/components/ens/ENSGallerySection";
 import { ENSHeaderField } from "@/components/ens/ENSHeaderField";
-import { ENSTextField } from "@/components/ens/ENSTextField";
-import { ENSLivestreamToggle } from "@/components/ens/ENSLivestreamToggle";
 import { ENSLivestreamEmbed } from "@/components/ens/ENSLivestreamEmbed";
+import { ENSLivestreamToggle } from "@/components/ens/ENSLivestreamToggle";
+import { ENSTextField } from "@/components/ens/ENSTextField";
 import { Loader } from "@/components/loader";
 
 // Internal component that uses the ENS fields context
@@ -28,8 +28,9 @@ function SubdomainProfileContent({
 }) {
 	const [copiedField, setCopiedField] = useState<string | null>(null);
 	const [activeTab, _setActiveTab] = useState("profile");
-	const { saveAllFields, hasChanges, isSaving, saved, getValue } = useENSFields();
-	
+	const { saveAllFields, hasChanges, isSaving, saved, getValue } =
+		useENSFields();
+
 	// Get livestream data for preview
 	const livestreamUrl = getValue("livestream.url");
 	const isStreaming = getValue("livestream.active") === "true";
@@ -445,10 +446,7 @@ function SubdomainProfileContent({
 								/>
 
 								{isOwner && (
-									<ENSLivestreamToggle
-										isOwner={isOwner}
-										ensName={ensName}
-									/>
+									<ENSLivestreamToggle isOwner={isOwner} ensName={ensName} />
 								)}
 							</div>
 						</div>

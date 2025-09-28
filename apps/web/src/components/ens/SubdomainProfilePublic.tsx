@@ -27,9 +27,17 @@ const ENS_FIELDS: ENSField[] = [
 	{ key: "email", label: "Email", isEmail: true },
 	{ key: "com.twitter", label: "Twitter", prefix: "https://twitter.com/" },
 	{ key: "com.github", label: "GitHub", prefix: "https://github.com/" },
-	{ key: "com.discord", label: "Discord", prefix: "https://discord.com/users/" },
+	{
+		key: "com.discord",
+		label: "Discord",
+		prefix: "https://discord.com/users/",
+	},
 	{ key: "com.telegram", label: "Telegram", prefix: "https://t.me/" },
-	{ key: "social.farcaster", label: "Farcaster", prefix: "https://warpcast.com/" },
+	{
+		key: "social.farcaster",
+		label: "Farcaster",
+		prefix: "https://warpcast.com/",
+	},
 	{ key: "social.lens", label: "Lens Protocol", prefix: "https://hey.xyz/u/" },
 	{ key: "livestream.url", label: "Livestream", isUrl: true },
 ];
@@ -409,16 +417,18 @@ export function SubdomainProfilePublic({ ensName }: { ensName: string }) {
 
 					{/* Profile Information - Full Width */}
 					<div style={{ marginTop: "24px" }}>
-						{ENS_FIELDS.filter(field => field.key === "description").map(field => (
-							<div key={field.key} style={{ marginBottom: "24px" }}>
-								<ENSFieldDisplay ensName={ensName} field={field} />
-							</div>
-						))}
+						{ENS_FIELDS.filter((field) => field.key === "description").map(
+							(field) => (
+								<div key={field.key} style={{ marginBottom: "24px" }}>
+									<ENSFieldDisplay ensName={ensName} field={field} />
+								</div>
+							),
+						)}
 					</div>
 
 					{/* Contact & Social Links - Column Layout */}
-					<div 
-						style={{ 
+					<div
+						style={{
 							marginTop: "16px",
 							display: "grid",
 							gridTemplateColumns: "repeat(3, 1fr)",
@@ -428,17 +438,19 @@ export function SubdomainProfilePublic({ ensName }: { ensName: string }) {
 					>
 						{/* Contact Column */}
 						<div>
-							<h4 style={{ 
-								fontSize: "14px", 
-								fontWeight: "600", 
-								marginBottom: "8px",
-								color: "#374151"
-							}}>
+							<h4
+								style={{
+									fontSize: "14px",
+									fontWeight: "600",
+									marginBottom: "8px",
+									color: "#374151",
+								}}
+							>
 								Contact
 							</h4>
-							{ENS_FIELDS.filter(field => 
-								field.key === "url" || field.key === "email"
-							).map(field => (
+							{ENS_FIELDS.filter(
+								(field) => field.key === "url" || field.key === "email",
+							).map((field) => (
 								<div key={field.key} style={{ marginBottom: "8px" }}>
 									<ENSFieldDisplay ensName={ensName} field={field} />
 								</div>
@@ -447,20 +459,23 @@ export function SubdomainProfilePublic({ ensName }: { ensName: string }) {
 
 						{/* Dev & Social Column */}
 						<div>
-							<h4 style={{ 
-								fontSize: "14px", 
-								fontWeight: "600", 
-								marginBottom: "8px",
-								color: "#374151"
-							}}>
+							<h4
+								style={{
+									fontSize: "14px",
+									fontWeight: "600",
+									marginBottom: "8px",
+									color: "#374151",
+								}}
+							>
 								Dev & Social
 							</h4>
-							{ENS_FIELDS.filter(field => 
-								field.key === "com.twitter" || 
-								field.key === "com.github" ||
-								field.key === "com.discord" ||
-								field.key === "com.telegram"
-							).map(field => (
+							{ENS_FIELDS.filter(
+								(field) =>
+									field.key === "com.twitter" ||
+									field.key === "com.github" ||
+									field.key === "com.discord" ||
+									field.key === "com.telegram",
+							).map((field) => (
 								<div key={field.key} style={{ marginBottom: "8px" }}>
 									<ENSFieldDisplay ensName={ensName} field={field} />
 								</div>
@@ -469,18 +484,21 @@ export function SubdomainProfilePublic({ ensName }: { ensName: string }) {
 
 						{/* Web3 Social Column */}
 						<div>
-							<h4 style={{ 
-								fontSize: "14px", 
-								fontWeight: "600", 
-								marginBottom: "8px",
-								color: "#374151"
-							}}>
+							<h4
+								style={{
+									fontSize: "14px",
+									fontWeight: "600",
+									marginBottom: "8px",
+									color: "#374151",
+								}}
+							>
 								Web3 Social
 							</h4>
-							{ENS_FIELDS.filter(field => 
-								field.key === "social.farcaster" || 
-								field.key === "social.lens"
-							).map(field => (
+							{ENS_FIELDS.filter(
+								(field) =>
+									field.key === "social.farcaster" ||
+									field.key === "social.lens",
+							).map((field) => (
 								<div key={field.key} style={{ marginBottom: "8px" }}>
 									<ENSFieldDisplay ensName={ensName} field={field} />
 								</div>

@@ -27,7 +27,9 @@ function GalleryItem({ ensName, artKey }: { ensName: string; artKey: string }) {
 	};
 
 	const isAudio = (url: string) => {
-		return url.includes("/api/audio/") || url.match(/\.(mp3|wav|ogg|m4a|flac)$/i);
+		return (
+			url.includes("/api/audio/") || url.match(/\.(mp3|wav|ogg|m4a|flac)$/i)
+		);
 	};
 
 	return (
@@ -42,11 +44,7 @@ function GalleryItem({ ensName, artKey }: { ensName: string; artKey: string }) {
 				/>
 			) : isAudio(artUrl) ? (
 				<div className="flex h-full w-full items-center justify-center bg-muted transition-transform group-hover:scale-105">
-					<audio
-						src={artUrl}
-						controls
-						className="w-full px-4"
-					/>
+					<audio src={artUrl} controls className="w-full px-4" />
 				</div>
 			) : (
 				<Image
