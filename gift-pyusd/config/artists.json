@@ -1,0 +1,14 @@
+{
+  "artists": [
+    {
+      "wallet": "0x08D811A358850892029251CcC8a565a32fd2dCB8",
+      "name": "Alice",
+      "image": "https://example.com/alice.png"
+    },
+    {
+        "wallet": "0xC94d68094FA65E991dFfa0A941306E8460876169",
+        "name": "Bob",
+        "image": "https://example.com/bob.png"
+    }
+  ]
+}
