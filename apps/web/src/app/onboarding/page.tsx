@@ -192,9 +192,7 @@ export default function OnboardingPage() {
 		if (currentStep < steps.length - 1) {
 			setCurrentStep((prev) => prev + 1);
 		} else {
-			// Save all data before completing onboarding
-			await saveAllOnboardingData();
-			// Onboarding complete - redirect to /me
+			// Final step completed - redirect to /me
 			router.push("/me");
 		}
 	};
@@ -346,7 +344,7 @@ export default function OnboardingPage() {
 					<button
 						onClick={async () => {
 							await saveAllOnboardingData();
-							router.push("/me");
+							handleNext();
 						}}
 						disabled={isSaving}
 						className="flex items-center space-x-2"

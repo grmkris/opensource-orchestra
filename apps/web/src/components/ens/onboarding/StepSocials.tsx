@@ -4,6 +4,7 @@ import { ArrowRight, SkipForward } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ENSTextField } from "../ENSTextField";
+import { ENSFieldsProvider } from "../ENSFieldsProvider";
 
 interface SocialData {
 	twitter?: string;
@@ -225,13 +226,15 @@ export function StepSocials({
 							onInputChange={handleInputChange}
 						/>
 
-						<ENSTextField
-							ensName={ensName}
-							recordKey="livestream.url"
-							label="Livestream URL"
-							placeholder="https://twitch.tv/yourstream or https://youtube.com/watch?v=..."
-							isOwner={true}
-						/>
+						<ENSFieldsProvider ensName={ensName} isOwner={true}>
+							<ENSTextField
+								ensName={ensName}
+								recordKey="livestream.url"
+								label="Livestream URL"
+								placeholder="https://twitch.tv/yourstream or https://youtube.com/watch?v=..."
+								isOwner={true}
+							/>
+						</ENSFieldsProvider>
 					</div>
 				</div>
 			</div>
