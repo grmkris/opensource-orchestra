@@ -7,6 +7,7 @@ import { normalize } from "viem/ens";
 import { useEnsAddress, useEnsAvatar, useEnsText } from "wagmi";
 import { ENSAvatar } from "@/components/ens/ENSAvatar";
 import { ENSGalleryPublic } from "@/components/ens/ENSGalleryPublic";
+import { ENSLivestreamEmbed } from "@/components/ens/ENSLivestreamEmbed";
 import { GiftPopover } from "@/components/ens/GiftPopover";
 import { PyusdGiftPopover } from "@/components/ens/PyusdGiftPopover";
 import { Loader } from "@/components/loader";
@@ -28,6 +29,7 @@ const _ENS_FIELDS: ENSField[] = [
 	{ key: "com.github", label: "GitHub", prefix: "https://github.com/" },
 	{ key: "com.discord", label: "Discord" },
 	{ key: "com.telegram", label: "Telegram", prefix: "https://t.me/" },
+	{ key: "livestream.url", label: "Livestream", isUrl: true },
 ];
 
 function ENSFieldDisplay({
@@ -115,6 +117,23 @@ export function SubdomainProfilePublic({ ensName }: { ensName: string }) {
 		query: { enabled: !!ensName },
 		chainId: 1,
 	});
+
+	// Get livestream data
+	const { data: livestreamUrl } = useEnsText({
+		name: ensName,
+		key: "livestream.url",
+		query: { enabled: !!ensName },
+		chainId: 1,
+	});
+
+	const { data: isStreamingData } = useEnsText({
+		name: ensName,
+		key: "livestream.active",
+		query: { enabled: !!ensName },
+		chainId: 1,
+	});
+
+	const isStreaming = isStreamingData === "true";
 
 	const handleCopy = async (text: string, field: string) => {
 		try {
@@ -242,33 +261,64 @@ export function SubdomainProfilePublic({ ensName }: { ensName: string }) {
 
 					{/* Profile Name and Verification */}
 					<div style={{ marginBottom: "16px", textAlign: "center" }}>
-						<span
-							style={{
-								display: "inline-block",
-								fontSize: "32px",
-								fontWeight: "800",
-								letterSpacing: "-0.3px",
-								marginRight: "8px",
-							}}
-						>
-							{ensName}
-						</span>
-						<span
-							style={{
-								display: "inline-block",
-								width: "24px",
-								height: "24px",
-								borderRadius: "50%",
-								background: "#156fb3",
-								color: "#ffffff",
-								fontSize: "14px",
-								fontWeight: "800",
-								textAlign: "center",
-								lineHeight: "24px",
-							}}
-						>
-							✓
-						</span>
+						<div style={{ marginBottom: "8px" }}>
+							<span
+								style={{
+									display: "inline-block",
+									fontSize: "32px",
+									fontWeight: "800",
+									letterSpacing: "-0.3px",
+									marginRight: "8px",
+								}}
+							>
+								{ensName}
+							</span>
+							<span
+								style={{
+									display: "inline-block",
+									width: "24px",
+									height: "24px",
+									borderRadius: "50%",
+									background: "#156fb3",
+									color: "#ffffff",
+									fontSize: "14px",
+									fontWeight: "800",
+									textAlign: "center",
+									lineHeight: "24px",
+								}}
+							>
+								✓
+							</span>
+						</div>
+						{isStreaming && livestreamUrl && (
+							<div style={{ marginBottom: "8px" }}>
+								<span
+									style={{
+										display: "inline-flex",
+										alignItems: "center",
+										fontSize: "16px",
+										fontWeight: "700",
+										color: "#dc2626",
+										background: "#fef2f2",
+										border: "2px solid #dc2626",
+										borderRadius: "20px",
+										padding: "4px 12px",
+									}}
+								>
+									<span
+										style={{
+											width: "8px",
+											height: "8px",
+											borderRadius: "50%",
+											background: "#dc2626",
+											marginRight: "6px",
+											animation: "pulse 2s infinite",
+										}}
+									/>
+									LIVE NOW
+								</span>
+							</div>
+						)}
 					</div>
 
 					{/* Action Buttons */}
@@ -277,6 +327,7 @@ export function SubdomainProfilePublic({ ensName }: { ensName: string }) {
 							display: "flex",
 							gap: "12px",
 							justifyContent: "center",
+							flexWrap: "wrap",
 						}}
 					>
 						<button
@@ -295,6 +346,38 @@ export function SubdomainProfilePublic({ ensName }: { ensName: string }) {
 						>
 							{copiedField === "profile-link" ? "✓ Copied" : "Copy Link"}
 						</button>
+
+						{isStreaming && livestreamUrl && (
+							<a
+								href={livestreamUrl}
+								target="_blank"
+								rel="noopener noreferrer"
+								style={{
+									fontSize: "14px",
+									fontWeight: "600",
+									color: "#ffffff",
+									background: "#dc2626",
+									border: "1px solid #dc2626",
+									borderRadius: "6px",
+									padding: "8px 16px",
+									textDecoration: "none",
+									display: "inline-flex",
+									alignItems: "center",
+								}}
+							>
+								<span
+									style={{
+										width: "8px",
+										height: "8px",
+										borderRadius: "50%",
+										background: "#ffffff",
+										marginRight: "6px",
+										animation: "pulse 2s infinite",
+									}}
+								/>
+								Watch Stream
+							</a>
+						)}
 
 						<GiftPopover
 							recipientAddress={ensAddress}
@@ -322,6 +405,13 @@ export function SubdomainProfilePublic({ ensName }: { ensName: string }) {
 					/>
 				</div>
 			</div>
+
+			{/* Livestream Embed */}
+			<ENSLivestreamEmbed
+				url={livestreamUrl || ""}
+				isStreaming={isStreaming}
+				ensName={ensName}
+			/>
 
 			{/* Media Gallery Card */}
 			<div

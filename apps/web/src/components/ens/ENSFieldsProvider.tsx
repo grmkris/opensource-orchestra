@@ -140,6 +140,18 @@ export function ENSFieldsProvider({
 			query: { enabled: !!ensName },
 			chainId: 1,
 		}),
+		"livestream.url": useEnsText({
+			name: ensName,
+			key: "livestream.url",
+			query: { enabled: !!ensName },
+			chainId: 1,
+		}),
+		"livestream.active": useEnsText({
+			name: ensName,
+			key: "livestream.active",
+			query: { enabled: !!ensName },
+			chainId: 1,
+		}),
 		art1: useEnsText({
 			name: ensName,
 			key: "art1",
@@ -227,6 +239,8 @@ export function ENSFieldsProvider({
 		textQueries["com.telegram"].data,
 		textQueries["social.farcaster"].data,
 		textQueries["social.lens"].data,
+		textQueries["livestream.url"].data,
+		textQueries["livestream.active"].data,
 		textQueries.art1.data,
 		textQueries.art2.data,
 		textQueries.art3.data,

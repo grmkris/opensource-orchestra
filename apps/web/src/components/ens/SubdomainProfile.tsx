@@ -12,6 +12,8 @@ import {
 import { ENSGallerySection } from "@/components/ens/ENSGallerySection";
 import { ENSHeaderField } from "@/components/ens/ENSHeaderField";
 import { ENSTextField } from "@/components/ens/ENSTextField";
+import { ENSLivestreamToggle } from "@/components/ens/ENSLivestreamToggle";
+import { ENSLivestreamEmbed } from "@/components/ens/ENSLivestreamEmbed";
 import { Loader } from "@/components/loader";
 
 // Internal component that uses the ENS fields context
@@ -26,7 +28,11 @@ function SubdomainProfileContent({
 }) {
 	const [copiedField, setCopiedField] = useState<string | null>(null);
 	const [activeTab, _setActiveTab] = useState("profile");
-	const { saveAllFields, hasChanges, isSaving, saved } = useENSFields();
+	const { saveAllFields, hasChanges, isSaving, saved, getValue } = useENSFields();
+	
+	// Get livestream data for preview
+	const livestreamUrl = getValue("livestream.url");
+	const isStreaming = getValue("livestream.active") === "true";
 
 	// Fetch avatar and header from blockchain
 	const { data: avatarUrl, isLoading: avatarLoading } = useEnsAvatar({
@@ -388,6 +394,74 @@ function SubdomainProfileContent({
 								/>
 							</div>
 						</div>
+
+						{/* Livestream Card */}
+						<div
+							style={{
+								fontFamily:
+									"system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, sans-serif",
+								background: "#ffffff",
+								color: "#2f3044",
+								border: "2px solid #2f3044",
+								borderBottomWidth: "14px",
+								borderRadius: "2px",
+								maxWidth: "880px",
+								padding: "28px 32px 36px",
+								lineHeight: "1.35",
+								textAlign: "left",
+							}}
+						>
+							<span
+								style={{
+									display: "block",
+									fontSize: "40px",
+									fontWeight: "800",
+									letterSpacing: "-0.3px",
+									marginBottom: "14px",
+								}}
+							>
+								For livestreaming
+							</span>
+
+							<span
+								style={{
+									display: "block",
+									fontSize: "22px",
+									fontWeight: "500",
+									color: "#2f3044cc",
+									marginBottom: "26px",
+								}}
+							>
+								Share your live streams with the community
+							</span>
+
+							<div className="space-y-6">
+								<ENSTextField
+									recordKey="livestream.url"
+									label="Livestream URL"
+									placeholder="https://twitch.tv/yourstream or https://youtube.com/watch?v=..."
+									isOwner={isOwner}
+									ensName={ensName}
+								/>
+
+								{isOwner && (
+									<ENSLivestreamToggle
+										isOwner={isOwner}
+										ensName={ensName}
+									/>
+								)}
+							</div>
+						</div>
+
+						{/* Livestream Preview */}
+						{livestreamUrl && (
+							<ENSLivestreamEmbed
+								url={livestreamUrl}
+								isStreaming={isStreaming}
+								ensName={ensName}
+								showPreview={true}
+							/>
+						)}
 
 						{/* Media Gallery Card */}
 						<div
