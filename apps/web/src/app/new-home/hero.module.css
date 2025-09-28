@@ -115,6 +115,7 @@
 
 /* Animation for fireflies glow */
 @keyframes firefly-glow {
+
 	0%,
 	100% {
 		opacity: 0.3;
@@ -173,6 +174,19 @@
 	/* Larger to prevent gaps during parallax */
 	height: 130%;
 	z-index: 10;
+	transform: translate(-50%, -50%) translateX(var(--parallax-x, 0px)) translateY(calc(var(--parallax-y, 0px) + var(--scroll-y, 0px)));
+	animation: zoomOut 6s ease-out forwards;
+}
+
+/* Zoom out animation */
+@keyframes zoomOut {
+	0% {
+		transform: translate(-50%, -50%) translateX(var(--parallax-x, 0px)) translateY(var(--parallax-y, 0px)) scale(1.1);
+	}
+
+	100% {
+		transform: translate(-50%, -50%) translateX(var(--parallax-x, 0px)) translateY(var(--parallax-y, 0px)) scale(1);
+	}
 }
 
 .hero_left__MMFhv {
