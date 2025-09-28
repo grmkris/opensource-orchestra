@@ -3,6 +3,7 @@
 import { ArrowRight, SkipForward } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { ENSTextField } from "../ENSTextField";
 
 interface SocialData {
   twitter?: string;
