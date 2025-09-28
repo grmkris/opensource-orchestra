@@ -1,0 +1,6 @@
+[submodule "gift-pyusd/lib/solmate"]
+	path = gift-pyusd/lib/solmate
+	url = https://github.com/transmissions11/solmate
+[submodule "gift-pyusd/lib/forge-std"]
+	path = gift-pyusd/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
