@@ -1,152 +1,289 @@
 "use client";
 
 import { ArrowRight, SkipForward } from "lucide-react";
-import { ENSTextField } from "@/components/ens/ENSTextField";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { ENSTextField } from "../ENSTextField";
 
-interface StepSocialsProps {
-	ensName: string;
-	onNext: () => void;
-	onSkip: () => void;
+interface SocialData {
+  twitter?: string;
+  github?: string;
+  discord?: string;
+  telegram?: string;
+  farcaster?: string;
+  lens?: string;
+  website?: string;
+  email?: string;
 }
 
-export function StepSocials({ ensName, onNext, onSkip }: StepSocialsProps) {
-	return (
-		<div
-			className="rounded-2xl border-2 border-gray-100 bg-white p-8 shadow-sm"
-			style={{ fontFamily: "var(--font-roboto)" }}
-		>
-			<div className="space-y-6">
-				<div className="text-center">
-					<div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-100">
-						<div className="h-8 w-8 rounded-lg bg-blue-500" />
-					</div>
-					<h2 className="mb-2 font-bold text-2xl text-gray-900">
-						Connect Your Social Presence
-					</h2>
-					<p className="text-gray-600">
-						Link your social media accounts so the community can find and
-						connect with you.
-					</p>
-				</div>
+interface StepSocialsProps {
+  ensName: string;
+  onNext: (data?: SocialData) => void;
+  onSkip: () => void;
+  initialData?: SocialData;
+}
 
-				<div className="space-y-6">
-					{/* Social Links Section */}
-					<div className="space-y-4">
-						<div className="flex items-center space-x-2">
-							<div className="h-6 w-1 rounded-full bg-blue-500" />
-							<h4 className="font-bold text-gray-900 text-lg">Social Media</h4>
-						</div>
+// Move InputField outside to prevent recreation on every render
+const InputField = ({
+  label,
+  placeholder,
+  field,
+  socialData,
+  onInputChange,
+}: {
+  label: string;
+  placeholder: string;
+  field: keyof SocialData;
+  socialData: SocialData;
+  onInputChange: (field: keyof SocialData, value: string) => void;
+}) => (
+  <div className="space-y-2">
+    <label
+      style={{
+        display: "block",
+        fontSize: "14px",
+        fontWeight: "600",
+        color: "#2f3044",
+        marginBottom: "8px",
+      }}
+    >
+      {label}
+    </label>
+    <input
+      type="text"
+      value={socialData[field] || ""}
+      onChange={(e) => onInputChange(field, e.target.value)}
+      placeholder={placeholder}
+      style={{
+        width: "100%",
+        padding: "12px 16px",
+        fontSize: "14px",
+        border: "1px solid #2f304466",
+        borderRadius: "6px",
+        background: "#ffffff",
+        color: "#2f3044",
+      }}
+    />
+  </div>
+);
 
-						<div className="space-y-4">
-							<ENSTextField
-								ensName={ensName}
-								recordKey="com.twitter"
-								label="Twitter/X"
-								placeholder="username (without @)"
-								isOwner={true}
-							/>
+export function StepSocials({
+  ensName,
+  onNext,
+  onSkip,
+  initialData,
+}: StepSocialsProps) {
+  const [socialData, setSocialData] = useState<SocialData>({
+    twitter: initialData?.twitter || "",
+    github: initialData?.github || "",
+    discord: initialData?.discord || "",
+    telegram: initialData?.telegram || "",
+    farcaster: initialData?.farcaster || "",
+    lens: initialData?.lens || "",
+    website: initialData?.website || "",
+    email: initialData?.email || "",
+  });
 
-							<ENSTextField
-								ensName={ensName}
-								recordKey="com.github"
-								label="GitHub"
-								placeholder="username"
-								isOwner={true}
-							/>
+  const handleInputChange = (field: keyof SocialData, value: string) => {
+    setSocialData((prev) => ({ ...prev, [field]: value }));
+  };
 
-							<ENSTextField
-								ensName={ensName}
-								recordKey="com.discord"
-								label="Discord"
-								placeholder="username"
-								isOwner={true}
-							/>
+  const handleNext = () => {
+    onNext(socialData);
+  };
 
-							<ENSTextField
-								ensName={ensName}
-								recordKey="com.telegram"
-								label="Telegram"
-								placeholder="username"
-								isOwner={true}
-							/>
+  return (
+    <div className="space-y-6">
+      <div className="text-center">
+        <span
+          style={{
+            display: "block",
+            fontSize: "32px",
+            fontWeight: "800",
+            letterSpacing: "-0.3px",
+            marginBottom: "14px",
+          }}
+        >
+          Connect Your Social Presence
+        </span>
+        <span
+          style={{
+            display: "block",
+            fontSize: "18px",
+            fontWeight: "500",
+            color: "#2f3044cc",
+            marginBottom: "32px",
+          }}
+        >
+          Link your social media accounts so the community can find and connect
+          with you.
+        </span>
+      </div>
 
-							<ENSTextField
-								ensName={ensName}
-								recordKey="social.farcaster"
-								label="Farcaster"
-								placeholder="username or FID"
-								isOwner={true}
-							/>
+      <div className="space-y-6">
+        {/* Social Links Section */}
+        <div className="space-y-4">
+          <div className="flex items-center space-x-2">
+            <div
+              className="h-6 w-1 rounded-full"
+              style={{ backgroundColor: "#2f3044" }}
+            />
+            <h4
+              style={{
+                fontSize: "20px",
+                fontWeight: "700",
+                color: "#2f3044",
+              }}
+            >
+              Social Media
+            </h4>
+          </div>
 
-							<ENSTextField
-								ensName={ensName}
-								recordKey="social.lens"
-								label="Lens Protocol"
-								placeholder="username.lens"
-								isOwner={true}
-							/>
-						</div>
-					</div>
+          <div className="space-y-4">
+            <InputField
+              label="Twitter/X"
+              placeholder="username (without @)"
+              field="twitter"
+              socialData={socialData}
+              onInputChange={handleInputChange}
+            />
 
-					{/* Contact Section */}
-					<div className="space-y-4">
-						<div className="flex items-center space-x-2">
-							<div className="h-6 w-1 rounded-full bg-blue-500" />
-							<h4 className="font-bold text-gray-900 text-lg">Contact & Web</h4>
-						</div>
+            <InputField
+              label="GitHub"
+              placeholder="username"
+              field="github"
+              socialData={socialData}
+              onInputChange={handleInputChange}
+            />
 
-						<div className="space-y-4">
-							<ENSTextField
-								ensName={ensName}
-								recordKey="url"
-								label="Website"
-								placeholder="https://yourwebsite.com"
-								isOwner={true}
-							/>
+            <InputField
+              label="Discord"
+              placeholder="username"
+              field="discord"
+              socialData={socialData}
+              onInputChange={handleInputChange}
+            />
 
-							<ENSTextField
-								ensName={ensName}
-								recordKey="email"
-								label="Email"
-								placeholder="your@email.com"
-								isOwner={true}
-							/>
+            <InputField
+              label="Telegram"
+              placeholder="username"
+              field="telegram"
+              socialData={socialData}
+              onInputChange={handleInputChange}
+            />
 
-							<ENSTextField
-								ensName={ensName}
-								recordKey="livestream.url"
-								label="Livestream URL"
-								placeholder="https://twitch.tv/yourstream or https://youtube.com/watch?v=..."
-								isOwner={true}
-							/>
-						</div>
-					</div>
-				</div>
+            <InputField
+              label="Farcaster"
+              placeholder="username or FID"
+              field="farcaster"
+              socialData={socialData}
+              onInputChange={handleInputChange}
+            />
 
-				<div className="flex items-center justify-between pt-4">
-					<Button
-						variant="ghost"
-						onClick={onSkip}
-						className="flex items-center space-x-2"
-					>
-						<SkipForward className="h-4 w-4" />
-						<span>Skip for now</span>
-					</Button>
+            <InputField
+              label="Lens Protocol"
+              placeholder="username.lens"
+              field="lens"
+              socialData={socialData}
+              onInputChange={handleInputChange}
+            />
+          </div>
+        </div>
 
-					<Button onClick={onNext} className="flex items-center space-x-2">
-						<span>Complete Profile</span>
-						<ArrowRight className="h-4 w-4" />
-					</Button>
-				</div>
+        {/* Contact Section */}
+        <div className="space-y-4">
+          <div className="flex items-center space-x-2">
+            <div
+              className="h-6 w-1 rounded-full"
+              style={{ backgroundColor: "#2f3044" }}
+            />
+            <h4
+              style={{
+                fontSize: "20px",
+                fontWeight: "700",
+                color: "#2f3044",
+              }}
+            >
+              Contact & Web
+            </h4>
+          </div>
 
-				<div className="text-center">
-					<p className="text-gray-500 text-sm">
-						Each field saves individually when you update it. You can always add
-						more links later.
-					</p>
-				</div>
-			</div>
-		</div>
-	);
+          <div className="space-y-4">
+            <InputField
+              label="Website"
+              placeholder="https://yourwebsite.com"
+              field="website"
+              socialData={socialData}
+              onInputChange={handleInputChange}
+            />
+
+            <InputField
+              label="Email"
+              placeholder="your@email.com"
+              field="email"
+              socialData={socialData}
+              onInputChange={handleInputChange}
+            />
+
+            <ENSTextField
+              ensName={ensName}
+              recordKey="livestream.url"
+              label="Livestream URL"
+              placeholder="https://twitch.tv/yourstream or https://youtube.com/watch?v=..."
+              isOwner={true}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between pt-4">
+        <Button
+          variant="ghost"
+          onClick={onSkip}
+          className="flex items-center space-x-2"
+          style={{
+            fontSize: "14px",
+            fontWeight: "600",
+            color: "#2f3044aa",
+            background: "transparent",
+            border: "1px solid #2f304466",
+            borderRadius: "6px",
+            padding: "8px 16px",
+          }}
+        >
+          <SkipForward className="h-4 w-4" />
+          <span>Skip for now</span>
+        </Button>
+
+        <Button
+          onClick={handleNext}
+          className="flex items-center space-x-2"
+          style={{
+            fontSize: "14px",
+            fontWeight: "600",
+            color: "#ffffff",
+            background: "#2f3044",
+            border: "1px solid #2f3044",
+            borderRadius: "6px",
+            padding: "8px 16px",
+          }}
+        >
+          <span>Complete Profile</span>
+          <ArrowRight className="h-4 w-4" />
+        </Button>
+      </div>
+
+      <div className="text-center">
+        <p
+          style={{
+            fontSize: "14px",
+            color: "#2f3044aa",
+            marginTop: "16px",
+          }}
+        >
+          Your information will be saved when you complete the onboarding.
+        </p>
+      </div>
+    </div>
+  );
 }
