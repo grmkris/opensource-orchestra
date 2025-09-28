@@ -9,6 +9,7 @@ import { useAccount, useEnsAvatar } from "wagmi";
 import { OnboardingProgress } from "@/components/ens/OnboardingProgress";
 import { StepArtistRegistration } from "@/components/ens/onboarding/StepArtistRegistration";
 import { StepBasicInfo } from "@/components/ens/onboarding/StepBasicInfo";
+import { StepMediaGallery } from "@/components/ens/onboarding/StepMediaGallery";
 import { StepSocials } from "@/components/ens/onboarding/StepSocials";
 import { StepVisuals } from "@/components/ens/onboarding/StepVisuals";
 import { StepWallet } from "@/components/ens/onboarding/StepWallet";
@@ -40,6 +41,16 @@ interface OnboardingData {
     lens?: string;
     website?: string;
     email?: string;
+  };
+  mediaGallery?: {
+    art1?: string;
+    art2?: string;
+    art3?: string;
+    art4?: string;
+    art5?: string;
+    art6?: string;
+    art7?: string;
+    art8?: string;
   };
 }
 
@@ -80,8 +91,9 @@ export default function OnboardingPage() {
     { id: "basic", title: "Basic Info", required: false },
     { id: "visuals", title: "Profile Images", required: false },
     { id: "socials", title: "Social Links", required: false },
-    { id: "artist", title: "Artist Registration", required: false },
+    { id: "gallery", title: "Media Gallery", required: false },
     { id: "complete", title: "Complete Setup", required: true },
+    { id: "artist", title: "Artist Registration", required: false },
   ];
 
   const saveAllOnboardingData = async () => {
@@ -130,6 +142,29 @@ export default function OnboardingPage() {
           if (value && socialMappings[key]) {
             records.push({
               key: socialMappings[key],
+              value: value,
+            });
+          }
+        });
+      }
+
+      // Add media gallery
+      if (onboardingData.mediaGallery) {
+        const galleryMappings: Record<string, TextRecordKey> = {
+          art1: TEXT_RECORD_KEYS.ART1,
+          art2: TEXT_RECORD_KEYS.ART2,
+          art3: TEXT_RECORD_KEYS.ART3,
+          art4: TEXT_RECORD_KEYS.ART4,
+          art5: TEXT_RECORD_KEYS.ART5,
+          art6: TEXT_RECORD_KEYS.ART6,
+          art7: TEXT_RECORD_KEYS.ART7,
+          art8: TEXT_RECORD_KEYS.ART8,
+        };
+
+        Object.entries(onboardingData.mediaGallery).forEach(([key, value]) => {
+          if (value && galleryMappings[key]) {
+            records.push({
+              key: galleryMappings[key],
               value: value,
             });
           }
@@ -207,10 +242,29 @@ export default function OnboardingPage() {
     handleNext();
   };
 
+  const handleMediaGalleryNext = (data?: {
+    art1?: string;
+    art2?: string;
+    art3?: string;
+    art4?: string;
+    art5?: string;
+    art6?: string;
+    art7?: string;
+    art8?: string;
+  }) => {
+    if (data) {
+      setOnboardingData((prev) => ({ ...prev, mediaGallery: data }));
+    }
+    handleNext();
+  };
+
   // Completion step component
   const CompletionStep = () => {
     const hasData =
-      onboardingData.basic || onboardingData.visuals || onboardingData.socials;
+      onboardingData.basic ||
+      onboardingData.visuals ||
+      onboardingData.socials ||
+      onboardingData.mediaGallery;
 
     return (
       <div className="space-y-6">
@@ -269,6 +323,18 @@ export default function OnboardingPage() {
                           .length
                       }{" "}
                       connected
+                    </li>
+                  )}
+                {onboardingData.mediaGallery &&
+                  Object.values(onboardingData.mediaGallery).some((v) => v) && (
+                    <li>
+                      ✓ Media gallery:{" "}
+                      {
+                        Object.values(onboardingData.mediaGallery).filter(
+                          (v) => v
+                        ).length
+                      }{" "}
+                      items uploaded
                     </li>
                   )}
               </ul>
@@ -367,6 +433,17 @@ export default function OnboardingPage() {
         );
       case 5:
         return (
+          <StepMediaGallery
+            ensName={userSubdomain.data || ""}
+            onNext={handleMediaGalleryNext}
+            onSkip={handleSkip}
+            initialData={onboardingData.mediaGallery}
+          />
+        );
+      case 6:
+        return <CompletionStep />;
+      case 7:
+        return (
           <StepArtistRegistration
             ensName={userSubdomain.data || ""}
             onNext={handleNext}
@@ -374,8 +451,6 @@ export default function OnboardingPage() {
             avatarUrl={avatarUrl || ""}
           />
         );
-      case 6:
-        return <CompletionStep />;
       default:
         return null;
     }
