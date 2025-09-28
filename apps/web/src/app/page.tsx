@@ -37,14 +37,16 @@ export default function Home() {
 				/>
 
 				{/* YouTube video iframe positioned in the center black area of the stage */}
-				<div className="absolute inset-0 flex items-center justify-center">
-					<div>
-						<iframe
+				{/* 						<iframe
 							src="https://player.twitch.tv/?channel=shakalei&parent=opensource-orchestra-web.vercel.app"
 							height="480"
 							width="720"
 							title="Shakalei"
 						/>
+ */}
+				<div className="absolute inset-0 flex items-center justify-center">
+					<div>
+					<iframe width="720" height="480" src="https://www.youtube.com/embed/8B22y_sLG3I?si=LM8b7NT65xo3hzF9" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"/>
 					</div>
 				</div>
 

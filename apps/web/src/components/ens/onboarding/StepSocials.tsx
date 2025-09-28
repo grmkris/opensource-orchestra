@@ -223,6 +223,14 @@ export function StepSocials({
               socialData={socialData}
               onInputChange={handleInputChange}
             />
+
+            <ENSTextField
+              ensName={ensName}
+              recordKey="livestream.url"
+              label="Livestream URL"
+              placeholder="https://twitch.tv/yourstream or https://youtube.com/watch?v=..."
+              isOwner={true}
+            />
           </div>
         </div>
       </div>

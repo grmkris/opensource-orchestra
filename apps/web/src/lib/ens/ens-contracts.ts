@@ -33,6 +33,8 @@ export const TEXT_RECORD_KEYS = {
 	TELEGRAM: "com.telegram",
 	FARCASTER: "social.farcaster",
 	LENS: "social.lens",
+	LIVESTREAM_URL: "livestream.url",
+	IS_STREAMING: "livestream.active",
 	ART1: "art1",
 	ART2: "art2",
 	ART3: "art3",

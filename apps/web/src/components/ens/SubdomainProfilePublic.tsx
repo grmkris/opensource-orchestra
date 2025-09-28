@@ -7,6 +7,7 @@ import { normalize } from "viem/ens";
 import { useEnsAddress, useEnsAvatar, useEnsText } from "wagmi";
 import { ENSAvatar } from "@/components/ens/ENSAvatar";
 import { ENSGalleryPublic } from "@/components/ens/ENSGalleryPublic";
+import { ENSLivestreamEmbed } from "@/components/ens/ENSLivestreamEmbed";
 import { GiftPopover } from "@/components/ens/GiftPopover";
 import { PyusdGiftPopover } from "@/components/ens/PyusdGiftPopover";
 import { Loader } from "@/components/loader";
@@ -20,14 +21,17 @@ interface ENSField {
 	prefix?: string;
 }
 
-const _ENS_FIELDS: ENSField[] = [
+const ENS_FIELDS: ENSField[] = [
 	{ key: "description", label: "Description" },
 	{ key: "url", label: "Website", isUrl: true },
 	{ key: "email", label: "Email", isEmail: true },
 	{ key: "com.twitter", label: "Twitter", prefix: "https://twitter.com/" },
 	{ key: "com.github", label: "GitHub", prefix: "https://github.com/" },
-	{ key: "com.discord", label: "Discord" },
+	{ key: "com.discord", label: "Discord", prefix: "https://discord.com/users/" },
 	{ key: "com.telegram", label: "Telegram", prefix: "https://t.me/" },
+	{ key: "social.farcaster", label: "Farcaster", prefix: "https://warpcast.com/" },
+	{ key: "social.lens", label: "Lens Protocol", prefix: "https://hey.xyz/u/" },
+	{ key: "livestream.url", label: "Livestream", isUrl: true },
 ];
 
 function ENSFieldDisplay({
@@ -116,6 +120,23 @@ export function SubdomainProfilePublic({ ensName }: { ensName: string }) {
 		chainId: 1,
 	});
 
+	// Get livestream data
+	const { data: livestreamUrl } = useEnsText({
+		name: ensName,
+		key: "livestream.url",
+		query: { enabled: !!ensName },
+		chainId: 1,
+	});
+
+	const { data: isStreamingData } = useEnsText({
+		name: ensName,
+		key: "livestream.active",
+		query: { enabled: !!ensName },
+		chainId: 1,
+	});
+
+	const isStreaming = isStreamingData === "true";
+
 	const handleCopy = async (text: string, field: string) => {
 		try {
 			await navigator.clipboard.writeText(text);
@@ -127,7 +148,7 @@ export function SubdomainProfilePublic({ ensName }: { ensName: string }) {
 	};
 
 	const handleCopyProfileLink = () => {
-		const profileUrl = `${window.location.origin}/ens/${ensName}`;
+		const profileUrl = `${window.location.origin}/profile/${ensName}`;
 		handleCopy(profileUrl, "profile-link");
 	};
 
@@ -164,6 +185,21 @@ export function SubdomainProfilePublic({ ensName }: { ensName: string }) {
 			className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8"
 			style={{ fontFamily: "Roboto, sans-serif" }}
 		>
+			{/* Responsive CSS for profile columns */}
+			<style jsx>{`
+				@media (max-width: 768px) {
+					.profile-columns {
+						grid-template-columns: 1fr !important;
+						gap: 12px !important;
+					}
+				}
+				@media (min-width: 769px) and (max-width: 1024px) {
+					.profile-columns {
+						grid-template-columns: repeat(3, 1fr) !important;
+						gap: 12px !important;
+					}
+				}
+			`}</style>
 			{/* Avatar Card with Header and Profile Picture */}
 			<div
 				style={{
@@ -242,33 +278,64 @@ export function SubdomainProfilePublic({ ensName }: { ensName: string }) {
 
 					{/* Profile Name and Verification */}
 					<div style={{ marginBottom: "16px", textAlign: "center" }}>
-						<span
-							style={{
-								display: "inline-block",
-								fontSize: "32px",
-								fontWeight: "800",
-								letterSpacing: "-0.3px",
-								marginRight: "8px",
-							}}
-						>
-							{ensName}
-						</span>
-						<span
-							style={{
-								display: "inline-block",
-								width: "24px",
-								height: "24px",
-								borderRadius: "50%",
-								background: "#156fb3",
-								color: "#ffffff",
-								fontSize: "14px",
-								fontWeight: "800",
-								textAlign: "center",
-								lineHeight: "24px",
-							}}
-						>
-							✓
-						</span>
+						<div style={{ marginBottom: "8px" }}>
+							<span
+								style={{
+									display: "inline-block",
+									fontSize: "32px",
+									fontWeight: "800",
+									letterSpacing: "-0.3px",
+									marginRight: "8px",
+								}}
+							>
+								{ensName}
+							</span>
+							<span
+								style={{
+									display: "inline-block",
+									width: "24px",
+									height: "24px",
+									borderRadius: "50%",
+									background: "#156fb3",
+									color: "#ffffff",
+									fontSize: "14px",
+									fontWeight: "800",
+									textAlign: "center",
+									lineHeight: "24px",
+								}}
+							>
+								✓
+							</span>
+						</div>
+						{isStreaming && livestreamUrl && (
+							<div style={{ marginBottom: "8px" }}>
+								<span
+									style={{
+										display: "inline-flex",
+										alignItems: "center",
+										fontSize: "16px",
+										fontWeight: "700",
+										color: "#dc2626",
+										background: "#fef2f2",
+										border: "2px solid #dc2626",
+										borderRadius: "20px",
+										padding: "4px 12px",
+									}}
+								>
+									<span
+										style={{
+											width: "8px",
+											height: "8px",
+											borderRadius: "50%",
+											background: "#dc2626",
+											marginRight: "6px",
+											animation: "pulse 2s infinite",
+										}}
+									/>
+									LIVE NOW
+								</span>
+							</div>
+						)}
 					</div>
 
 					{/* Action Buttons */}
@@ -277,6 +344,7 @@ export function SubdomainProfilePublic({ ensName }: { ensName: string }) {
 							display: "flex",
 							gap: "12px",
 							justifyContent: "center",
+							flexWrap: "wrap",
 						}}
 					>
 						<button
@@ -296,6 +364,38 @@ export function SubdomainProfilePublic({ ensName }: { ensName: string }) {
 							{copiedField === "profile-link" ? "✓ Copied" : "Copy Link"}
 						</button>
 
+						{isStreaming && livestreamUrl && (
+							<a
+								href={livestreamUrl}
+								target="_blank"
+								rel="noopener noreferrer"
+								style={{
+									fontSize: "14px",
+									fontWeight: "600",
+									color: "#ffffff",
+									background: "#dc2626",
+									border: "1px solid #dc2626",
+									borderRadius: "6px",
+									padding: "8px 16px",
+									textDecoration: "none",
+									display: "inline-flex",
+									alignItems: "center",
+								}}
+							>
+								<span
+									style={{
+										width: "8px",
+										height: "8px",
+										borderRadius: "50%",
+										background: "#ffffff",
+										marginRight: "6px",
+										animation: "pulse 2s infinite",
+									}}
+								/>
+								Watch Stream
+							</a>
+						)}
+
 						<GiftPopover
 							recipientAddress={ensAddress}
 							recipientName={ensName}
@@ -307,21 +407,95 @@ export function SubdomainProfilePublic({ ensName }: { ensName: string }) {
 						/>
 					</div>
 
-					<ENSFieldDisplay
-						ensName={ensName}
-						field={{ key: "com.discord", label: "Discord" }}
-					/>
+					{/* Profile Information - Full Width */}
+					<div style={{ marginTop: "24px" }}>
+						{ENS_FIELDS.filter(field => field.key === "description").map(field => (
+							<div key={field.key} style={{ marginBottom: "24px" }}>
+								<ENSFieldDisplay ensName={ensName} field={field} />
+							</div>
+						))}
+					</div>
 
-					<ENSFieldDisplay
-						ensName={ensName}
-						field={{
-							key: "com.telegram",
-							label: "Telegram",
-							prefix: "https://t.me/",
+					{/* Contact & Social Links - Column Layout */}
+					<div 
+						style={{ 
+							marginTop: "16px",
+							display: "grid",
+							gridTemplateColumns: "repeat(3, 1fr)",
+							gap: "16px",
 						}}
-					/>
+						className="profile-columns"
+					>
+						{/* Contact Column */}
+						<div>
+							<h4 style={{ 
+								fontSize: "14px", 
+								fontWeight: "600", 
+								marginBottom: "8px",
+								color: "#374151"
+							}}>
+								Contact
+							</h4>
+							{ENS_FIELDS.filter(field => 
+								field.key === "url" || field.key === "email"
+							).map(field => (
+								<div key={field.key} style={{ marginBottom: "8px" }}>
+									<ENSFieldDisplay ensName={ensName} field={field} />
+								</div>
+							))}
+						</div>
+
+						{/* Dev & Social Column */}
+						<div>
+							<h4 style={{ 
+								fontSize: "14px", 
+								fontWeight: "600", 
+								marginBottom: "8px",
+								color: "#374151"
+							}}>
+								Dev & Social
+							</h4>
+							{ENS_FIELDS.filter(field => 
+								field.key === "com.twitter" || 
+								field.key === "com.github" ||
+								field.key === "com.discord" ||
+								field.key === "com.telegram"
+							).map(field => (
+								<div key={field.key} style={{ marginBottom: "8px" }}>
+									<ENSFieldDisplay ensName={ensName} field={field} />
+								</div>
+							))}
+						</div>
+
+						{/* Web3 Social Column */}
+						<div>
+							<h4 style={{ 
+								fontSize: "14px", 
+								fontWeight: "600", 
+								marginBottom: "8px",
+								color: "#374151"
+							}}>
+								Web3 Social
+							</h4>
+							{ENS_FIELDS.filter(field => 
+								field.key === "social.farcaster" || 
+								field.key === "social.lens"
+							).map(field => (
+								<div key={field.key} style={{ marginBottom: "8px" }}>
+									<ENSFieldDisplay ensName={ensName} field={field} />
+								</div>
+							))}
+						</div>
+					</div>
 				</div>
 			</div>
+
+			{/* Livestream Embed */}
+			<ENSLivestreamEmbed
+				url={livestreamUrl || ""}
+				isStreaming={isStreaming}
+				ensName={ensName}
+			/>
 
 			{/* Media Gallery Card */}
 			<div
