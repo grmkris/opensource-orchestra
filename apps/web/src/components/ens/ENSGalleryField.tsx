@@ -41,7 +41,8 @@ export function ENSGalleryField({
 
 			// Use the appropriate endpoint based on file type
 			const isVideo = file.type.startsWith("video/");
-			const endpoint = isVideo ? "/api/upload" : "/api/upload/image";
+			const isAudio = file.type.startsWith("audio/");
+			const endpoint = isVideo || isAudio ? "/api/upload" : "/api/upload/image";
 
 			const response = await fetch(endpoint, {
 				method: "POST",
@@ -60,6 +61,14 @@ export function ENSGalleryField({
 				if (data.fileName) {
 					const videoUrl = `/api/video/${encodeURIComponent(data.fileName)}`;
 					setValue(artKey, videoUrl);
+				} else if (data.url) {
+					setValue(artKey, data.url);
+				}
+			} else if (isAudio) {
+				// Audio upload returns fileName, construct the URL
+				if (data.fileName) {
+					const audioUrl = `/api/audio/${encodeURIComponent(data.fileName)}`;
+					setValue(artKey, audioUrl);
 				} else if (data.url) {
 					setValue(artKey, data.url);
 				}
@@ -87,6 +96,10 @@ export function ENSGalleryField({
 		return url.includes("/api/video/") || url.match(/\.(mp4|webm|avi|mov)$/i);
 	};
 
+	const isAudio = (url: string) => {
+		return url.includes("/api/audio/") || url.match(/\.(mp3|wav|ogg|m4a|flac)$/i);
+	};
+
 	// Media display (always show this if there's content)
 	const mediaDisplay = (
 		<div className="mb-4 flex justify-center">
@@ -103,6 +116,14 @@ export function ENSGalleryField({
 								muted
 								playsInline
 							/>
+						) : isAudio(value) ? (
+							<div className="flex h-full w-full items-center justify-center bg-muted">
+								<audio
+									src={value}
+									controls
+									className="w-full"
+								/>
+							</div>
 						) : (
 							<Image
 								src={value}
@@ -155,6 +176,14 @@ export function ENSGalleryField({
 								muted
 								playsInline
 							/>
+						) : isAudio(value) ? (
+							<div className="flex h-full w-full items-center justify-center bg-muted">
+								<audio
+									src={value}
+									controls
+									className="w-full"
+								/>
+							</div>
 						) : (
 							<Image
 								src={value}
@@ -175,7 +204,7 @@ export function ENSGalleryField({
 					<Input
 						id={fieldId}
 						type="file"
-						accept="image/*,video/*"
+						accept="image/*,video/*,audio/*"
 						onChange={handleFileSelect}
 						disabled={isUploading}
 						className="cursor-pointer"

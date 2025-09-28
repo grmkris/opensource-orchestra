@@ -21,14 +21,16 @@ interface ENSField {
 	prefix?: string;
 }
 
-const _ENS_FIELDS: ENSField[] = [
+const ENS_FIELDS: ENSField[] = [
 	{ key: "description", label: "Description" },
 	{ key: "url", label: "Website", isUrl: true },
 	{ key: "email", label: "Email", isEmail: true },
 	{ key: "com.twitter", label: "Twitter", prefix: "https://twitter.com/" },
 	{ key: "com.github", label: "GitHub", prefix: "https://github.com/" },
-	{ key: "com.discord", label: "Discord" },
+	{ key: "com.discord", label: "Discord", prefix: "https://discord.com/users/" },
 	{ key: "com.telegram", label: "Telegram", prefix: "https://t.me/" },
+	{ key: "social.farcaster", label: "Farcaster", prefix: "https://warpcast.com/" },
+	{ key: "social.lens", label: "Lens Protocol", prefix: "https://hey.xyz/u/" },
 	{ key: "livestream.url", label: "Livestream", isUrl: true },
 ];
 
@@ -146,7 +148,7 @@ export function SubdomainProfilePublic({ ensName }: { ensName: string }) {
 	};
 
 	const handleCopyProfileLink = () => {
-		const profileUrl = `${window.location.origin}/ens/${ensName}`;
+		const profileUrl = `${window.location.origin}/profile/${ensName}`;
 		handleCopy(profileUrl, "profile-link");
 	};
 
@@ -183,6 +185,21 @@ export function SubdomainProfilePublic({ ensName }: { ensName: string }) {
 			className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8"
 			style={{ fontFamily: "Roboto, sans-serif" }}
 		>
+			{/* Responsive CSS for profile columns */}
+			<style jsx>{`
+				@media (max-width: 768px) {
+					.profile-columns {
+						grid-template-columns: 1fr !important;
+						gap: 12px !important;
+					}
+				}
+				@media (min-width: 769px) and (max-width: 1024px) {
+					.profile-columns {
+						grid-template-columns: repeat(3, 1fr) !important;
+						gap: 12px !important;
+					}
+				}
+			`}</style>
 			{/* Avatar Card with Header and Profile Picture */}
 			<div
 				style={{
@@ -390,19 +407,86 @@ export function SubdomainProfilePublic({ ensName }: { ensName: string }) {
 						/>
 					</div>
 
-					<ENSFieldDisplay
-						ensName={ensName}
-						field={{ key: "com.discord", label: "Discord" }}
-					/>
+					{/* Profile Information - Full Width */}
+					<div style={{ marginTop: "24px" }}>
+						{ENS_FIELDS.filter(field => field.key === "description").map(field => (
+							<div key={field.key} style={{ marginBottom: "24px" }}>
+								<ENSFieldDisplay ensName={ensName} field={field} />
+							</div>
+						))}
+					</div>
 
-					<ENSFieldDisplay
-						ensName={ensName}
-						field={{
-							key: "com.telegram",
-							label: "Telegram",
-							prefix: "https://t.me/",
+					{/* Contact & Social Links - Column Layout */}
+					<div 
+						style={{ 
+							marginTop: "16px",
+							display: "grid",
+							gridTemplateColumns: "repeat(3, 1fr)",
+							gap: "16px",
 						}}
-					/>
+						className="profile-columns"
+					>
+						{/* Contact Column */}
+						<div>
+							<h4 style={{ 
+								fontSize: "14px", 
+								fontWeight: "600", 
+								marginBottom: "8px",
+								color: "#374151"
+							}}>
+								Contact
+							</h4>
+							{ENS_FIELDS.filter(field => 
+								field.key === "url" || field.key === "email"
+							).map(field => (
+								<div key={field.key} style={{ marginBottom: "8px" }}>
+									<ENSFieldDisplay ensName={ensName} field={field} />
+								</div>
+							))}
+						</div>
+
+						{/* Dev & Social Column */}
+						<div>
+							<h4 style={{ 
+								fontSize: "14px", 
+								fontWeight: "600", 
+								marginBottom: "8px",
+								color: "#374151"
+							}}>
+								Dev & Social
+							</h4>
+							{ENS_FIELDS.filter(field => 
+								field.key === "com.twitter" || 
+								field.key === "com.github" ||
+								field.key === "com.discord" ||
+								field.key === "com.telegram"
+							).map(field => (
+								<div key={field.key} style={{ marginBottom: "8px" }}>
+									<ENSFieldDisplay ensName={ensName} field={field} />
+								</div>
+							))}
+						</div>
+
+						{/* Web3 Social Column */}
+						<div>
+							<h4 style={{ 
+								fontSize: "14px", 
+								fontWeight: "600", 
+								marginBottom: "8px",
+								color: "#374151"
+							}}>
+								Web3 Social
+							</h4>
+							{ENS_FIELDS.filter(field => 
+								field.key === "social.farcaster" || 
+								field.key === "social.lens"
+							).map(field => (
+								<div key={field.key} style={{ marginBottom: "8px" }}>
+									<ENSFieldDisplay ensName={ensName} field={field} />
+								</div>
+							))}
+						</div>
+					</div>
 				</div>
 			</div>
 
