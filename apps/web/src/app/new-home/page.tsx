@@ -307,7 +307,7 @@ export default function HeroPage() {
 											className="relative overflow-hidden rounded-lg shadow-xl"
 										>
 											<iframe
-												src="https://player.twitch.tv/?channel=shakalei&parent=localhost"
+												src="https://www.youtube.com/watch?v=8B22y_sLG3I"
 												height="480"
 												width="720"
 												className="h-auto max-h-[480px] w-full max-w-[720px] rounded-lg"

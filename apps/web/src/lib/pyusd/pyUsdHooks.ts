@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Address } from "viem";
 import { erc20Abi } from "viem";
 import { waitForTransactionReceipt } from "viem/actions";
@@ -118,7 +118,7 @@ export const usePyusdAllowance = (
 export const usePyusdApprove = () => {
 	const { writeContractAsync } = useWriteContract();
 	const publicClient = usePublicClient();
-
+  const queryClient = useQueryClient();
 	const approvePyusd = useMutation({
 		mutationFn: async (variables: { spender: Address; amount: bigint }) => {
 			if (!publicClient) {
@@ -134,8 +134,11 @@ export const usePyusdApprove = () => {
 
 			const waited = waitForTransactionReceipt(publicClient, { hash: result });
 
+			queryClient.invalidateQueries();
+
 			return waited;
 		},
+
 	});
 
 	return approvePyusd;
