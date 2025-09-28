@@ -46,7 +46,7 @@ export default function Home() {
  */}
 				<div className="absolute inset-0 flex items-center justify-center">
 					<div>
-					<iframe width="720" height="480" src="https://www.youtube.com/watch?v=hyWmLBrLcow" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"/>
+					<iframe width="720" height="480" src="https://www.youtube.com/embed/hyWmLBrLcow?si=W9WZLEQ-zC3Pi09-" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"/>
 					</div>
 				</div>
 
